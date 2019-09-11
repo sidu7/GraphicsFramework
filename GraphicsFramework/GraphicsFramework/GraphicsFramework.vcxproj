@@ -1,0 +1,284 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{DFD84CF5-8909-4FCE-A28F-58F0A7E524F0}</ProjectGuid>
+    <RootNamespace>GraphicsFramework</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor\assimp\include;$(SolutionDir)GraphicsFramework\vendor\GLEW\include;$(SolutionDir)GraphicsFramework\vendor\Imgui;$(SolutionDir)GraphicsFramework\vendor\SDL\include;$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GLEW_STATIC;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>SDL2.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>
+      </SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>cd $(SolutionDir)
+copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor\assimp\include;$(SolutionDir)GraphicsFramework\vendor\GLEW\include;$(SolutionDir)GraphicsFramework\vendor\Imgui;$(SolutionDir)GraphicsFramework\vendor\SDL\include;$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GLEW_STATIC;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>SDL2.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>
+      </SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>cd $(SolutionDir)
+copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor\assimp\include;$(SolutionDir)GraphicsFramework\vendor\GLEW\include;$(SolutionDir)GraphicsFramework\vendor\Imgui;$(SolutionDir)GraphicsFramework\vendor\SDL\include;$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GLEW_STATIC;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>SDL2.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>
+      </SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>cd $(SolutionDir)
+copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor\assimp\include;$(SolutionDir)GraphicsFramework\vendor\GLEW\include;$(SolutionDir)GraphicsFramework\vendor\Imgui;$(SolutionDir)GraphicsFramework\vendor\SDL\include;$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GLEW_STATIC;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>SDL2.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>
+      </SubSystem>
+    </Link>
+    <PostBuildEvent>
+      <Command>cd $(SolutionDir)
+copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="opengl\ElementArrayBuffer.cpp" />
+    <ClCompile Include="opengl\FrameBuffer.cpp" />
+    <ClCompile Include="opengl\Indexbuffer.cpp" />
+    <ClCompile Include="opengl\Mesh.cpp" />
+    <ClCompile Include="opengl\Model.cpp" />
+    <ClCompile Include="opengl\Renderer.cpp" />
+    <ClCompile Include="opengl\Shader.cpp" />
+    <ClCompile Include="opengl\Texture.cpp" />
+    <ClCompile Include="opengl\VertexArray.cpp" />
+    <ClCompile Include="opengl\VertexBuffer.cpp" />
+    <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\Engine.cpp" />
+    <ClCompile Include="src\Inputs.cpp" />
+    <ClCompile Include="vendor\Imgui\imgui.cpp" />
+    <ClCompile Include="vendor\Imgui\imgui_demo.cpp" />
+    <ClCompile Include="vendor\Imgui\imgui_draw.cpp" />
+    <ClCompile Include="vendor\Imgui\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="vendor\Imgui\imgui_impl_sdl.cpp" />
+    <ClCompile Include="vendor\Imgui\imgui_widgets.cpp" />
+    <ClCompile Include="vendor\stbi_image\stbi_image.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="opengl\ElementArrayBuffer.h" />
+    <ClInclude Include="opengl\FrameBuffer.h" />
+    <ClInclude Include="opengl\IndexBuffer.h" />
+    <ClInclude Include="opengl\Mesh.h" />
+    <ClInclude Include="opengl\Model.h" />
+    <ClInclude Include="opengl\Renderer.h" />
+    <ClInclude Include="opengl\Shader.h" />
+    <ClInclude Include="opengl\Texture.h" />
+    <ClInclude Include="opengl\VertexArray.h" />
+    <ClInclude Include="opengl\VertexBuffer.h" />
+    <ClInclude Include="src\Engine.h" />
+    <ClInclude Include="src\Inputs.h" />
+    <ClInclude Include="src\Singleton.h" />
+    <ClInclude Include="vendor\GLEW\include\GL\eglew.h" />
+    <ClInclude Include="vendor\GLEW\include\GL\glew.h" />
+    <ClInclude Include="vendor\GLEW\include\GL\glxew.h" />
+    <ClInclude Include="vendor\GLEW\include\GL\wglew.h" />
+    <ClInclude Include="vendor\Imgui\imconfig.h" />
+    <ClInclude Include="vendor\Imgui\imgui.h" />
+    <ClInclude Include="vendor\Imgui\imgui_impl_opengl3.h" />
+    <ClInclude Include="vendor\Imgui\imgui_impl_sdl.h" />
+    <ClInclude Include="vendor\Imgui\imgui_internal.h" />
+    <ClInclude Include="vendor\Imgui\imstb_rectpack.h" />
+    <ClInclude Include="vendor\Imgui\imstb_textedit.h" />
+    <ClInclude Include="vendor\Imgui\imstb_truetype.h" />
+    <ClInclude Include="vendor\SDL\include\begin_code.h" />
+    <ClInclude Include="vendor\SDL\include\close_code.h" />
+    <ClInclude Include="vendor\SDL\include\SDL.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_assert.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_atomic.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_audio.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_bits.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_blendmode.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_clipboard.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_config.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_cpuinfo.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_endian.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_error.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_events.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_filesystem.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_gamecontroller.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_gesture.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_haptic.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_hints.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_joystick.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_keyboard.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_keycode.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_loadso.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_log.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_main.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_messagebox.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_mouse.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_mutex.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_name.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_opengl.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_opengles.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_opengles2.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_pixels.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_platform.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_power.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_quit.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_rect.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_render.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_revision.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_rwops.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_scancode.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_shape.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_stdinc.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_surface.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_system.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_syswm.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_assert.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_common.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_compare.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_crc32.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_font.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_fuzzer.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_harness.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_images.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_log.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_md5.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_test_random.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_thread.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_timer.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_touch.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_types.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_version.h" />
+    <ClInclude Include="vendor\SDL\include\SDL_video.h" />
+    <ClInclude Include="vendor\stbi_image\stbi_image.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\crysis-nano-suit-2\scene.fbx" />
+    <None Include="res\gh_sample_animation.fbx" />
+    <None Include="src\shaders\Drawing.frag" />
+    <None Include="src\shaders\Drawing.vert" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
