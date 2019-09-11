@@ -19,15 +19,14 @@ VertexArray::VertexArray()
 
 VertexArray::~VertexArray()
 {
-	Delete();
 }
 
 void VertexArray::AddLayout()
 {
 	for (auto c : m_Elements)
 	{
-		GLCall(glVertexAttribPointer(m_Index, c.m_Count, c.m_Type, GL_FALSE, m_Stride, (const void*)m_Offset));
 		GLCall(glEnableVertexAttribArray(m_Index));
+		GLCall(glVertexAttribPointer(m_Index, c.m_Count, c.m_Type, GL_FALSE, m_Stride, (const void*)m_Offset));
 		m_Offset += c.m_Size * c.m_Count;
 		m_Index++;
 	}

@@ -17,7 +17,7 @@ void Mesh::Draw(Shader * shader)
 	unsigned int specularNum = 1;
 	unsigned int normalNum = 1;
 	unsigned int heightNum = 1;
-	for (unsigned int i = 0; i < mTextures.size(); ++i)
+	/*for (unsigned int i = 0; i < mTextures.size(); ++i)
 	{		
 		std::string number;
 		std::string name;
@@ -41,7 +41,7 @@ void Mesh::Draw(Shader * shader)
 		shader->SetUniform1i("Material." + name + number, i);
 
 		mTextures[i].texture->Bind(i);
-	}
+	}*/
 
 	VAO.Bind();
 	GLCall(glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_INT, 0));
@@ -52,16 +52,17 @@ void Mesh::Draw(Shader * shader)
 
 void Mesh::SetupMesh()
 {
-	VAO.AddBuffer(VBO);
+	VAO.Bind();
+	VBO.Bind();
 
 	VBO.AddData(&mVertices[0], mVertices.size() * sizeof(VertexData));
 
 	EBO.Bind();
 	EBO.AddData(&mIndices[0], mIndices.size() * sizeof(unsigned int));
 
-	VAO.Push(3, GL_FLOAT, sizeof(VertexData));
-	VAO.Push(3, GL_FLOAT, sizeof(VertexData));
-	VAO.Push(2, GL_FLOAT, sizeof(VertexData));
+	VAO.Push(3, GL_FLOAT, sizeof(float));
+	VAO.Push(3, GL_FLOAT, sizeof(float));
+	VAO.Push(2, GL_FLOAT, sizeof(float));
 	VAO.AddLayout();
 
 	VAO.Unbind();

@@ -10,6 +10,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 
 Shader* shader;
+Model demoModel;
+
 
 void Engine::Start()
 {
@@ -64,8 +66,7 @@ void Engine::Start()
 	
 	shader = new Shader("src/shaders/Drawing.vert", "src/shaders/Drawing.frag");
 
-	Model demoModel;
-	demoModel.LoadModel("res/crysis-nano-suit-2/scene.fbx");
+	demoModel.LoadModel("res/gh_sample_animation.fbx");
 	
 }
 
@@ -77,6 +78,8 @@ void Engine::Run()
 		Inputs::Instance().Update();
 
 		shader->Bind();
+
+		demoModel.Draw(shader);
 		
 		Renderer::Instance().SwapBuffers();
 	}

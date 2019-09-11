@@ -11,6 +11,5 @@ public:
 
 	bool appIsRunning;
 
-private:
 	SDL_Window* pWindow;	
 };
