@@ -173,6 +173,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Inputs.cpp" />
+    <ClCompile Include="src\Time.cpp" />
     <ClCompile Include="vendor\Imgui\imgui.cpp" />
     <ClCompile Include="vendor\Imgui\imgui_demo.cpp" />
     <ClCompile Include="vendor\Imgui\imgui_draw.cpp" />
@@ -196,6 +197,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\Inputs.h" />
     <ClInclude Include="src\Singleton.h" />
+    <ClInclude Include="src\Time.h" />
     <ClInclude Include="vendor\GLEW\include\GL\eglew.h" />
     <ClInclude Include="vendor\GLEW\include\GL\glew.h" />
     <ClInclude Include="vendor\GLEW\include\GL\glxew.h" />

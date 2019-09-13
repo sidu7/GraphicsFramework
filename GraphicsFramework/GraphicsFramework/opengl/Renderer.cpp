@@ -8,9 +8,11 @@ Author: Sidhant Tumma
 #include "Renderer.h"
 #include "VertexArray.h"
 #include "IndexBuffer.h"
+#include "VertexBuffer.h"
 #include "Shader.h"
 #include <iostream>
 #include "Shader.h"
+#include "../src/Camera.h"
 
 extern Shader *gpShader;
 extern Shader *gdShader;
@@ -39,6 +41,11 @@ void Renderer::Init(SDL_Window * window)
 	{
 		printf("Error initializing GLEW\n");
 	}
+
+	pCamera = new Camera();
+	pCamera->Init(45, -1, 1000);
+
+	InitPrimitiveModels();
 }
 
 void Renderer::Clear() const
@@ -80,4 +87,40 @@ void Renderer::DrawDebugLine(const VertexArray& va, const Shader& shader) const
 	shader.Bind();
 	va.Bind();
 	GLCall(glDrawArrays(GL_LINE_LOOP, 0, 2));
+}
+
+void Renderer::DrawQuad()
+{
+	//Quad
+	float positions_quad[] = {
+			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
+			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
+	};
+
+	unsigned int indices_quad[] = {
+		0, 1, 2,
+		2, 3, 0
+	};
+
+	VertexArray VAO_quad;
+	VertexBuffer VBO_quad;
+	IndexBuffer IBO_quad(indices_quad, 6);
+
+	VBO_quad.AddData(positions_quad, 5 * 4 * sizeof(float));
+
+	VAO_quad.AddBuffer(VBO_quad);
+	VAO_quad.Push(3, GL_FLOAT, sizeof(float));
+	VAO_quad.Push(2, GL_FLOAT, sizeof(float));
+	VAO_quad.AddLayout();
+	VBO_quad.Unbind();
+	IBO_quad.Bind();
+
+	GLCall(glDrawElements(GL_TRIANGLES, IBO_quad.GetCount(), GL_UNSIGNED_INT, nullptr));
+	VAO_quad.Unbind();
+}
+
+void Renderer::InitPrimitiveModels()
+{
 }

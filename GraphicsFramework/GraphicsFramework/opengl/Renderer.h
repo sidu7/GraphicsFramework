@@ -12,6 +12,7 @@ Author: Sidhant Tumma
 #include "SDL.h"
 
 class SDL_Window;
+class Camera;
 
 #define ASSERT(x) if (!(x)) __debugbreak();
 #define GLCall(x) GLClearError();\
@@ -29,7 +30,7 @@ class Shader;
 
 class Renderer
 {
-	SINGLETON(Renderer);
+	SINGLETON(Renderer)
 public:
 	void Init(SDL_Window* pWindow);
 	void Clear() const;
@@ -39,7 +40,14 @@ public:
 	void DebugDraw(const VertexArray & va, const IndexBuffer & ib, const Shader & shader) const;
 	void DrawDebugCircle(const VertexArray& va, const Shader& shader) const;
 	void DrawDebugLine(const VertexArray& va, const Shader& shader) const;
+	void DrawQuad();
+
+private:
+	void InitPrimitiveModels();
 
 private:
 	SDL_Window* pWindow;
+
+public:
+	Camera* pCamera;	
 };
