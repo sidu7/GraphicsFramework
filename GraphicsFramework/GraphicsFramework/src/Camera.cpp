@@ -3,17 +3,20 @@
 #include "Time.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "Engine.h"
+#include <iostream>
 
 extern Engine* engine;
 
-void Camera::Init(int FOVangle,int nearPlane, int farPlane)
+void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 {
-	mSpeed = 0.0f;
+	mSpeed = 0.01f;
 	mCameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 	mCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	mCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec2 wSize = engine->GetWindowSize();
-	mProjection = glm::perspectiveFov(FOVangle, (int)wSize.x, (int)wSize.y, nearPlane, farPlane);
+	mProjection = glm::perspective(FOVangle, wSize.x/wSize.y, nearPlane, farPlane);
+	pitch = 0.0f;
+	yaw = -90.0f;
 }
 
 void Camera::Update()
@@ -36,4 +39,34 @@ void Camera::Update()
 	}
 
 	mView = glm::lookAt(mCameraPos, mCameraPos + mCameraFront, mCameraUp);
+}
+
+void Camera::MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent)
+{
+	glm::vec2 wSize = engine->GetWindowSize();
+	if (Inputs::Instance().IsMousePressed(SDL_BUTTON_LEFT))
+	{
+		float sensitivity = 0.05f;
+		pitch += (lastMouseY - mouseEvent.y) * sensitivity;
+		yaw += (mouseEvent.x - lastMouseX) * sensitivity;
+		lastMouseY = mouseEvent.y;
+		lastMouseX = mouseEvent.x;
+
+		
+		if (pitch >  89.0f)
+			pitch =  89.0f;
+		if (pitch < -89.0f)
+			pitch = -89.0f;
+
+		glm::vec3 front;
+		front.x = glm::cos(glm::radians(pitch)) * glm::cos(glm::radians(yaw));
+		front.y = glm::sin(glm::radians(pitch));
+		front.z = glm::cos(glm::radians(pitch)) * glm::sin(glm::radians(yaw));
+		mCameraFront = glm::normalize(front);
+	}
+	else
+	{
+		lastMouseX = mouseEvent.x;
+		lastMouseY = mouseEvent.y;
+	}
 }

@@ -1,5 +1,6 @@
 #include "Inputs.h"
 #include "Engine.h"
+#include "Camera.h"
 
 extern Engine* engine;
 
@@ -30,6 +31,10 @@ void Inputs::Update()
 		if (e.type == SDL_MOUSEBUTTONUP)
 		{
 			mCurrentMouseState[e.button.button - 1] = false;
+		}
+		if (e.type == SDL_MOUSEMOTION)
+		{
+			engine->pCamera->MouseMotionCallBack(e.motion);
 		}
 	}
 
@@ -91,6 +96,24 @@ bool Inputs::IsReleased(unsigned int KeyScanCode)
 bool Inputs::IsMouseClicked(unsigned int KeyScanCode)
 {
 	if (mCurrentMouseState[KeyScanCode - 1] && !mPrevMouseState[KeyScanCode - 1])
+	{
+		return true;
+	}
+	return false;
+}
+
+bool Inputs::IsMousePressed(unsigned int KeyScanCode)
+{
+	if (mCurrentMouseState[KeyScanCode - 1])
+	{
+		return true;
+	}
+	return false;
+}
+
+bool Inputs::IsMouseReleased(unsigned int KeyScanCode)
+{
+	if (!mCurrentMouseState[KeyScanCode - 1] && mPrevMouseState[KeyScanCode - 1])
 	{
 		return true;
 	}

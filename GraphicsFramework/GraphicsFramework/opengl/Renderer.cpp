@@ -12,7 +12,6 @@ Author: Sidhant Tumma
 #include "Shader.h"
 #include <iostream>
 #include "Shader.h"
-#include "../src/Camera.h"
 
 extern Shader *gpShader;
 extern Shader *gdShader;
@@ -41,9 +40,6 @@ void Renderer::Init(SDL_Window * window)
 	{
 		printf("Error initializing GLEW\n");
 	}
-
-	pCamera = new Camera();
-	pCamera->Init(45, -1, 1000);
 
 	InitPrimitiveModels();
 }

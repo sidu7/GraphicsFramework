@@ -16,7 +16,13 @@ public:
 	bool IsReleased(unsigned int KeyScanCode);
 
 	bool IsMouseClicked(unsigned int KeyScanCode);
+	bool IsMousePressed(unsigned int KeyScanCode);
+	bool IsMouseReleased(unsigned int KeyScanCode);
 	glm::vec2 GetMouseLocation();
+
+private:
+	void MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent);
+
 private:
 	Uint8 mCurrentKeyState[512];
 	Uint8 mPreviousKeyState[512];

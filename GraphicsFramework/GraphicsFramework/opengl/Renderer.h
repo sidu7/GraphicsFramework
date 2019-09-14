@@ -46,8 +46,5 @@ private:
 	void InitPrimitiveModels();
 
 private:
-	SDL_Window* pWindow;
-
-public:
-	Camera* pCamera;	
+	SDL_Window* pWindow;	
 };

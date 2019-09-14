@@ -3,6 +3,8 @@
 #include <SDL.h>
 #include <glm/glm.hpp>
 
+class Camera;
+
 class Engine
 {
 public:
@@ -15,4 +17,6 @@ public:
 	bool appIsRunning;
 
 	SDL_Window* pWindow;
+
+	Camera* pCamera;
 };

@@ -10,6 +10,7 @@
 #include <iostream>
 #include "../opengl/Model.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "Camera.h"
 
 Shader* shader;
 Model demoModel;
@@ -72,9 +73,12 @@ void Engine::Start()
 	demoModel.LoadModel("res/gh_sample_animation.fbx");
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(0.5f));
+	model = glm::scale(model, glm::vec3(1.0f));
 	shader->Bind();
 	shader->SetUniformMat4f("model", model);
+
+	pCamera = new Camera();
+	pCamera->Init(glm::radians(45.0f), 0.1f, 100.0f);
 }
 
 void Engine::Run()
@@ -84,13 +88,13 @@ void Engine::Run()
 		Time::Instance().FrameStart();
 		Renderer::Instance().Clear();
 		Inputs::Instance().Update();
-		Renderer::Instance().pCamera->Update();
+		pCamera->Update();
 
 		shader->Bind();
-		shader->SetUniformMat4f("view", Renderer::Instance().pCamera->mView);
-		shader->SetUniformMat4f("projection", Renderer::Instance().pCamera->mProjection);
-		Renderer::Instance().DrawQuad();
-		//demoModel.Draw(shader);
+		shader->SetUniformMat4f("view", pCamera->mView);
+		shader->SetUniformMat4f("projection", pCamera->mProjection);
+		//Renderer::Instance().DrawQuad();
+		demoModel.Draw(shader);
 		
 		Renderer::Instance().SwapBuffers();
 		Time::Instance().FrameEnd();
