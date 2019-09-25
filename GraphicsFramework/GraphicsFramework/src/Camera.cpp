@@ -23,7 +23,14 @@ void Camera::Update()
 {
 	if (Inputs::Instance().IsPressed(SDL_SCANCODE_W))
 	{
-		mCameraPos += mSpeed * Time::Instance().deltaTime * mCameraFront;
+		if (Inputs::Instance().IsMousePressed(SDL_BUTTON_RIGHT))
+		{
+			mCameraPos += mSpeed * Time::Instance().deltaTime * mCameraUp;
+		}
+		else
+		{
+			mCameraPos += mSpeed * Time::Instance().deltaTime * mCameraFront;
+		}
 	}
 	if (Inputs::Instance().IsPressed(SDL_SCANCODE_A))
 	{
@@ -31,7 +38,14 @@ void Camera::Update()
 	}
 	if (Inputs::Instance().IsPressed(SDL_SCANCODE_S))
 	{
-		mCameraPos -= mSpeed * Time::Instance().deltaTime * mCameraFront;
+		if (Inputs::Instance().IsMousePressed(SDL_BUTTON_RIGHT))
+		{
+			mCameraPos -= mSpeed * Time::Instance().deltaTime * mCameraUp;
+		}
+		else
+		{
+			mCameraPos -= mSpeed * Time::Instance().deltaTime * mCameraFront;
+		}
 	}
 	if (Inputs::Instance().IsPressed(SDL_SCANCODE_D))
 	{

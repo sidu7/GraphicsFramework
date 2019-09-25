@@ -25,7 +25,7 @@ void GLClearError();
 bool GLLogCall(const char* function, const char* file, int line);
 
 class VertexArray;
-class IndexBuffer;
+class ElementArrayBuffer;
 class Shader;
 
 class Renderer
@@ -36,8 +36,8 @@ public:
 	void Clear() const;
 	void SwapBuffers() const;
 
-	void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
-	void DebugDraw(const VertexArray & va, const IndexBuffer & ib, const Shader & shader) const;
+	void Draw(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const;
+	void DebugDraw(const VertexArray & va, const ElementArrayBuffer& ib, const Shader & shader) const;
 	void DrawDebugCircle(const VertexArray& va, const Shader& shader) const;
 	void DrawDebugLine(const VertexArray& va, const Shader& shader) const;
 	void DrawQuad();

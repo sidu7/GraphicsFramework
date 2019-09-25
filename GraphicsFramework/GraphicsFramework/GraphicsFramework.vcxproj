@@ -28,7 +28,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -161,7 +161,6 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
   <ItemGroup>
     <ClCompile Include="opengl\ElementArrayBuffer.cpp" />
     <ClCompile Include="opengl\FrameBuffer.cpp" />
-    <ClCompile Include="opengl\Indexbuffer.cpp" />
     <ClCompile Include="opengl\Mesh.cpp" />
     <ClCompile Include="opengl\Model.cpp" />
     <ClCompile Include="opengl\Renderer.cpp" />
@@ -173,6 +172,8 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Inputs.cpp" />
+    <ClCompile Include="src\Light.cpp" />
+    <ClCompile Include="src\ShapeManager.cpp" />
     <ClCompile Include="src\Time.cpp" />
     <ClCompile Include="vendor\Imgui\imgui.cpp" />
     <ClCompile Include="vendor\Imgui\imgui_demo.cpp" />
@@ -185,7 +186,6 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
   <ItemGroup>
     <ClInclude Include="opengl\ElementArrayBuffer.h" />
     <ClInclude Include="opengl\FrameBuffer.h" />
-    <ClInclude Include="opengl\IndexBuffer.h" />
     <ClInclude Include="opengl\Mesh.h" />
     <ClInclude Include="opengl\Model.h" />
     <ClInclude Include="opengl\Renderer.h" />
@@ -196,6 +196,8 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\Inputs.h" />
+    <ClInclude Include="src\Light.h" />
+    <ClInclude Include="src\ShapeManager.h" />
     <ClInclude Include="src\Singleton.h" />
     <ClInclude Include="src\Time.h" />
     <ClInclude Include="vendor\GLEW\include\GL\eglew.h" />
@@ -281,6 +283,8 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <None Include="res\gh_sample_animation.fbx" />
     <None Include="src\shaders\Drawing.frag" />
     <None Include="src\shaders\Drawing.vert" />
+    <None Include="src\shaders\Lighting.frag" />
+    <None Include="src\shaders\Lighting.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

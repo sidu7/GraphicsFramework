@@ -7,7 +7,7 @@ Author: Sidhant Tumma
 
 #include "Renderer.h"
 #include "VertexArray.h"
-#include "IndexBuffer.h"
+#include "ElementArrayBuffer.h"
 #include "VertexBuffer.h"
 #include "Shader.h"
 #include <iostream>
@@ -41,12 +41,15 @@ void Renderer::Init(SDL_Window * window)
 		printf("Error initializing GLEW\n");
 	}
 
+	GLCall(glEnable(GL_DEPTH_TEST));
+	GLCall(glBlendFunc(GL_ONE, GL_ONE));
+
 	InitPrimitiveModels();
 }
 
 void Renderer::Clear() const
 {
-	GLCall(glClear(GL_COLOR_BUFFER_BIT));
+	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
@@ -55,7 +58,7 @@ void Renderer::SwapBuffers() const
 	SDL_GL_SwapWindow(pWindow);
 }
 
-void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const
+void Renderer::Draw(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const
 {
 	shader.Bind();
 	va.Bind();
@@ -63,7 +66,7 @@ void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& 
 	GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
 }
 
-void Renderer::DebugDraw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const
+void Renderer::DebugDraw(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const
 {
 	shader.Bind();
 	va.Bind();
@@ -89,10 +92,10 @@ void Renderer::DrawQuad()
 {
 	//Quad
 	float positions_quad[] = {
-			-0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-			 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-			 0.5f,  0.5f, 0.0f, 1.0f, 1.0f,
-			-0.5f,  0.5f, 0.0f, 0.0f, 1.0f
+			-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+			 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+			 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+			-1.0f,  1.0f, 0.0f, 0.0f, 1.0f
 	};
 
 	unsigned int indices_quad[] = {
@@ -102,9 +105,10 @@ void Renderer::DrawQuad()
 
 	VertexArray VAO_quad;
 	VertexBuffer VBO_quad;
-	IndexBuffer IBO_quad(indices_quad, 6);
+	ElementArrayBuffer IBO_quad;
 
 	VBO_quad.AddData(positions_quad, 5 * 4 * sizeof(float));
+	IBO_quad.AddData(indices_quad, 6, sizeof(unsigned int));
 
 	VAO_quad.AddBuffer(VBO_quad);
 	VAO_quad.Push(3, GL_FLOAT, sizeof(float));

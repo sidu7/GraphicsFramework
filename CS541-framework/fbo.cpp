@@ -1,78 +1,120 @@
-///////////////////////////////////////////////////////////////////////
-// A slight encapsulation of a Frame Buffer Object (i'e' Render
-// Target) and its associated texture.  When the FBO is "Bound", the
-// output of the graphics pipeline is captured into the texture.  When
-// it is "Unbound", the texture is available for use as any normal
-// texture.
-////////////////////////////////////////////////////////////////////////
-
-#include <glbinding/gl/gl.h>
-#include <glbinding/Binding.h>
-using namespace gl;
-
+/* Start Header -------------------------------------------------------
+Copyright (C) 2018-2019 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the prior
+written consent of DigiPen Institute of Technology is prohibited.
+Author: Sidhant Tumma
+- End Header --------------------------------------------------------*/
 #include "fbo.h"
 
-void FBO::CreateFBO(const int w, const int h, const int t_count = 1)
+void GLClearError()
 {
-    width = w;
-    height = h;
-	texCount = t_count;
+	while (glGetError() != GL_NO_ERROR);
+}
 
-    glGenFramebuffersEXT(1, &fboID);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID);
-
-    // Create a render buffer, and attach it to FBO's depth attachment
-    unsigned int depthBuffer;
-    glGenRenderbuffersEXT(1, &depthBuffer);
-    glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, depthBuffer);
-    glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT,
-                             width, height);
-    glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT,
-                                 GL_RENDERBUFFER_EXT, depthBuffer);
-
-    // Create a texture and attach FBO's color 0 attachment.  The
-    // GL_RGBA32F and GL_RGBA constants set this texture to be 32 bit
-    // floats for each of the 4 components.  Many other choices are
-    // possible.
-	gl::GLenum* attachments = new gl::GLenum[texCount];
-
-	for (unsigned int i = 0; i < t_count; ++i)
+bool GLLogCall(const char* function, const char* file, int line)
+{
+	while (bool error = (bool)gl::glGetError())
 	{
-		glGenTextures(1, &textureID[i]);
-		glBindTexture(GL_TEXTURE_2D, textureID[i]);
-		glTexImage2D(GL_TEXTURE_2D, 0, (int)GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, NULL);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+		std::cout << "[OpenGl Error] (" << std::hex << (gl::GLenum)error << std::dec << "):" << function << " " << file << ":" << line << std::endl;
+		return false;
+	}
+	return true;
+}
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (int)GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (int)GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (int)GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (int)GL_LINEAR);
+FrameBuffer::FrameBuffer(int width, int height, int Texcount) : mWidth(width), mHeight(height), mTexCount(Texcount), m_TextureID(nullptr)
+{
+	GLCall(glGenFramebuffers(1, &m_RendererID));
+	GLCall(glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID));
 
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT + i,
-			GL_TEXTURE_2D, textureID[i], 0);
+	m_TextureID = new unsigned int[mTexCount];
+	GLenum* attachments = new GLenum[mTexCount];
 
-		attachments[i] = GL_COLOR_ATTACHMENT0_EXT + i;
+	// create floating point color buffers
+	glGenTextures(mTexCount, m_TextureID);
+	for (unsigned int i = 0; i < mTexCount; i++)
+	{
+		GLCall(glBindTexture(GL_TEXTURE_2D, m_TextureID[i]));
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, (GLint)GL_RGB16F, mWidth, mHeight, 0, GL_RGB, GL_FLOAT, 0));
+
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint)GL_LINEAR));
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint)GL_LINEAR));
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLint)GL_CLAMP_TO_EDGE));  // we clamp to the edge as the blur filter would otherwise sample repeated texture values!
+		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLint)GL_CLAMP_TO_EDGE));
+		// attach texture to framebuffer
+		GLCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_TextureID[i], 0));
+		attachments[i] = GL_COLOR_ATTACHMENT0 + i;
 	}
 
-	glDrawBuffers(texCount, attachments);
+	// create and attach depth buffer (renderbuffer)
+	unsigned int rboDepth;
+	GLCall(glGenRenderbuffers(1, &mDepthBuffer));
+	GLCall(glBindRenderbuffer(GL_RENDERBUFFER, mDepthBuffer));
+	GLCall(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, mWidth, mHeight));
+	GLCall(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, mDepthBuffer));
 
-    // Check for completeness/correctness
-    int status = (int)glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-    if (status != int(GL_FRAMEBUFFER_COMPLETE_EXT))
-        printf("FBO Error: %d\n", status);
+	// tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+	GLCall(glDrawBuffers(mTexCount, attachments));
 
-    // Unbind the fbo until it's ready to be used
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	// finally check if framebuffer is complete
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Error building FrameBuffer" << std::endl;
+
+	GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
 	delete[] attachments;
 }
 
+FrameBuffer::~FrameBuffer()
+{
+	delete[] m_TextureID;
+	Delete();
+}
 
-void FBO::Bind() { glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fboID); }
-void FBO::Unbind() { glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0); }
+void FrameBuffer::Bind() const
+{
+	//glViewport(0, 0, mWidth, mHeight);
+	GLCall(glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID));
+	//Clear();
+}
 
-void FBO::BindTexture(unsigned int index = 0, unsigned int slot = 0)
+void FrameBuffer::Unbind() const
+{
+	GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+	Clear();
+}
+
+void FrameBuffer::TexBind(unsigned int index, unsigned int slot)
 {
 	glActiveTexture(GL_TEXTURE0 + slot);
-	glBindTexture(GL_TEXTURE_2D, textureID[index]);
+	glBindTexture(GL_TEXTURE_2D, m_TextureID[index]);
+}
+
+void FrameBuffer::TexUnbind(unsigned int index)
+{
+
+}
+
+void FrameBuffer::Clear() const
+{
+	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+}
+
+void FrameBuffer::DepthBind()
+{
+
+}
+
+void FrameBuffer::DepthUnbind()
+{
+
+}
+
+void FrameBuffer::Delete() const
+{
+	GLCall(glDeleteFramebuffers(1, &m_RendererID));
+}
+
+void FrameBuffer::ChangeSize(unsigned int width, unsigned int height)
+{
+	
 }

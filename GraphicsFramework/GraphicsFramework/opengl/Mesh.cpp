@@ -58,7 +58,7 @@ void Mesh::SetupMesh()
 	VBO.AddData(&mVertices[0], mVertices.size() * sizeof(VertexData));
 
 	EBO.Bind();
-	EBO.AddData(&mIndices[0], mIndices.size() * sizeof(unsigned int));
+	EBO.AddData(&mIndices[0], mIndices.size(), sizeof(unsigned int));
 
 	VAO.Push(3, GL_FLOAT, sizeof(float));
 	VAO.Push(3, GL_FLOAT, sizeof(float));

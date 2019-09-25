@@ -1,20 +1,38 @@
-///////////////////////////////////////////////////////////////////////
-// A slight encapsulation of a Frame Buffer Object (i'e' Render
-// Target) and its associated texture.  When the FBO is "Bound", the
-// output of the graphics pipeline is captured into the texture.  When
-// it is "Unbound", the texture is available for use as any normal
-// texture.
-////////////////////////////////////////////////////////////////////////
+#pragma once
+#include "glbinding/gl/gl.h"
+#include <iostream>
 
-class FBO {
+using namespace gl;
+
+#define ASSERT(x) if (!(x)) __debugbreak();
+#define GLCall(x) GLClearError();\
+	x;\
+	ASSERT(GLLogCall(#x,__FILE__,__LINE__))
+
+void GLClearError();
+bool GLLogCall(const char* function, const char* file, int line);
+
+class FrameBuffer
+{
+private:
+	unsigned int m_RendererID;
+
 public:
-    unsigned int fboID;
-    unsigned int textureID[8];
-    int width, height;  // Size of the texture.
-	unsigned int texCount;
+	unsigned int* m_TextureID;
+	unsigned int mWidth, mHeight, mDepthBuffer;
+	unsigned int mTexCount;
+public:
+	FrameBuffer(int width, int height, int Texcount = 1);
+	FrameBuffer() { }
+	~FrameBuffer();
 
-	void CreateFBO(const int w, const int h, const int t_count = 1);
-    void Bind();
-    void Unbind();
-	void BindTexture(unsigned int index = 0, unsigned int slot = 0);
+	void Bind() const;
+	void Unbind() const;
+	void TexBind(unsigned int index = 0, unsigned int slot = 0);
+	void TexUnbind(unsigned int index = 0);
+	void Clear() const;
+	void DepthBind();
+	void DepthUnbind();
+	void Delete() const;
+	void ChangeSize(unsigned int width, unsigned int height);
 };

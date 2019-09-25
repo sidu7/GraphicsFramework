@@ -17,6 +17,7 @@ public:
 	bool appIsRunning;
 
 	SDL_Window* pWindow;
+	int scrWidth, scrHeight;
 
 	Camera* pCamera;
 };

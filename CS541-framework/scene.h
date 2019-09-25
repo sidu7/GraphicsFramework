@@ -16,7 +16,7 @@
 #include "object.h"
 #include "texture.h"
 
-class FBO;
+class FrameBuffer;
 
 enum ObjectIds {
     nullId	= 0,
@@ -75,10 +75,11 @@ public:
     // Shader programs
     ShaderProgram* lightingProgram;
 	ShaderProgram* shadowProgram;
+	ShaderProgram* sceneDraw;
 
 	//FBO for ShadowMap
-	FBO* shadowMap;
-	FBO* G_Buffer;
+	FrameBuffer* shadowMap;
+	FrameBuffer* G_Buffer;
 
     //void append(Object* m) { objects.push_back(m); }
 

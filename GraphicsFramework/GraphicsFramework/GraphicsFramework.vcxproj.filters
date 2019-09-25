@@ -21,9 +21,6 @@
     <ClCompile Include="opengl\FrameBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\Indexbuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="opengl\Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -81,12 +78,15 @@
     <ClCompile Include="src\Time.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShapeManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="opengl\FrameBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="opengl\IndexBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="opengl\Renderer.h">
@@ -359,11 +359,19 @@
     <ClInclude Include="src\Time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ShapeManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\Drawing.vert" />
     <None Include="src\shaders\Drawing.frag" />
     <None Include="res\gh_sample_animation.fbx" />
     <None Include="res\crysis-nano-suit-2\scene.fbx" />
+    <None Include="src\shaders\Lighting.vert" />
+    <None Include="src\shaders\Lighting.frag" />
   </ItemGroup>
 </Project>
