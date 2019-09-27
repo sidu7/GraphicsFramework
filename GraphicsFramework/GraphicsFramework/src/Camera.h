@@ -13,9 +13,9 @@ public:
 	float mSpeed;
 	glm::mat4 mView;
 	glm::mat4 mProjection;
+	glm::vec3 mCameraPos;
 
 private:
-	glm::vec3 mCameraPos;
 	glm::vec3 mCameraFront;
 	glm::vec3 mCameraUp;
 	float pitch;

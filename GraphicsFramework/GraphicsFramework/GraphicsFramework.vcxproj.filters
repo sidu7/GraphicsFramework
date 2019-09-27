@@ -84,6 +84,9 @@
     <ClCompile Include="src\ShapeManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="opengl\FrameBuffer.h">
@@ -365,6 +368,9 @@
     <ClInclude Include="src\ShapeManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\Drawing.vert" />
@@ -373,5 +379,7 @@
     <None Include="res\crysis-nano-suit-2\scene.fbx" />
     <None Include="src\shaders\Lighting.vert" />
     <None Include="src\shaders\Lighting.frag" />
+    <None Include="src\shaders\Ambient.vert" />
+    <None Include="src\shaders\Ambient.frag" />
   </ItemGroup>
 </Project>

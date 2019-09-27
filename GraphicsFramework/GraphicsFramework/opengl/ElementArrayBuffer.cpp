@@ -7,7 +7,7 @@ ElementArrayBuffer::ElementArrayBuffer()
 
 ElementArrayBuffer::~ElementArrayBuffer()
 {
-	GLCall(glDeleteBuffers(1, &m_RendererID));
+	//GLCall(glDeleteBuffers(1, &m_RendererID));
 }
 
 void ElementArrayBuffer::AddData(const void* data, unsigned int count, unsigned int size)

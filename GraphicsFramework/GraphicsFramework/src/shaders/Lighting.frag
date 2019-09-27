@@ -12,14 +12,15 @@ uniform sampler2D diffusetex;
 uniform sampler2D specularalpha;
 
 uniform vec3 lightPos;
-uniform vec3 eyePos;
 uniform vec3 Light;
-uniform vec3 Ambient;
+uniform int GBufferShow;
+uniform mat4 inverseview;
 
 void main()
 {	
 	vec3 worldPos = texture(worldpostex,TexCoord).rgb;
 	vec3 lightVec = lightPos - worldPos;
+	vec3 eyePos = (inverseview * vec4(0,0,0,1)).xyz;
 	vec3 eyeVec = eyePos - worldPos;
 
 	vec3 N = normalize(texture(normaltex,TexCoord).rgb);
@@ -32,17 +33,27 @@ void main()
 
 	vec3 Kd = texture(diffusetex,TexCoord).rgb;
 	vec4 value = texture(specularalpha,TexCoord);
-	vec3 Ks = value.rgb/10.0;
+	vec3 Ks = value.rgb;
 	
 	float alp = value.w;
 	vec3 Ii = Light;
-	vec3 Ia = Ambient;
 
 	vec3 F = Ks + (vec3(1,1,1)-Ks)*pow((1-LH),5);
 	float D = (alp+2) * pow(NH,alp) / (2*pi);
 
 	vec3 BRDF = (Kd/pi) + ((F*D)/(4*pow(LH,2)));
 
-    FragColor = vec4(Ia*Kd + Ii * NL * BRDF,1.0);
-	//FragColor = vec4(texture(specularalpha,TexCoord).xyz,1.0);
+	switch(GBufferShow)
+	{
+		case 0: FragColor = vec4(Ii * NL * BRDF,1.0);
+				break;
+		case 1: FragColor = vec4(texture(normaltex,TexCoord).xyz,1.0);
+				break;
+		case 2: FragColor = vec4(texture(worldpostex,TexCoord).xyz,1.0);
+				break;
+		case 3: FragColor = vec4(texture(diffusetex,TexCoord).xyz,1.0);
+				break;
+		case 4: FragColor = vec4(texture(specularalpha,TexCoord).xyz,1.0);
+				break;
+	}
 }

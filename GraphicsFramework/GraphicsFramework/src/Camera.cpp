@@ -10,7 +10,7 @@ extern Engine* engine;
 void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 {
 	mSpeed = 0.01f;
-	mCameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+	mCameraPos = glm::vec3(0.0f, 10.0f, 50.0f);
 	mCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	mCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec2 wSize = engine->GetWindowSize();

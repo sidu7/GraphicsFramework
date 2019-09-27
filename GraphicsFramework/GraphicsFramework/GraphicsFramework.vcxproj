@@ -173,6 +173,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClCompile Include="src\Engine.cpp" />
     <ClCompile Include="src\Inputs.cpp" />
     <ClCompile Include="src\Light.cpp" />
+    <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\ShapeManager.cpp" />
     <ClCompile Include="src\Time.cpp" />
     <ClCompile Include="vendor\Imgui\imgui.cpp" />
@@ -197,6 +198,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\Inputs.h" />
     <ClInclude Include="src\Light.h" />
+    <ClInclude Include="src\Scene.h" />
     <ClInclude Include="src\ShapeManager.h" />
     <ClInclude Include="src\Singleton.h" />
     <ClInclude Include="src\Time.h" />
@@ -281,6 +283,8 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
   <ItemGroup>
     <None Include="res\crysis-nano-suit-2\scene.fbx" />
     <None Include="res\gh_sample_animation.fbx" />
+    <None Include="src\shaders\Ambient.frag" />
+    <None Include="src\shaders\Ambient.vert" />
     <None Include="src\shaders\Drawing.frag" />
     <None Include="src\shaders\Drawing.vert" />
     <None Include="src\shaders\Lighting.frag" />
