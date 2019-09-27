@@ -107,14 +107,12 @@ void Engine::Run()
 {
 	while (appIsRunning)
 	{
-		Time::Instance().FrameStart();
+		Time::Instance().FrameStart();		
 		Renderer::Instance().Clear();
 		Inputs::Instance().Update();
 		pCamera->Update();
 		light->HandleInputs();
 
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
 		G_Buffer->Bind();
 		shader->Bind();
 		shader->SetUniformMat4f("view", pCamera->mView);
@@ -162,7 +160,7 @@ void Engine::Run()
 		G_Buffer->Unbind();
 
 		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
+		glEnable(GL_BLEND);
 
 		lighting->Bind();
 		G_Buffer->TexBind(0, 1);
@@ -179,6 +177,10 @@ void Engine::Run()
 		Renderer::Instance().DrawQuad();
 		lighting->Unbind();
 		
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
+		//glBlendFunc(GL_ONE, GL_ONE);
+
 		Renderer::Instance().SwapBuffers();
 		Time::Instance().FrameEnd();
 	}
