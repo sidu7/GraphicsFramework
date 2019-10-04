@@ -86,9 +86,6 @@ void Scene::Draw()
 	shader->Unbind();
 	G_Buffer->Unbind();
 
-	//glViewport(0, 0, ShadowMap->mWidth, ShadowMap->mHeight);
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	//ShadowMap pass
 	ShadowMap->Bind();
 	shadow->Bind();

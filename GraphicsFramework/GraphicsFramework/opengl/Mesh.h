@@ -23,8 +23,8 @@ public:
 		glm::vec3 Position;
 		glm::vec3 Normal;
 		glm::vec2 TexCoords;
-		glm::ivec4 BoneIndex;
-		glm::vec4 BoneWeights;
+		//glm::ivec4 BoneIndex;
+		//glm::vec4 BoneWeights;
 	};
 
 	struct TextureData
