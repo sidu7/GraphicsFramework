@@ -6,6 +6,7 @@
 #include "VertexArray.h"
 #include "VertexBuffer.h"
 #include "ElementArrayBuffer.h"
+#include "Quaternion.h"
 
 #define DIFFUSE "texture_diffuse"
 #define SPECULAR "texture_specular"
@@ -22,6 +23,8 @@ public:
 		glm::vec3 Position;
 		glm::vec3 Normal;
 		glm::vec2 TexCoords;
+		glm::ivec4 BoneIndex;
+		glm::vec4 BoneWeights;
 	};
 
 	struct TextureData

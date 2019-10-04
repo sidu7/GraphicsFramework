@@ -87,6 +87,15 @@
     <ClCompile Include="src\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\ImguiManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AnimationScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="opengl\Quaternion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="opengl\FrameBuffer.h">
@@ -371,6 +380,15 @@
     <ClInclude Include="src\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ImguiManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AnimationScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="opengl\Quaternion.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\shaders\Drawing.vert" />
@@ -381,5 +399,11 @@
     <None Include="src\shaders\Lighting.frag" />
     <None Include="src\shaders\Ambient.vert" />
     <None Include="src\shaders\Ambient.frag" />
+    <None Include="src\shaders\Shadow.vert" />
+    <None Include="src\shaders\Shadow.frag" />
+    <None Include="src\shaders\LocalLight.vert" />
+    <None Include="src\shaders\LocalLight.frag" />
+    <None Include="src\animshaders\ModelDraw.vert" />
+    <None Include="src\animshaders\ModelDraw.frag" />
   </ItemGroup>
 </Project>

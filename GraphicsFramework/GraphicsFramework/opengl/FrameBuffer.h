@@ -18,8 +18,7 @@ public:
 	unsigned int mWidth, mHeight, mDepthBuffer;
 	unsigned int mTexCount;
 public:
-	FrameBuffer(int width, int height, int Texcount);
-	FrameBuffer() { }
+	FrameBuffer(int width, int height, int Texcount = 1);
 	~FrameBuffer();
 
 	void Bind() const;

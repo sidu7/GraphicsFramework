@@ -14,7 +14,7 @@ uniform float shininess;
 
 void main()
 {    
-	Normals.xyz = normalVec;
+	Normals.xyz = normalize(normalVec);
 	WorldPosition.xyz = worldPos;
 	DiffuseColor.xyz = diffuse;
 	SpecularAlpha.xyz = specular;

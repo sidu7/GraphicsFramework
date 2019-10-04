@@ -12,6 +12,6 @@ int main(int argc, char* args[])
 	engine->Run();
 	engine->Stop();
 
-	system("pause");
+	//system("pause");
 	return 0;
 }

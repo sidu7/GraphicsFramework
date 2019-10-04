@@ -15,6 +15,8 @@
 #include "ShapeManager.h"
 #include "../opengl/FrameBuffer.h"
 #include "Scene.h"
+#include "ImguiManager.h"
+#include "AnimationScene.h"
 
 
 void Engine::Start()
@@ -57,7 +59,7 @@ void Engine::Start()
 	}
 
 
-	SDL_GLContext glContext = SDL_GL_CreateContext(pWindow);
+	glContext = SDL_GL_CreateContext(pWindow);
 	if (glContext == NULL)
 	{
 		printf("OpenGL context could not be created. SDL Error: %s\n", SDL_GetError());
@@ -70,23 +72,39 @@ void Engine::Start()
 	Renderer::Instance().Init(pWindow);
 	Time::Instance().Init(60);
 	ShapeManager::Instance().Init();
-	Scene::Instance().Init();
+	ImguiManager::Instance().Init();
+	//CS562
+	//Scene::Instance().Init();
+
+	//CS560
+	AnimationScene::Instance().Init();
 		
 	pCamera = new Camera();
-	pCamera->Init(glm::radians(45.0f), 0.1f, 100.0f);	
+	pCamera->Init(glm::radians(45.0f), 0.1f, 2000.0f);
+
+	glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+	Quaternion q(model);
+	glm::mat4 ret = q.matrix();
 }
 
 void Engine::Run()
 {
 	while (appIsRunning)
 	{
-		Time::Instance().FrameStart();		
+		Time::Instance().FrameStart();	
+		ImguiManager::Instance().StartFrame();
+
 		Renderer::Instance().Clear();
 		Inputs::Instance().Update();
 		pCamera->Update();
 		
-		Scene::Instance().Draw();
-		
+		//CS562
+		//Scene::Instance().Draw();
+
+		//CS560
+		AnimationScene::Instance().Draw();
+
+		ImguiManager::Instance().Update();
 		Renderer::Instance().SwapBuffers();
 		Time::Instance().FrameEnd();
 	}
@@ -94,6 +112,7 @@ void Engine::Run()
 
 void Engine::Stop()
 {
+	ImguiManager::Instance().Close();
 	std::cout << "Window closed" << std::endl;
 	SDL_DestroyWindow(pWindow);
 	SDL_Quit();

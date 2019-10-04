@@ -10,11 +10,13 @@ uniform sampler2D normaltex;
 uniform sampler2D worldpostex;
 uniform sampler2D diffusetex;
 uniform sampler2D specularalpha;
+uniform sampler2D shadowmap;
 
 uniform vec3 lightPos;
 uniform vec3 Light;
 uniform int GBufferShow;
 uniform mat4 inverseview;
+uniform mat4 shadowmat;
 
 void main()
 {	
@@ -43,17 +45,37 @@ void main()
 
 	vec3 BRDF = (Kd/pi) + ((F*D)/(4*pow(LH,2)));
 
+	vec4 shadowCoord = shadowmat * vec4(worldPos,1.0);
+	
+	if(shadowCoord.w > 0.0)	
+	{	
+		vec2 shadowIndex = shadowCoord.xy/shadowCoord.w;
+		if(shadowIndex.x >= 0.0 && shadowIndex.y >= 0.0 && shadowIndex.x <= 1.0 && shadowIndex.y <= 1.0)
+		{
+			float lightDepth = texture(shadowmap,shadowIndex).w;
+			float pixelDepth = shadowCoord.w;
+			if(pixelDepth > lightDepth + 0.009)
+				FragColor = vec4(0,0,0,0);
+			else
+			{
+				FragColor = vec4(Ii * NL * BRDF,1.0);
+			}
+		}
+		else
+			FragColor = vec4(Ii * NL * BRDF,1.0);
+	}
+	else
+		FragColor = vec4(0,0,0,0);
+
 	switch(GBufferShow)
 	{
-		case 0: FragColor = vec4(Ii * NL * BRDF,1.0);
+		case 1: FragColor = vec4(texture(normaltex,TexCoord).rgb,1.0);
 				break;
-		case 1: FragColor = vec4(texture(normaltex,TexCoord).xyz,1.0);
+		case 2: FragColor = vec4(worldPos,1.0);
 				break;
-		case 2: FragColor = vec4(texture(worldpostex,TexCoord).xyz,1.0);
+		case 3: FragColor = vec4(Kd,1.0);
 				break;
-		case 3: FragColor = vec4(texture(diffusetex,TexCoord).xyz,1.0);
-				break;
-		case 4: FragColor = vec4(texture(specularalpha,TexCoord).xyz,1.0);
+		case 4: FragColor = vec4(Ks,1.0);
 				break;
 	}
 }

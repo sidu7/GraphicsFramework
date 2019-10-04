@@ -324,7 +324,7 @@ void Scene::DrawScene()
 	int loc;
 
 	// Set the viewport, and clear the screen
-	/*glViewport(0, 0, shadowMap->width, shadowMap->height);
+	glViewport(0, 0, shadowMap->width, shadowMap->height);
 	shadowMap->Bind();
 	glClearColor(0.5, 0.5, 0.5, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -355,7 +355,7 @@ void Scene::DrawScene()
 
 	shadowProgram->Unuse();
 	shadowMap->Unbind();
-*/
+
 	//Pass 2
 
     // Use the lighting shader

@@ -9,7 +9,7 @@ void Model::Draw(Shader* shader)
 	}
 }
 
-void Model::ProcessNode(aiNode* node, const aiScene* scene)
+void Model::ProcessNode(aiNode* node, const aiScene* scene, Bone* parent)
 {
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i)
 	{
@@ -17,9 +17,19 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
 		mMeshes.push_back(ProcessMesh(mesh, scene));
 	}
 
+	Bone child;
+	child.mIndex = mBoneCount++;
+	child.mTransformation = aiMatrix4x4ToGlm(&node->mTransformation);
+	child.mName = node->mName.data;
+	if (parent)
+	{
+		child.mParentIndex = parent->mIndex;
+	}
+	mBones.push_back(child);
+
 	for (unsigned int i = 0; i < node->mNumChildren; ++i)
 	{
-		ProcessNode(node->mChildren[i], scene);
+		ProcessNode(node->mChildren[i], scene, &child);
 	}
 }
 
@@ -119,6 +129,8 @@ void Model::LoadModel(std::string path)
 		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
 	}
 	directory = path.substr(0, path.find_last_of('/'));
+
+	mBoneCount = 0;
 
 	ProcessNode(scene->mRootNode, scene);
 }

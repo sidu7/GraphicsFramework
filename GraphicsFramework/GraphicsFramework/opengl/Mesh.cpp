@@ -7,7 +7,6 @@ Mesh::Mesh(std::vector<VertexData> vertices, std::vector<TextureData> textures, 
 	mVertices = vertices;
 	mTextures = textures;
 	mIndices = indices;
-
 	SetupMesh();
 }
 

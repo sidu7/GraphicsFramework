@@ -15,6 +15,7 @@ void ShapeManager::Init()
 		int x = i == 0 || i == 3 ? -1 : 1;
 		int y = i < 2 ? -1 : 1;
 		v.position = glm::vec3(0.5f * x,0.5f * y,0.0f);
+		v.normal = glm::vec3(0.0f, 0.0f, 1.0f);
 		v.texCoord = glm::vec2(x == -1 ? 0.0f : 1.0f, y == -1 ? 0.0f : 1.0f);
 		vertices.push_back(v);
 	}

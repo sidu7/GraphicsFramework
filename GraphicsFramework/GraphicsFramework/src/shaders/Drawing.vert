@@ -19,7 +19,7 @@ void main()
 
 	worldPos = (model * vec4(aPos,1.0)).xyz;
 
-	normalVec = aPos * mat3(normaltr);
+	normalVec = aNormals * mat3(normaltr);
 	//vec3 eyePos = (inverseview * vec4(0,0,0,1)).xyz;
 }
 

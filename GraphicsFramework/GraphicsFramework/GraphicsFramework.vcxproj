@@ -163,14 +163,17 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClCompile Include="opengl\FrameBuffer.cpp" />
     <ClCompile Include="opengl\Mesh.cpp" />
     <ClCompile Include="opengl\Model.cpp" />
+    <ClCompile Include="opengl\Quaternion.cpp" />
     <ClCompile Include="opengl\Renderer.cpp" />
     <ClCompile Include="opengl\Shader.cpp" />
     <ClCompile Include="opengl\Texture.cpp" />
     <ClCompile Include="opengl\VertexArray.cpp" />
     <ClCompile Include="opengl\VertexBuffer.cpp" />
+    <ClCompile Include="src\AnimationScene.cpp" />
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Engine.cpp" />
+    <ClCompile Include="src\ImguiManager.cpp" />
     <ClCompile Include="src\Inputs.cpp" />
     <ClCompile Include="src\Light.cpp" />
     <ClCompile Include="src\Scene.cpp" />
@@ -189,13 +192,16 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClInclude Include="opengl\FrameBuffer.h" />
     <ClInclude Include="opengl\Mesh.h" />
     <ClInclude Include="opengl\Model.h" />
+    <ClInclude Include="opengl\Quaternion.h" />
     <ClInclude Include="opengl\Renderer.h" />
     <ClInclude Include="opengl\Shader.h" />
     <ClInclude Include="opengl\Texture.h" />
     <ClInclude Include="opengl\VertexArray.h" />
     <ClInclude Include="opengl\VertexBuffer.h" />
+    <ClInclude Include="src\AnimationScene.h" />
     <ClInclude Include="src\Camera.h" />
     <ClInclude Include="src\Engine.h" />
+    <ClInclude Include="src\ImguiManager.h" />
     <ClInclude Include="src\Inputs.h" />
     <ClInclude Include="src\Light.h" />
     <ClInclude Include="src\Scene.h" />
@@ -283,12 +289,18 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
   <ItemGroup>
     <None Include="res\crysis-nano-suit-2\scene.fbx" />
     <None Include="res\gh_sample_animation.fbx" />
+    <None Include="src\animshaders\ModelDraw.frag" />
+    <None Include="src\animshaders\ModelDraw.vert" />
     <None Include="src\shaders\Ambient.frag" />
     <None Include="src\shaders\Ambient.vert" />
     <None Include="src\shaders\Drawing.frag" />
     <None Include="src\shaders\Drawing.vert" />
     <None Include="src\shaders\Lighting.frag" />
     <None Include="src\shaders\Lighting.vert" />
+    <None Include="src\shaders\LocalLight.frag" />
+    <None Include="src\shaders\LocalLight.vert" />
+    <None Include="src\shaders\Shadow.frag" />
+    <None Include="src\shaders\Shadow.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

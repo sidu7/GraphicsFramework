@@ -6,4 +6,5 @@ class Light
 public:
 	void HandleInputs();
 	glm::vec3 position;
+	float distance;
 };

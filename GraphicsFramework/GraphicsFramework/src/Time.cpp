@@ -21,5 +21,5 @@ void Time::FrameEnd()
 	{
 		endTime = SDL_GetTicks();
 	}
-	deltaTime = endTime - startTime;
+	deltaTime = (endTime - startTime) / 1000.0f;
 }

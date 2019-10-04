@@ -13,13 +13,19 @@ public:
 	void Draw();
 
 private:
+	void ObjectsDraw(Shader* shader);
+private:
 	Shader* shader;
 	Shader* lighting;
 	Shader* ambient;
-	Model demoModel;
+	Shader* shadow;
+	Shader* locallight;
 
 	Light* light;
 	FrameBuffer* G_Buffer;
+	FrameBuffer* ShadowMap;
 	int gBuffershow;
-
+	float angle;
+	glm::vec3 lightColors[40][40];
+	glm::vec3 trans1, trans2, trans3;
 };

@@ -21,7 +21,7 @@ FrameBuffer::FrameBuffer(int width, int height, int Texcount) : mWidth(width), m
 	for (unsigned int i = 0; i < mTexCount; i++)
 	{
 		GLCall(glBindTexture(GL_TEXTURE_2D, m_TextureID[i]));
-		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, mWidth, mHeight, 0, GL_RGB, GL_FLOAT, 0));
+		GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, mWidth, mHeight, 0, GL_RGBA, GL_FLOAT, NULL));
 		
 		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 		GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
