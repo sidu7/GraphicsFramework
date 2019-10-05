@@ -6,18 +6,18 @@ void Light::HandleInputs()
 {
 	if (Inputs::Instance().IsPressed(SDL_SCANCODE_I))
 	{
-		position.z -= 0.5f;
+		position.z -= 2.0f;
 	}
 	if (Inputs::Instance().IsPressed(SDL_SCANCODE_K))
 	{
-		position.z += 0.5f;
+		position.z += 2.0f;
 	}
 	if (Inputs::Instance().IsPressed(SDL_SCANCODE_J))
 	{
-		position.x -= 0.5f;
+		position.x -= 2.0f;
 	}
 	if (Inputs::Instance().IsPressed(SDL_SCANCODE_L))
 	{
-		position.x += 0.5f;
+		position.x += 2.0f;
 	}
 }

@@ -3,6 +3,7 @@
 #include "Time.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "Engine.h"
+#include "Imgui/imgui.h"
 #include <iostream>
 
 extern Engine* engine;
@@ -57,6 +58,11 @@ void Camera::Update()
 
 void Camera::MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent)
 {
+	if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow))
+	{
+		return;
+	}
+
 	glm::vec2 wSize = engine->GetWindowSize();
 	if (Inputs::Instance().IsMousePressed(SDL_BUTTON_LEFT))
 	{

@@ -10,6 +10,8 @@
 
 extern Engine* engine;
 
+float lp[3];
+
 void Scene::Init()
 {
 	shader = new Shader("src/shaders/Drawing.vert", "src/shaders/Drawing.frag");
@@ -24,6 +26,9 @@ void Scene::Init()
 
 	light = new Light();
 	light->position = glm::vec3(100.0f, 200.0f, 10.0f);
+	lp[0] = 100.0f;
+	lp[1] = 200.0f;
+	lp[2] = 10.0f;
 	light->distance = 200.0f;
 
 
@@ -50,6 +55,7 @@ void Scene::Init()
 }
 
 bool lighton = true;
+
 void Scene::Draw()
 {
 	light->HandleInputs();
@@ -70,6 +76,10 @@ void Scene::Draw()
 		if (ImGui::Selectable("Specular", selected))
 			gBuffershow = 4;
 		ImGui::EndCombo();
+	}
+	if (ImGui::DragFloat3("Light Position", lp, 2.0f, -300.0f, 300.0f))
+	{
+		light->position = glm::vec3(lp[0], lp[1], lp[2]);
 	}
 	ImGui::End();
 	
