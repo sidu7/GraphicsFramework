@@ -65,6 +65,7 @@ void Scene::Draw()
 	bool selected = true;
 	if (ImGui::BeginCombo("", "Select G-Buffer"))
 	{
+		lighton = true;
 		if (ImGui::Selectable("Lighting", selected))
 			gBuffershow = 0;
 		if (ImGui::Selectable("Normals", selected))
