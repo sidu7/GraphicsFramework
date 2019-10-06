@@ -11,13 +11,14 @@ extern Engine* engine;
 void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 {
 	mSpeed = 20.0f;
-	mCameraPos = glm::vec3(0.0f, 10.0f, 50.0f);
+	mCameraPos = glm::vec3(0.0f, 40.0f, 100.0f);
 	mCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	mCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec2 wSize = engine->GetWindowSize();
 	mProjection = glm::perspective(FOVangle, wSize.x/wSize.y, nearPlane, farPlane);
-	pitch = 0.0f;
+	pitch = -20.0f;
 	yaw = -90.0f;
+	CalculateFront();
 }
 
 void Camera::Update()
@@ -78,15 +79,20 @@ void Camera::MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent)
 		if (pitch < -89.0f)
 			pitch = -89.0f;
 
-		glm::vec3 front;
-		front.x = glm::cos(glm::radians(pitch)) * glm::cos(glm::radians(yaw));
-		front.y = glm::sin(glm::radians(pitch));
-		front.z = glm::cos(glm::radians(pitch)) * glm::sin(glm::radians(yaw));
-		mCameraFront = glm::normalize(front);
+		CalculateFront();
 	}
 	else
 	{
 		lastMouseX = mouseEvent.x;
 		lastMouseY = mouseEvent.y;
 	}
+}
+
+void Camera::CalculateFront()
+{
+	glm::vec3 front;
+	front.x = glm::cos(glm::radians(pitch)) * glm::cos(glm::radians(yaw));
+	front.y = glm::sin(glm::radians(pitch));
+	front.z = glm::cos(glm::radians(pitch)) * glm::sin(glm::radians(yaw));
+	mCameraFront = glm::normalize(front);
 }

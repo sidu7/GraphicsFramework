@@ -9,6 +9,9 @@ public:
 	void Update();
 	void MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent);
 
+private:
+	void CalculateFront();
+
 public:
 	float mSpeed;
 	glm::mat4 mView;
