@@ -75,17 +75,14 @@ void Engine::Start()
 	ImguiManager::Instance().Init();
 
 	//CS562
-	Scene::Instance().Init();
+	//Scene::Instance().Init();
 
 	//CS560
-	//AnimationScene::Instance().Init();
+	AnimationScene::Instance().Init();
 		
 	pCamera = new Camera();
 	pCamera->Init(glm::radians(45.0f), 0.1f, 2000.0f);
 
-	glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-	Quaternion q(model);
-	glm::mat4 ret = q.matrix();
 }
 
 void Engine::Run()
@@ -100,10 +97,10 @@ void Engine::Run()
 		pCamera->Update();
 		
 		//CS562
-		Scene::Instance().Draw();
+		//Scene::Instance().Draw();
 
 		//CS560
-		//AnimationScene::Instance().Draw();
+		AnimationScene::Instance().Draw();
 
 		ImguiManager::Instance().Update();
 		Renderer::Instance().SwapBuffers();

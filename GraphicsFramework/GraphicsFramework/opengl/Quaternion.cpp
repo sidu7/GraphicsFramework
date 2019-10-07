@@ -7,7 +7,7 @@ Quaternion::Quaternion(float x, float y, float z, float s) : mQuat(glm::vec4(x,y
 
 Quaternion::Quaternion(glm::vec3 axis, float angle)
 {
-	mQuat = glm::vec4(glm::sin(glm::radians(angle)) * axis, glm::cos(glm::radians(angle)));
+	mQuat = glm::vec4(glm::sin(glm::radians(angle)/2) * axis, glm::cos(glm::radians(angle)/2));
 }
 
 Quaternion::Quaternion(glm::mat4 rotation)
@@ -86,6 +86,37 @@ Quaternion Quaternion::inverse()
 {
 	float l = length();
 	return conjugate() / (l * l);
+}
+
+Quaternion Quaternion::interpolate(const Quaternion& start, const Quaternion& end, float factor)
+{
+	float cos = glm::dot(start.mQuat, end.mQuat);
+
+	Quaternion pend = end;
+	if (cos < 0.0f)
+	{
+		cos = -cos;
+		pend.mQuat = -pend.mQuat;
+	}
+
+	float sclp, sclq;
+	if ((1.0f - cos) > 0.0001f) // epsillon
+	{
+		float omega, sinom;
+		omega = std::acos(cos);
+		sinom = std::sin(omega);
+		sclp = std::sin((1.0f - factor) * omega) / sinom;
+		sclq = std::sin(factor * omega) / sinom;
+	}
+	else
+	{
+		sclp = 1.0f - factor;
+		sclq = factor;
+	}
+
+	Quaternion result;
+	result.mQuat = sclp * start.mQuat + sclq * pend.mQuat;
+	return result;
 }
 
 glm::mat4 Quaternion::matrix()

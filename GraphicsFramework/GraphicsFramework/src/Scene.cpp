@@ -31,6 +31,8 @@ void Scene::Init()
 	lp[2] = 10.0f;
 	light->distance = 200.0f;
 
+	engine->pCamera->pitch = -20.0f;
+	engine->pCamera->mCameraPos = glm::vec3(0.0f, 40.0f, 100.0f);
 
 	lighting->Bind();
 	lighting->SetUniform3f("Light", 1.0f, 1.0f, 1.0f);

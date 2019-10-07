@@ -62,6 +62,8 @@ void Mesh::SetupMesh()
 	VAO.Push(3, GL_FLOAT, sizeof(float));
 	VAO.Push(3, GL_FLOAT, sizeof(float));
 	VAO.Push(2, GL_FLOAT, sizeof(float));
+	VAO.Push(4, GL_INT,   sizeof(int));
+	VAO.Push(4, GL_FLOAT, sizeof(float));
 	VAO.AddLayout();
 
 	VAO.Unbind();

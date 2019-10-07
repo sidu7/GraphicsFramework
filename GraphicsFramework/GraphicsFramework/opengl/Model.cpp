@@ -9,6 +9,61 @@ void Model::Draw(Shader* shader)
 	}
 }
 
+void Model::LoadModel(std::string path)
+{
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_OptimizeMeshes);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+	}
+	directory = path.substr(0, path.find_last_of('/'));
+
+	mBoneCount = 0;
+
+	ProcessNode(scene->mRootNode, scene);
+
+	ProcessAnimationData(scene);
+}
+
+
+void Model::ProcessAnimationData(const aiScene* scene)
+{
+	for (unsigned int i = 0; i < scene->mNumAnimations; ++i)
+	{
+		aiAnimation* animation = scene->mAnimations[i];		
+		for (unsigned int j = 0; j < animation->mNumChannels; ++j)
+		{
+			unsigned int index = GetBoneIndex(animation->mChannels[j]->mNodeName.data);
+			AnimationData animData;
+			animData.mDuration = animation->mDuration;
+			animData.mTicksPerSec = animation->mTicksPerSecond;
+			//Key Positions
+			for (unsigned int k = 0; k < animation->mChannels[j]->mNumPositionKeys; ++k)
+			{
+				animData.mKeyPositions.push_back(std::make_pair(animation->mChannels[j]->mPositionKeys[k].mTime, aiVec3toGlm(&animation->mChannels[j]->mPositionKeys[k].mValue)));
+			}
+
+			//Key Rotations
+			for (unsigned int k = 0; k < animation->mChannels[j]->mNumRotationKeys; ++k)
+			{
+				aiQuaternion aiquat = animation->mChannels[j]->mRotationKeys[k].mValue;
+				Quaternion quat(aiquat.x, aiquat.y, aiquat.z, aiquat.w);
+				animData.mKeyRotations.push_back(std::make_pair(animation->mChannels[j]->mRotationKeys[k].mTime, quat));
+			}
+
+			//Key Scalings
+			for (unsigned int k = 0; k < animation->mChannels[j]->mNumScalingKeys; ++k)
+			{
+				animData.mKeyScalings.push_back(std::make_pair(animation->mChannels[j]->mScalingKeys[k].mTime, aiVec3toGlm(&animation->mChannels[j]->mScalingKeys[k].mValue)));
+			}
+
+			mBones[index].mAnimations[animation->mName.data] = animData;
+		}
+	}
+}
+
 void Model::ProcessNode(aiNode* node, const aiScene* scene, Bone* parent)
 {
 	for (unsigned int i = 0; i < node->mNumMeshes; ++i)
@@ -21,9 +76,15 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene, Bone* parent)
 	child.mIndex = mBoneCount++;
 	child.mTransformation = aiMatrix4x4ToGlm(&node->mTransformation);
 	child.mName = node->mName.data;
+	child.isAnimated = false;
+	child.mOffset = glm::mat4(0.0f);
 	if (parent)
 	{
 		child.mParentIndex = parent->mIndex;
+	}
+	else
+	{
+		child.mParentIndex = -1;
 	}
 	mBones.push_back(child);
 
@@ -38,6 +99,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	std::vector<Mesh::VertexData> vertices;
 	std::vector<Mesh::TextureData> textures;
 	std::vector<unsigned int> indices;
+	std::vector<unsigned int> vertexindex;
 
 	//Processing vertices
 	for (unsigned int i = 0; i < mesh->mNumVertices; ++i)
@@ -56,7 +118,11 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 			vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 		}
 
+		vertex.BoneIndex = glm::ivec4(0);
+		vertex.BoneWeights = glm::vec4(0.0f);
+
 		vertices.push_back(vertex);
+		vertexindex.push_back(0);
 	}
 
 	//Processing textures
@@ -81,6 +147,21 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		{
 			indices.push_back(face.mIndices[j]);
 		}
+	}
+
+	//Processing Bones
+	for (unsigned int i = 0; i < mesh->mNumBones; ++i)
+	{
+		aiBone* bone = mesh->mBones[i];
+		unsigned int boneIndex = GetBoneIndex(bone->mName.data);
+		for (unsigned int j = 0; j < bone->mNumWeights; ++j)
+		{
+			unsigned int index = bone->mWeights[j].mVertexId;
+			vertices[index].BoneIndex[vertexindex[index]] = boneIndex;
+			vertices[index].BoneWeights[vertexindex[index]++] = bone->mWeights[j].mWeight;
+		}
+		mBones[boneIndex].mOffset = aiMatrix4x4ToGlm(&bone->mOffsetMatrix);
+		mBones[boneIndex].isAnimated = true;
 	}
 
 	return Mesh(vertices, textures, indices);
@@ -119,18 +200,4 @@ std::vector<Mesh::TextureData> Model::LoadMaterialTextures(aiMaterial* material,
 	return textures;
 }
 
-void Model::LoadModel(std::string path)
-{
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_OptimizeMeshes);
 
-	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-	{
-		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
-	}
-	directory = path.substr(0, path.find_last_of('/'));
-
-	mBoneCount = 0;
-
-	ProcessNode(scene->mRootNode, scene);
-}

@@ -218,6 +218,8 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
   <ItemGroup>
     <None Include="res\crysis-nano-suit-2\scene.fbx" />
     <None Include="res\gh_sample_animation.fbx" />
+    <None Include="src\animshaders\Drawing.frag" />
+    <None Include="src\animshaders\Drawing.vert" />
     <None Include="src\animshaders\ModelDraw.frag" />
     <None Include="src\animshaders\ModelDraw.vert" />
     <None Include="src\shaders\Ambient.frag" />

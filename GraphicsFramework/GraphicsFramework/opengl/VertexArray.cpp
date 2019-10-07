@@ -44,7 +44,6 @@ void VertexArray::Push(unsigned int count, unsigned int type, unsigned int size)
 	VertexElements element(count, type, size);
 	m_Elements.push_back(element);
 	m_Stride += count * size;
-
 }
 
 void VertexArray::AddBuffer(const VertexBuffer& vb) const

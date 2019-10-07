@@ -31,6 +31,9 @@ public:
 	Quaternion conjugate();
 	Quaternion inverse();
 
+	//interpolate between two quaternions by a factor
+	static Quaternion interpolate(const Quaternion& start, const Quaternion& end, float factor);
+
 	//rotation matrix form of quaternion
 	glm::mat4 matrix();
 
