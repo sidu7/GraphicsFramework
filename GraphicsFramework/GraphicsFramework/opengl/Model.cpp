@@ -77,7 +77,7 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene, Bone* parent)
 	child.mTransformation = aiMatrix4x4ToGlm(&node->mTransformation);
 	child.mName = node->mName.data;
 	child.isAnimated = false;
-	child.mOffset = glm::mat4(0.0f);
+	child.mOffset = glm::mat4(1.0f);
 	if (parent)
 	{
 		child.mParentIndex = parent->mIndex;

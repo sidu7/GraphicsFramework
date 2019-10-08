@@ -104,11 +104,11 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 		{
 			if (demoModel.mBones[parent].isAnimated)
 			{
-				trans *= demoModel.mBones[parent].mCurrentTransformation;
+				trans = demoModel.mBones[parent].mCurrentTransformation * trans;
 			}
 			else
 			{
-				trans *= demoModel.mBones[parent].mTransformation;
+				trans = demoModel.mBones[parent].mTransformation * trans;
 			}
 			parent = demoModel.mBones[parent].mParentIndex;
 		}
@@ -119,6 +119,6 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 
 	for (unsigned int i = 0; i < mBonesTransformation.size(); ++i)
 	{
-		modelDraw->SetUniformMat4f("boneMatrix[" + std::to_string(i) + "]", mBonesTransformation[i]);
+		modelDraw->SetUniformMat4f("boneMatrix[" + std::to_string(i) + "]", mBonesTransformation[i] * demoModel.mBones[i].mOffset);
 	}
 }
