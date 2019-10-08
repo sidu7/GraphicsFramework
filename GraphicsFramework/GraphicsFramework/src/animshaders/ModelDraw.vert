@@ -31,9 +31,9 @@ void main()
 
 	worldPos = (model * BoneTransform * vec4(aPos,1.0)).xyz;
 
-	vec4 normalL = BoneTransform * vec4(aNormal,0.0);
+	vec4 normalL = vec4(aNormal,0.0) * BoneTransform;
 
-	normalVec = (normaltr * normalL).xyz;
+	normalVec = (normalL * normaltr).xyz;
 
 	eyePos = (inverseview * vec4(0,0,0,1)).xyz;
 }

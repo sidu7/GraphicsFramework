@@ -60,6 +60,7 @@ void Model::ProcessAnimationData(const aiScene* scene)
 			}
 
 			mBones[index].mAnimations[animation->mName.data] = animData;
+			mBones[index].isAnimated = true;
 		}
 	}
 }
@@ -161,7 +162,6 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 			vertices[index].BoneWeights[vertexindex[index]++] = bone->mWeights[j].mWeight;
 		}
 		mBones[boneIndex].mOffset = aiMatrix4x4ToGlm(&bone->mOffsetMatrix);
-		mBones[boneIndex].isAnimated = true;
 	}
 
 	return Mesh(vertices, textures, indices);

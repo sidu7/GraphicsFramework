@@ -89,10 +89,9 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 			glm::vec3 position = posIndex == 0 ? anim.mKeyPositions[0].second : glm::lerp(anim.mKeyPositions[rotIndex - 1].second, anim.mKeyPositions[rotIndex].second, (float)timeFrame);
 			Quaternion rotation = rotIndex == 0 ? anim.mKeyRotations[0].second : Quaternion::interpolate(anim.mKeyRotations[rotIndex - 1].second, anim.mKeyRotations[rotIndex].second, timeFrame);
 			glm::vec3 scale = sclIndex == 0 ? anim.mKeyScalings[0].second : glm::lerp(anim.mKeyScalings[rotIndex - 1].second, anim.mKeyScalings[rotIndex].second, (float)timeFrame);
-			glm::mat4 model = glm::translate(glm::mat4(1.0f), position);
-			model = model * rotation.matrix();
-			model = glm::scale(model, scale);
-			trans = model;
+			glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
+			glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
+			trans =  translate * rotation.matrix() * scaling;
 		}
 		else
 		{
