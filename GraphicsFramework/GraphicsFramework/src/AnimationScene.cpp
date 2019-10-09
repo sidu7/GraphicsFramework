@@ -83,15 +83,17 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 			double timeFrame = fmod(TimeinTicks, anim.mDuration);
 
 			unsigned int posIndex = FindLessThaninList<glm::vec3>(timeFrame, anim.mKeyPositions);
-			unsigned int rotIndex = FindLessThaninList<Quaternion>(timeFrame, anim.mKeyRotations);
+			unsigned int rotIndex = FindLessThaninList<aiQuaternion>(timeFrame, anim.mKeyRotations);
 			unsigned int sclIndex = FindLessThaninList<glm::vec3>(timeFrame, anim.mKeyScalings);
 
-			glm::vec3 position = posIndex == 0 ? anim.mKeyPositions[0].second : glm::lerp(anim.mKeyPositions[rotIndex - 1].second, anim.mKeyPositions[rotIndex].second, (float)timeFrame);
-			Quaternion rotation = rotIndex == 0 ? anim.mKeyRotations[0].second : Quaternion::interpolate(anim.mKeyRotations[rotIndex - 1].second, anim.mKeyRotations[rotIndex].second, timeFrame);
-			glm::vec3 scale = sclIndex == 0 ? anim.mKeyScalings[0].second : glm::lerp(anim.mKeyScalings[rotIndex - 1].second, anim.mKeyScalings[rotIndex].second, (float)timeFrame);
+			glm::vec3 position = posIndex == 0 ? anim.mKeyPositions[0].second : glm::lerp(anim.mKeyPositions[posIndex - 1].second, anim.mKeyPositions[posIndex].second, (float)timeFrame);
+			aiQuaternion rotation;
+			if (rotIndex == 0) rotation = anim.mKeyRotations[0].second;
+			else aiQuaternion::Interpolate(rotation ,anim.mKeyRotations[rotIndex - 1].second, anim.mKeyRotations[rotIndex].second, timeFrame);
+			glm::vec3 scale = sclIndex == 0 ? anim.mKeyScalings[0].second : glm::lerp(anim.mKeyScalings[sclIndex - 1].second, anim.mKeyScalings[sclIndex].second, (float)timeFrame);
 			glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
 			glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
-			trans =  translate * rotation.matrix() * scaling;
+			trans =  translate * (*(glm::mat4*)&rotation.GetMatrix().Transpose()) * scaling;
 		}
 		else
 		{
@@ -101,14 +103,7 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 		unsigned int parent = bone.mParentIndex;
 		while (parent != -1)
 		{
-			if (demoModel.mBones[parent].isAnimated)
-			{
-				trans = demoModel.mBones[parent].mCurrentTransformation * trans;
-			}
-			else
-			{
-				trans = demoModel.mBones[parent].mTransformation * trans;
-			}
+			trans = demoModel.mBones[parent].mCurrentTransformation * trans;			
 			parent = demoModel.mBones[parent].mParentIndex;
 		}
 		bone.mCurrentTransformation = trans;

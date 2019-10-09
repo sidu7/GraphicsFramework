@@ -2,7 +2,7 @@
 
 Quaternion::Quaternion(float x, float y, float z, float s) : mQuat(glm::vec4(x,y,z,s))
 {
-	glm::normalize(mQuat);
+	//glm::normalize(mQuat);
 }
 
 Quaternion::Quaternion(glm::vec3 axis, float angle)

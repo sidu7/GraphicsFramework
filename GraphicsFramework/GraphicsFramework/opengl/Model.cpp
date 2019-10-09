@@ -12,7 +12,7 @@ void Model::Draw(Shader* shader)
 void Model::LoadModel(std::string path)
 {
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_OptimizeMeshes);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
@@ -50,7 +50,7 @@ void Model::ProcessAnimationData(const aiScene* scene)
 			{
 				aiQuaternion aiquat = animation->mChannels[j]->mRotationKeys[k].mValue;
 				Quaternion quat(aiquat.x, aiquat.y, aiquat.z, aiquat.w);
-				animData.mKeyRotations.push_back(std::make_pair(animation->mChannels[j]->mRotationKeys[k].mTime, quat));
+				animData.mKeyRotations.push_back(std::make_pair(animation->mChannels[j]->mRotationKeys[k].mTime, aiquat));
 			}
 
 			//Key Scalings
@@ -75,7 +75,7 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene, Bone* parent)
 
 	Bone child;
 	child.mIndex = mBoneCount++;
-	child.mTransformation = aiMatrix4x4ToGlm(&node->mTransformation);
+	child.mTransformation = *(glm::mat4*)(&node->mTransformation.Transpose());
 	child.mName = node->mName.data;
 	child.isAnimated = false;
 	child.mOffset = glm::mat4(1.0f);
@@ -161,7 +161,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 			vertices[index].BoneIndex[vertexindex[index]] = boneIndex;
 			vertices[index].BoneWeights[vertexindex[index]++] = bone->mWeights[j].mWeight;
 		}
-		mBones[boneIndex].mOffset = aiMatrix4x4ToGlm(&bone->mOffsetMatrix);
+		mBones[boneIndex].mOffset = *(glm::mat4*)(&bone->mOffsetMatrix.Transpose());
 	}
 
 	return Mesh(vertices, textures, indices);
