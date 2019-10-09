@@ -38,7 +38,8 @@ void AnimationScene::Draw()
 	modelDraw->SetUniformMat4f("view", engine->pCamera->mView);
 
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 7.5f, 0.0f));
-	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0, 0.0));
+	//model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0, 0.0));
+	model = glm::scale(model, glm::vec3(0.5f));
 	modelDraw->SetUniformMat4f("model", model);
 	modelDraw->SetUniformMat4f("normaltr", glm::inverse(model));
 	modelDraw->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
@@ -105,7 +106,7 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 				double T1 = anim.mKeyRotations[rotIndex - 1].first;
 				double localT = (timeFrame - T1) / (T2 - T1);
 				aiQuaternion::Interpolate(rotation, anim.mKeyRotations[rotIndex - 1].second, anim.mKeyRotations[rotIndex].second, localT);
-				rot = *(glm::mat4*) & (rotation.GetMatrix().Transpose());
+				rot = aiMatrix3x3ToGlm(&rotation.GetMatrix().Transpose());
 			}
 			else
 			{

@@ -75,6 +75,19 @@ inline glm::mat4 aiMatrix4x4ToGlm(const aiMatrix4x4* from)
 	return to;
 }
 
+inline glm::mat4 aiMatrix3x3ToGlm(const aiMatrix3x3* from)
+{
+	glm::mat4 to =  glm::mat4(1.0f);
+
+
+	to[0][0] = (GLfloat)from->a1; to[0][1] = (GLfloat)from->a2;  to[0][2] = (GLfloat)from->a3;
+	to[1][0] = (GLfloat)from->b1; to[1][1] = (GLfloat)from->b2;  to[1][2] = (GLfloat)from->b3;
+	to[2][0] = (GLfloat)from->c1; to[2][1] = (GLfloat)from->c2;  to[2][2] = (GLfloat)from->c3;
+	
+
+	return to;
+}
+
 inline glm::vec3 aiVec3toGlm(const aiVector3D* from)
 {
 	return glm::vec3(from->x, from->y, from->z);
