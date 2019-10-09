@@ -81,32 +81,64 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 			AnimationData& anim = bone.mAnimations[animName];
 			double TimeinTicks = RunTime * anim.mTicksPerSec;
 			double timeFrame = fmod(TimeinTicks, anim.mDuration);
-
 			unsigned int posIndex = FindLessThaninList<glm::vec3>(timeFrame, anim.mKeyPositions);
 			unsigned int rotIndex = FindLessThaninList<aiQuaternion>(timeFrame, anim.mKeyRotations);
 			unsigned int sclIndex = FindLessThaninList<glm::vec3>(timeFrame, anim.mKeyScalings);
 
-			glm::vec3 position = posIndex == 0 ? anim.mKeyPositions[0].second : glm::lerp(anim.mKeyPositions[posIndex - 1].second, anim.mKeyPositions[posIndex].second, (float)timeFrame);
+			glm::vec3 position, scale;
 			aiQuaternion rotation;
-			if (rotIndex == 0) rotation = anim.mKeyRotations[0].second;
-			else aiQuaternion::Interpolate(rotation ,anim.mKeyRotations[rotIndex - 1].second, anim.mKeyRotations[rotIndex].second, timeFrame);
-			glm::vec3 scale = sclIndex == 0 ? anim.mKeyScalings[0].second : glm::lerp(anim.mKeyScalings[sclIndex - 1].second, anim.mKeyScalings[sclIndex].second, (float)timeFrame);
+			glm::mat4 rot = glm::mat4(1.0f);
+			if (posIndex != 0)
+			{
+				double T2 = anim.mKeyPositions[posIndex].first;
+				double T1 = anim.mKeyPositions[posIndex - 1].first;
+				double localT = (timeFrame - T1) / (T2 - T1);
+				position = glm::lerp(anim.mKeyPositions[posIndex - 1].second, anim.mKeyPositions[posIndex].second, (float)localT);
+			}
+			else
+			{
+				position = anim.mKeyPositions[0].second;
+			}
+			if (rotIndex != 0)
+			{
+				double T2 = anim.mKeyRotations[rotIndex].first;
+				double T1 = anim.mKeyRotations[rotIndex - 1].first;
+				double localT = (timeFrame - T1) / (T2 - T1);
+				aiQuaternion::Interpolate(rotation, anim.mKeyRotations[rotIndex - 1].second, anim.mKeyRotations[rotIndex].second, localT);
+				rot = *(glm::mat4*) & (rotation.GetMatrix().Transpose());
+			}
+			else
+			{
+				rotation = anim.mKeyRotations[0].second;
+			}
+			if (sclIndex != 0)
+			{
+				double T2 = anim.mKeyScalings[sclIndex].first;
+				double T1 = anim.mKeyScalings[sclIndex - 1].first;
+				double localT = (timeFrame - T1) / (T2 - T1);
+				scale = glm::lerp(anim.mKeyScalings[sclIndex - 1].second, anim.mKeyScalings[sclIndex].second, (float)localT);
+			}
+			else
+			{
+				scale = anim.mKeyScalings[0].second;
+			}
 			glm::mat4 translate = glm::translate(glm::mat4(1.0f), position);
 			glm::mat4 scaling = glm::scale(glm::mat4(1.0f), scale);
-			trans =  translate * (*(glm::mat4*)&rotation.GetMatrix().Transpose()) * scaling;
+			trans =  translate * rot * scaling;
 		}
 		else
 		{
 			trans = bone.mTransformation;
 		}
-		
 		unsigned int parent = bone.mParentIndex;
-		while (parent != -1)
+		if (parent != -1)
 		{
-			trans = demoModel.mBones[parent].mCurrentTransformation * trans;			
-			parent = demoModel.mBones[parent].mParentIndex;
+			bone.mCurrentTransformation = demoModel.mBones[parent].mCurrentTransformation * trans;
 		}
-		bone.mCurrentTransformation = trans;
+		else
+		{
+			bone.mCurrentTransformation = trans;
+		}
 		
 		mBonesTransformation.push_back(bone.mCurrentTransformation);
 	}
