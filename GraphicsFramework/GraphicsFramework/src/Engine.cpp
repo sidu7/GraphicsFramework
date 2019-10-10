@@ -82,8 +82,6 @@ void Engine::Start()
 
 	//CS560
 	AnimationScene::Instance().Init();
-		
-
 }
 
 void Engine::Run()

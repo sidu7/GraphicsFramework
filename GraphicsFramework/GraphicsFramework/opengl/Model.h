@@ -13,7 +13,7 @@ class Shader;
 struct AnimationData
 {
 	std::vector<std::pair<double, glm::vec3>> mKeyPositions;
-	std::vector<std::pair<double, aiQuaternion>> mKeyRotations;
+	std::vector<std::pair<double, Quaternion>> mKeyRotations;
 	std::vector<std::pair<double, glm::vec3>> mKeyScalings;
 	double mDuration;
 	double mTicksPerSec;
@@ -35,6 +35,7 @@ class Model
 {
  public:
 	 void LoadModel(std::string path);
+	 void AddAnimation(std::string path);
 	 void Draw(Shader* shader);
 private:
 	 void ProcessNode(aiNode* node, const aiScene* scene, Bone* parent = nullptr);
@@ -51,10 +52,11 @@ private:
 		 }
 		 std::cout << "Bone index not found" << std::endl;
 	 }
-	 void ProcessAnimationData(const aiScene* scene);
+	 void ProcessAnimationData(const aiScene* scene, std::string name);
 
 public:
 	 std::vector<Bone> mBones;
+	 std::vector<std::string> mAnimations;
  private:
 	 std::vector<Mesh> mMeshes;
 	 std::vector<Mesh::TextureData> loadedTextures;

@@ -33,7 +33,126 @@ void ShapeManager::Init()
 	indices.clear();
 
 	//Cube
+	indices = { 0, 1, 2, 0, 2, 3, //front
+			4, 5, 6, 4, 6, 7, //right
+			8, 9, 10, 8, 10, 11, //back
+			12, 13, 14, 12, 14, 15, //left
+			16, 17, 18, 16, 18, 19, //upper
+			20, 21, 22, 20, 22, 23 }; //bottom
 
+	//front
+	Vertex v;
+	v.position = glm::vec3(-1.0f, -1.0f, 1.0f);
+	v.normal = glm::vec3(0.0f, 0.0f, 1.0f);
+	v.texCoord = glm::vec2(0.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, -1.0f, 1.0f);
+	v.normal = glm::vec3(0.0f, 0.0f, 1.0f);
+	v.texCoord = glm::vec2(1.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, 1.0f, 1.0f);
+	v.normal = glm::vec3(0.0f, 0.0f, 1.0f);
+	v.texCoord = glm::vec2(1.0f, 1.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(-1.0f, 1.0f, 1.0f);
+	v.normal = glm::vec3(0.0f, 0.0f, 1.0f);
+	v.texCoord = glm::vec2(0.0f, 1.0f);
+	vertices.push_back(v);
+
+	//right
+	v.position = glm::vec3(1.0f, 1.0f, 1.0f);
+	v.normal = glm::vec3(1.0f, 0.0f, 0.0f);
+	v.texCoord = glm::vec2(0.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, 1.0f, -1.0f);
+	v.normal = glm::vec3(1.0f, 0.0f, 0.0f);
+	v.texCoord = glm::vec2(0.0f, 1.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, -1.0f, -1.0f);
+	v.normal = glm::vec3(1.0f, 0.0f, 0.0f);
+	v.texCoord = glm::vec2(1.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, -1.0f, 1.0f);
+	v.normal = glm::vec3(1.0f, 0.0f, 0.0f);
+	v.texCoord = glm::vec2(1.0f, 1.0f);
+	vertices.push_back(v);
+
+	//back
+	v.position = glm::vec3(-1.0f, -1.0f, -1.0f);
+	v.normal = glm::vec3(0.0f, 0.0f, -1.0f);
+	v.texCoord = glm::vec2(1.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, -1.0f, -1.0f);
+	v.normal = glm::vec3(0.0f, 0.0f, -1.0f);
+	v.texCoord = glm::vec2(0.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, 1.0f, -1.0f);
+	v.normal = glm::vec3(0.0f, 0.0f, -1.0f);
+	v.texCoord = glm::vec2(0.0f, 1.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(-1.0f, 1.0f, -1.0f);
+	v.normal = glm::vec3(0.0f, 0.0f, -1.0f);
+	v.texCoord = glm::vec2(1.0f, 1.0f);
+	vertices.push_back(v);
+
+	//left
+	v.position = glm::vec3(-1.0f, -1.0f, -1.0f);
+	v.normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+	v.texCoord = glm::vec2(0.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(-1.0f, -1.0f, 1.0f);
+	v.normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+	v.texCoord = glm::vec2(1.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(-1.0f, 1.0f, 1.0f);
+	v.normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+	v.texCoord = glm::vec2(1.0f, 1.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(-1.0f, 1.0f, -1.0f);
+	v.normal = glm::vec3(-1.0f, 0.0f, 0.0f);
+	v.texCoord = glm::vec2(0.0f, 1.0f);
+	vertices.push_back(v);
+
+	//upper
+	v.position = glm::vec3(1.0f, 1.0f, 1.0f);
+	v.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+	v.texCoord = glm::vec2(1.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(-1.0f, 1.0f, 1.0f);
+	v.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+	v.texCoord = glm::vec2(0.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(-1.0f, 1.0f, -1.0f);
+	v.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+	v.texCoord = glm::vec2(0.0f, 1.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, 1.0f, -1.0f);
+	v.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+	v.texCoord = glm::vec2(1.0f, 1.0f);
+	vertices.push_back(v);
+
+	//bottom
+	v.position = glm::vec3(-1.0f, -1.0f, -1.0f);
+	v.normal = glm::vec3(0.0f, -1.0f, 0.0f);
+	v.texCoord = glm::vec2(0.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, -1.0f, -1.0f);
+	v.normal = glm::vec3(0.0f, -1.0f, 0.0f);
+	v.texCoord = glm::vec2(1.0f, 0.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(1.0f, -1.0f, 1.0f);
+	v.normal = glm::vec3(0.0f, -1.0f, 0.0f);
+	v.texCoord = glm::vec2(1.0f, 1.0f);
+	vertices.push_back(v);
+	v.position = glm::vec3(-1.0f, -1.0f, 1.0f);
+	v.normal = glm::vec3(0.0f, -1.0f, 0.0f);
+	v.texCoord = glm::vec2(0.0f, 1.0f);
+	vertices.push_back(v);
+
+	MakeVAO(vertices, indices,CUBE);
+
+	vertices.clear();
+	indices.clear();
 	//Sphere
 	const float PI = 3.141592f;
 	int n = 32;

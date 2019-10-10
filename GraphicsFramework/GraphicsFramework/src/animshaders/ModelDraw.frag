@@ -5,12 +5,15 @@ out vec4 FragColor;
 in vec3 normalVec;
 in vec3 worldPos;
 in vec3 eyePos;
+in vec2 TexCoord;
 
 uniform vec3 diffuse;
 uniform vec3 specular;
 uniform float shininess;
 uniform vec3 lightPos;
 uniform vec3 light;
+
+uniform sampler2D texture_diffuse1;
 
 const float pi = 22/7;
 
@@ -27,7 +30,7 @@ void main()
 	float NH = max(dot(N,H),0.0);
 	float LH = max(dot(L,H),0.0);
 
-	vec3 Kd = diffuse;
+	vec3 Kd = 3.2 *  texture(texture_diffuse1,TexCoord).xyz;
 	vec3 Ks = specular;
 	
 	float alp = shininess;

@@ -24,15 +24,28 @@ void Model::LoadModel(std::string path)
 
 	ProcessNode(scene->mRootNode, scene);
 
-	ProcessAnimationData(scene);
+	ProcessAnimationData(scene, path.substr(path.find_last_of('/')+1,path.size()-8));
+}
+
+void Model::AddAnimation(std::string path)
+{
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices);
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	{
+		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+	}
+
+	ProcessAnimationData(scene, path.substr(path.find_last_of('/')+1, path.size()-8));
 }
 
 
-void Model::ProcessAnimationData(const aiScene* scene)
+void Model::ProcessAnimationData(const aiScene* scene, std::string name)
 {
 	for (unsigned int i = 0; i < scene->mNumAnimations; ++i)
 	{
-		aiAnimation* animation = scene->mAnimations[i];		
+		aiAnimation* animation = scene->mAnimations[i];
 		for (unsigned int j = 0; j < animation->mNumChannels; ++j)
 		{
 			unsigned int index = GetBoneIndex(animation->mChannels[j]->mNodeName.data);
@@ -50,7 +63,7 @@ void Model::ProcessAnimationData(const aiScene* scene)
 			{
 				aiQuaternion aiquat = animation->mChannels[j]->mRotationKeys[k].mValue;
 				Quaternion quat(aiquat.x, aiquat.y, aiquat.z, aiquat.w);
-				animData.mKeyRotations.push_back(std::make_pair(animation->mChannels[j]->mRotationKeys[k].mTime, aiquat));
+				animData.mKeyRotations.push_back(std::make_pair(animation->mChannels[j]->mRotationKeys[k].mTime, quat));
 			}
 
 			//Key Scalings
@@ -59,9 +72,10 @@ void Model::ProcessAnimationData(const aiScene* scene)
 				animData.mKeyScalings.push_back(std::make_pair(animation->mChannels[j]->mScalingKeys[k].mTime, aiVec3toGlm(&animation->mChannels[j]->mScalingKeys[k].mValue)));
 			}
 
-			mBones[index].mAnimations[animation->mName.data] = animData;
+			mBones[index].mAnimations[name] = animData;		
 			mBones[index].isAnimated = true;
 		}
+		mAnimations.push_back(name);
 	}
 }
 
@@ -189,7 +203,7 @@ std::vector<Mesh::TextureData> Model::LoadMaterialTextures(aiMaterial* material,
 		{
 			Mesh::TextureData data;
 			std::string fileName = str.C_Str();
-			std::string name = fileName.substr(fileName.find_last_of('\\') + 1);
+			std::string name = fileName.substr(fileName.find_last_of('/') + 1);
 			data.texture = new Texture(directory + '/' + name);
 			data.type = typeName;
 			textures.push_back(data);

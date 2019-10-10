@@ -18,11 +18,12 @@ uniform mat4 boneMatrix[MAX_BONES];
 out vec3 normalVec;
 out vec3 worldPos;
 out vec3 eyePos;
+out vec2 TexCoord;
 
 void main()
 {
 
-	/*mat4 BoneTransform = boneMatrix[aBoneIDs[0]] * aWeights[0];
+	mat4 BoneTransform = boneMatrix[aBoneIDs[0]] * aWeights[0];
 	BoneTransform += boneMatrix[aBoneIDs[1]] * aWeights[1];
 	BoneTransform += boneMatrix[aBoneIDs[2]] * aWeights[2];
 	BoneTransform += boneMatrix[aBoneIDs[3]] * aWeights[3];
@@ -31,37 +32,11 @@ void main()
 
 	worldPos = (model * BoneTransform * vec4(aPos,1.0)).xyz;
 
-	vec4 normalL = vec4(aNormal,0.0) * BoneTransform;*/
-
-	vec3 position = vec3(0.0);
-	vec3 normal = vec3(0.0);
-	if(aBoneIDs[0] == 0)
-	{
-		position = aPos;
-	}
-	else
-	{
-		for(int i = 0; i < 4; ++i)
-		{
-			int boneIndex = aBoneIDs[i];
-			if(boneIndex == 0)
-			{
-				break;
-			}
-
-			position += aWeights[i] * (boneMatrix[boneIndex] * vec4(aPos, 1.0)).xyz;
-			normal += aWeights[i] * (boneMatrix[boneIndex] * vec4(aNormal, 0.0)).xyz;
-		}
-	}
-	normal = normalize(normal);
-
-
-	worldPos = (model * vec4(position,1.0)).xyz;
-	gl_Position = projection * view * vec4(worldPos,1.0);
-
-	vec4 normalL = vec4(aNormal,0.0);
+	vec4 normalL = BoneTransform * vec4(aNormal,0.0);
 
 	normalVec = (normalL * normaltr).xyz;
+
+	TexCoord = aTexCoord;
 
 	eyePos = (inverseview * vec4(0,0,0,1)).xyz;
 }

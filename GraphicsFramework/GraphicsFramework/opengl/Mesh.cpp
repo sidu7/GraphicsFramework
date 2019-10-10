@@ -16,7 +16,7 @@ void Mesh::Draw(Shader * shader)
 	unsigned int specularNum = 1;
 	unsigned int normalNum = 1;
 	unsigned int heightNum = 1;
-	/*for (unsigned int i = 0; i < mTextures.size(); ++i)
+	for (unsigned int i = 0; i < mTextures.size(); ++i)
 	{		
 		std::string number;
 		std::string name;
@@ -37,10 +37,10 @@ void Mesh::Draw(Shader * shader)
 			number = std::to_string(heightNum++);
 		}
 
-		shader->SetUniform1i("Material." + name + number, i);
+		shader->SetUniform1i(name + number, i);
 
 		mTextures[i].texture->Bind(i);
-	}*/
+	}
 
 	VAO.Bind();
 	GLCall(glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_INT, 0));
