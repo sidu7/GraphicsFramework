@@ -104,7 +104,7 @@ void AnimationScene::Draw()
 			Renderer::Instance().Draw(*shape.first, *shape.second, *Drawing);
 		}
 		VertexArray VBO = CreateBonesData();
-		glDrawArrays(GL_LINES, 0, demoModel.mBones.size());
+		glDrawArrays(GL_LINES, 0, demoModel.mBones.size() * 2 - 2);
 		Drawing->SetUniform1i("lighting", 1);
 	}
 
@@ -212,10 +212,19 @@ VertexArray AnimationScene::CreateBonesData()
 
 	std::vector<glm::vec3> vertices;
 
-	for (unsigned int i = 0; i < demoModel.mBones.size(); ++i)
+	for (unsigned int i = 1; i < demoModel.mBones.size(); ++i)
 	{
 		glm::mat4 trans = demoModel.mBones[i].mCurrentTransformation;
 		vertices.push_back((glm::vec3)trans[3]);
+		if (demoModel.mBones[i].mParentIndex != 0)
+		{
+			glm::mat4 parentTrans = demoModel.mBones[demoModel.mBones[i].mParentIndex].mCurrentTransformation;
+			vertices.push_back((glm::vec3)parentTrans[3]);
+		}
+		else
+		{
+			vertices.push_back((glm::vec3)trans[3]);
+		}
 	}
 	va.AddBuffer(vb);
 	vb.AddData(&vertices[0], vertices.size() * sizeof(glm::vec3));
