@@ -37,7 +37,10 @@ void AnimationScene::Draw()
 {
 	modelDraw->Bind();
 
-	RunTime += Time::Instance().deltaTime;
+	if (!isPaused)
+	{
+		RunTime += Time::Instance().deltaTime;
+	}
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -57,6 +60,34 @@ void AnimationScene::Draw()
 	}
 	ImGui::Checkbox("Draw Skin", &drawModel);
 	ImGui::Checkbox("Draw Bones", &drawBones);
+	if (ImGui::Button("Step --"))
+	{
+		isPaused = true;
+		RunTime -= 2.0f * Time::Instance().deltaTime;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Step -"))
+	{
+		isPaused = true;
+		RunTime -= Time::Instance().deltaTime;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button(isPaused ? "Start" : "Pause"))
+	{
+		isPaused = !isPaused;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Step +"))
+	{
+		isPaused = true;
+		RunTime += Time::Instance().deltaTime;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Step ++"))
+	{
+		isPaused = true;
+		RunTime += 2.0f * Time::Instance().deltaTime;
+	}
 	ImGui::End();
 
 	AnimatorUpdate(animation);

@@ -42,4 +42,5 @@ private:
 
 	std::vector<glm::mat4> mBonesTransformation;
 	double RunTime;
+	bool isPaused;
 };
