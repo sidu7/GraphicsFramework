@@ -1,4 +1,7 @@
 #include "Model.h"
+#include "GL/glew.h"
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
 #include <iostream>
 
 void Model::Draw(Shader* shader)
@@ -24,7 +27,7 @@ void Model::LoadModel(std::string path)
 
 	ProcessNode(scene->mRootNode, scene);
 
-	ProcessAnimationData(scene, path.substr(path.find_last_of('/')+1,path.size()-8));
+	ProcessAnimationData(scene, path.substr(path.find_last_of('/') + 1, path.size() - 8));
 }
 
 void Model::AddAnimation(std::string path)
@@ -37,7 +40,7 @@ void Model::AddAnimation(std::string path)
 		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
 	}
 
-	ProcessAnimationData(scene, path.substr(path.find_last_of('/')+1, path.size()-8));
+	ProcessAnimationData(scene, path.substr(path.find_last_of('/') + 1, path.size() - 8));
 }
 
 
@@ -72,7 +75,7 @@ void Model::ProcessAnimationData(const aiScene* scene, std::string name)
 				animData.mKeyScalings.push_back(std::make_pair(animation->mChannels[j]->mScalingKeys[k].mTime, aiVec3toGlm(&animation->mChannels[j]->mScalingKeys[k].mValue)));
 			}
 
-			mBones[index].mAnimations[name] = animData;		
+			mBones[index].mAnimations[name] = animData;
 			mBones[index].isAnimated = true;
 		}
 		mAnimations.push_back(name);
@@ -123,7 +126,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 
 		vertex.Position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
 		vertex.Normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
-		
+
 		if (mesh->mTextureCoords[0])
 		{
 			vertex.TexCoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
@@ -144,13 +147,13 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	if (mesh->mMaterialIndex >= 0)
 	{
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-		std::vector<Mesh::TextureData> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, DIFFUSE);
+		std::vector<Mesh::TextureData> diffuseMaps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, DIFFUSE, scene);
 		textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-		std::vector<Mesh::TextureData> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, SPECULAR);
+		std::vector<Mesh::TextureData> specularMaps = LoadMaterialTextures(material, aiTextureType_SPECULAR, SPECULAR, scene);
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-		std::vector<Mesh::TextureData> normalMaps = LoadMaterialTextures(material, aiTextureType_NORMALS, NORMAL);
+		std::vector<Mesh::TextureData> normalMaps = LoadMaterialTextures(material, aiTextureType_NORMALS, NORMAL, scene);
 		textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-		std::vector<Mesh::TextureData> heightMaps = LoadMaterialTextures(material, aiTextureType_HEIGHT, HEIGHT);
+		std::vector<Mesh::TextureData> heightMaps = LoadMaterialTextures(material, aiTextureType_HEIGHT, HEIGHT, scene);
 		textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 	}
 
@@ -172,16 +175,26 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		for (unsigned int j = 0; j < bone->mNumWeights; ++j)
 		{
 			unsigned int index = bone->mWeights[j].mVertexId;
-			vertices[index].BoneIndex[vertexindex[index]] = boneIndex;
-			vertices[index].BoneWeights[vertexindex[index]++] = bone->mWeights[j].mWeight;
+			vertices[index].AddBone(vertexindex[index]++, boneIndex, bone->mWeights[j].mWeight);
+			//vertices[index].BoneIndex[vertexindex[index]] = boneIndex;
+			//vertices[index].BoneWeights[vertexindex[index]++] = bone->mWeights[j].mWeight;
 		}
 		mBones[boneIndex].mOffset = *(glm::mat4*)(&bone->mOffsetMatrix.Transpose());
+	}
+
+	for (unsigned int i = 0; i < vertices.size(); ++i)
+	{
+		float val = vertices[i].BoneWeights.x + vertices[i].BoneWeights.y + vertices[i].BoneWeights.z + vertices[i].BoneWeights.w;
+		if (val < 0.8f)
+		{
+			vertices[i].BoneWeights *= (1 / val);
+		}
 	}
 
 	return Mesh(vertices, textures, indices);
 }
 
-std::vector<Mesh::TextureData> Model::LoadMaterialTextures(aiMaterial* material, aiTextureType type, std::string typeName)
+std::vector<Mesh::TextureData> Model::LoadMaterialTextures(aiMaterial* material, aiTextureType type, std::string typeName, const aiScene* scene)
 {
 	std::vector<Mesh::TextureData> textures;
 
@@ -190,6 +203,7 @@ std::vector<Mesh::TextureData> Model::LoadMaterialTextures(aiMaterial* material,
 		aiString str;
 		material->GetTexture(type, i, &str);
 		bool skip = false;
+		//Check in cache
 		for (unsigned int j = 0; j < loadedTextures.size(); ++j)
 		{
 			if (std::strcmp(loadedTextures[i].texture->mFilePath.c_str(), str.C_Str()) == 0)
@@ -199,15 +213,26 @@ std::vector<Mesh::TextureData> Model::LoadMaterialTextures(aiMaterial* material,
 				break;
 			}
 		}
+		//Not in cache load it
 		if (!skip)
 		{
 			Mesh::TextureData data;
-			std::string fileName = str.C_Str();
-			std::string name = fileName.substr(fileName.find_last_of('/') + 1);
-			data.texture = new Texture(directory + '/' + name);
-			data.type = typeName;
-			textures.push_back(data);
-			loadedTextures.push_back(data);
+			const aiTexture* tex = scene->GetEmbeddedTexture(str.C_Str());
+			if (tex && tex->mHeight == 0)
+			{
+				data.texture = new Texture(tex->pcData, tex->mWidth);
+				data.type = typeName;
+				textures.push_back(data);
+				loadedTextures.push_back(data);
+			}
+			else
+			{
+				std::string fileName = str.C_Str();
+				data.texture = new Texture(directory + '/' + fileName);
+				data.type = typeName;
+				textures.push_back(data);
+				loadedTextures.push_back(data);
+			}
 		}
 	}
 

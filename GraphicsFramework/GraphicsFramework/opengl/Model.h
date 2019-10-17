@@ -40,7 +40,7 @@ class Model
 private:
 	 void ProcessNode(aiNode* node, const aiScene* scene, Bone* parent = nullptr);
 	 Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene);
-	 std::vector<Mesh::TextureData> LoadMaterialTextures(aiMaterial* material, aiTextureType type, std::string typeName);
+	 std::vector<Mesh::TextureData> LoadMaterialTextures(aiMaterial* material, aiTextureType type, std::string typeName,const aiScene* scene);
 	 inline unsigned int GetBoneIndex(std::string name)
 	 {
 		 for (unsigned int i = 0; i < mBones.size(); ++i)
