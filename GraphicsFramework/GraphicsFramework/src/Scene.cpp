@@ -33,6 +33,7 @@ void Scene::Init()
 
 	engine->pCamera->pitch = -20.0f;
 	engine->pCamera->mCameraPos = glm::vec3(0.0f, 40.0f, 100.0f);
+	engine->pCamera->CalculateFront();
 
 	lighting->Bind();
 	lighting->SetUniform3f("Light", 1.0f, 1.0f, 1.0f);

@@ -8,8 +8,6 @@ public:
 	void Init(float FOVangle, float nearPlane, float farPlane);
 	void Update();
 	void MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent);
-
-private:
 	void CalculateFront();
 
 public:

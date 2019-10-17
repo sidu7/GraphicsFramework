@@ -20,7 +20,7 @@ private:
 	void AnimatorUpdate(std::string animName);
 	VertexArray CreateBonesData();
 	template<typename T>
-	unsigned int FindLessThaninList(double time, std::vector<std::pair<double,T>> list)
+	inline unsigned int FindLessThaninList(double time, std::vector<std::pair<double,T>> list)
 	{
 		for (unsigned int i = 0; i < list.size(); ++i)
 		{

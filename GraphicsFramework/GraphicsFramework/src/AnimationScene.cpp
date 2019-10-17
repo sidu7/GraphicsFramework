@@ -24,6 +24,10 @@ void AnimationScene::Init()
 	drawModel = true;
 	drawBones = false;
 
+	engine->pCamera->pitch = -20.0f;
+	engine->pCamera->mCameraPos = glm::vec3(0.0f, 30.0f, 30.0f);
+	engine->pCamera->CalculateFront();
+
 	mBonesTransformation.resize(demoModel.mBones.size());
 
 	light = new Light();

@@ -61,6 +61,8 @@ void Camera::MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent)
 {
 	if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow))
 	{
+		lastMouseX = mouseEvent.x;
+		lastMouseY = mouseEvent.y;
 		return;
 	}
 
