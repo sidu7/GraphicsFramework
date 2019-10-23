@@ -20,6 +20,7 @@ void AnimationScene::Init()
 	demoModel.AddAnimation("res/ArcherDancing.fbx");
 	demoModel.AddAnimation("res/ArcherShooting.fbx");
 	animation = demoModel.mAnimations[0];
+	//demoModel.LoadModel("res/arissa.fbx");
 
 	drawModel = true;
 	drawBones = false;
@@ -43,7 +44,7 @@ void AnimationScene::Draw()
 
 	if (!isPaused)
 	{
-		RunTime += Time::Instance().deltaTime;
+		RunTime += Time::Instance().deltaTime /2.0f;
 	}
 
 	glEnable(GL_DEPTH_TEST);

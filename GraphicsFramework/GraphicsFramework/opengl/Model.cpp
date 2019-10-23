@@ -3,6 +3,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/norm.hpp"
 #include <iostream>
+#include "assimp/cimport.h"
 
 void Model::Draw(Shader* shader)
 {
@@ -15,11 +16,11 @@ void Model::Draw(Shader* shader)
 void Model::LoadModel(std::string path)
 {
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices);
+	const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_OptimizeMeshes | aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_LimitBoneWeights);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
-		std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+		//std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
 	}
 	directory = path.substr(0, path.find_last_of('/'));
 
@@ -175,20 +176,10 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 		for (unsigned int j = 0; j < bone->mNumWeights; ++j)
 		{
 			unsigned int index = bone->mWeights[j].mVertexId;
-			vertices[index].AddBone(vertexindex[index]++, boneIndex, bone->mWeights[j].mWeight);
-			//vertices[index].BoneIndex[vertexindex[index]] = boneIndex;
-			//vertices[index].BoneWeights[vertexindex[index]++] = bone->mWeights[j].mWeight;
+			vertices[index].BoneIndex[vertexindex[index]] = boneIndex;
+			vertices[index].BoneWeights[vertexindex[index]++] = bone->mWeights[j].mWeight;
 		}
 		mBones[boneIndex].mOffset = *(glm::mat4*)(&bone->mOffsetMatrix.Transpose());
-	}
-
-	for (unsigned int i = 0; i < vertices.size(); ++i)
-	{
-		float val = vertices[i].BoneWeights.x + vertices[i].BoneWeights.y + vertices[i].BoneWeights.z + vertices[i].BoneWeights.w;
-		if (val < 0.8f)
-		{
-			vertices[i].BoneWeights *= (1 / val);
-		}
 	}
 
 	return Mesh(vertices, textures, indices);
