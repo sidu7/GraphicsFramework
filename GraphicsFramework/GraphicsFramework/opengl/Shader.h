@@ -25,7 +25,7 @@ public:
 	Shader(std::string vertexFilePath, std::string fragmentFilePath);
 	~Shader();
 
-	inline unsigned int GetRenderId() { return m_RendererID; }
+	inline unsigned int GetProgramId() { return m_RendererID; }
 
 	unsigned int CreateProgram(std::string& vertexSource, std::string& fragmentSource);
 	unsigned int CompileShader(unsigned int type, std::string& Source);
@@ -44,4 +44,5 @@ public:
 	void SetUniform2fvLoc(int location, glm::vec2 vector);
 	void SetUniform3fvLoc(int location, glm::vec3 vector);
 	void SetUniform4fvLoc(int location, glm::vec4 vector);
+	void SetUniformBlock(const std::string& name, unsigned int bindPoint);
 };

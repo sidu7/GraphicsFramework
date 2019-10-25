@@ -18,9 +18,12 @@ private:
 
 public:
 	std::string mFilePath;
+	Texture(int channels, int width, int height);
 	Texture(const std::string& FilePath);
 	Texture(void* buffer, int size);
 	~Texture();
+
+	inline unsigned int GetTextureID() { return mRendererID; }
 
 	void Bind(unsigned int slot = 0) const;
 	void Unbind() const;

@@ -57,6 +57,7 @@
       <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>
       </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
       <Command>cd $(SolutionDir)
@@ -81,6 +82,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
       <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <SubSystem>
       </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <PostBuildEvent>
       <Command>cd $(SolutionDir)
@@ -88,6 +90,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="opengl\ComputeShader.cpp" />
     <ClCompile Include="opengl\ElementArrayBuffer.cpp" />
     <ClCompile Include="opengl\FrameBuffer.cpp" />
     <ClCompile Include="opengl\Mesh.cpp" />
@@ -96,6 +99,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClCompile Include="opengl\Renderer.cpp" />
     <ClCompile Include="opengl\Shader.cpp" />
     <ClCompile Include="opengl\Texture.cpp" />
+    <ClCompile Include="opengl\UniformBuffer.cpp" />
     <ClCompile Include="opengl\VertexArray.cpp" />
     <ClCompile Include="opengl\VertexBuffer.cpp" />
     <ClCompile Include="src\AnimationScene.cpp" />
@@ -117,6 +121,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClCompile Include="vendor\stbi_image\stbi_image.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="opengl\ComputeShader.h" />
     <ClInclude Include="opengl\ElementArrayBuffer.h" />
     <ClInclude Include="opengl\FrameBuffer.h" />
     <ClInclude Include="opengl\Mesh.h" />
@@ -125,6 +130,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClInclude Include="opengl\Renderer.h" />
     <ClInclude Include="opengl\Shader.h" />
     <ClInclude Include="opengl\Texture.h" />
+    <ClInclude Include="opengl\UniformBuffer.h" />
     <ClInclude Include="opengl\VertexArray.h" />
     <ClInclude Include="opengl\VertexBuffer.h" />
     <ClInclude Include="src\AnimationScene.h" />
@@ -222,16 +228,6 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <None Include="src\animshaders\Drawing.vert" />
     <None Include="src\animshaders\ModelDraw.frag" />
     <None Include="src\animshaders\ModelDraw.vert" />
-    <None Include="src\shaders\Ambient.frag" />
-    <None Include="src\shaders\Ambient.vert" />
-    <None Include="src\shaders\Drawing.frag" />
-    <None Include="src\shaders\Drawing.vert" />
-    <None Include="src\shaders\Lighting.frag" />
-    <None Include="src\shaders\Lighting.vert" />
-    <None Include="src\shaders\LocalLight.frag" />
-    <None Include="src\shaders\LocalLight.vert" />
-    <None Include="src\shaders\Shadow.frag" />
-    <None Include="src\shaders\Shadow.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

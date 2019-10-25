@@ -3,6 +3,8 @@
 #include "../opengl/Shader.h"
 #include "../opengl/Model.h"
 #include "../opengl/FrameBuffer.h"
+#include "../opengl/ComputeShader.h"
+#include "../opengl/UniformBuffer.h"
 #include "Light.h"
 
 class Scene
@@ -20,6 +22,19 @@ private:
 	Shader* ambient;
 	Shader* shadow;
 	Shader* locallight;
+
+	//Blur Compute Shader
+	ComputeShader* blurHorizontal;
+	ComputeShader* blurVertical;
+	int blurSize;
+	std::vector<float> blurWeights;
+	UniformBuffer* block;
+	float maxDepth;
+	float biasAlpha;
+
+	//Blur NormalShader
+	Shader* blurShader;
+	FrameBuffer* BlurFBO[2];
 
 	Light* light;
 	FrameBuffer* G_Buffer;

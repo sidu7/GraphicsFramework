@@ -164,3 +164,9 @@ void Shader::SetUniform4fvLoc(int location, glm::vec4 vector)
 {
 	GLCall(glUniform4fv(location, 1, glm::value_ptr(vector)));
 }
+
+void Shader::SetUniformBlock(const std::string& name, unsigned int bindPoint)
+{
+	GLCall(unsigned int loc = glGetUniformBlockIndex(m_RendererID, name.c_str()));
+	GLCall(glUniformBlockBinding(m_RendererID, loc, bindPoint));
+}

@@ -17,6 +17,28 @@ uniform vec3 Light;
 uniform int GBufferShow;
 uniform mat4 inverseview;
 uniform mat4 shadowmat;
+uniform float maxDepth;
+uniform float biasAlpha;
+
+vec3 Cholesky(float m11, float m12, float m13, float m22, float m23, float m33, float z1, float z2, float z3)
+{
+	float a = sqrt(m11);
+	float b = m12 / a;
+	float c = m13 / a;
+	float d = sqrt(m22 - (b*b));
+	float e = (m23 - b*c) / d;
+	float f = sqrt(m33 - c*c - e*e);
+
+	float c1p = z1 / a;
+	float c2p = (z2 - b*c1p) / d;
+	float c3p = (z3 - c*c1p - e*c2p) / f;
+
+	float c3 = c3p / f;
+	float c2 = (c2p - e*c3) / d;
+	float c1 = (c1p - b*c2 - c*c3) / a;
+
+	return vec3(c1,c2,c3);
+}
 
 void main()
 {	
@@ -47,25 +69,51 @@ void main()
 
 	vec4 shadowCoord = shadowmat * vec4(worldPos,1.0);
 	
+	float G;
 	if(shadowCoord.w > 0.0)	
 	{	
 		vec2 shadowIndex = shadowCoord.xy/shadowCoord.w;
 		if(shadowIndex.x >= 0.0 && shadowIndex.y >= 0.0 && shadowIndex.x <= 1.0 && shadowIndex.y <= 1.0)
 		{
-			float lightDepth = texture(shadowmap,shadowIndex).w;
-			float pixelDepth = shadowCoord.w;
-			if(pixelDepth > lightDepth + 0.009)
-				FragColor = vec4(0,0,0,0);
+			vec4 b = texture(shadowmap,shadowIndex);
+			float zf = shadowCoord.w;			
+
+			vec4 bprime = (1 - biasAlpha) * b + biasAlpha * vec4(0.5);
+
+			vec3 c = Cholesky(1.0f, bprime.x, bprime.y, bprime.y, bprime.z, bprime.w, 1.0f, zf, zf*zf);
+
+			float b4ac = sqrt(c.y*c.y - 4*c.x*c.z);
+
+			float z2 = (-c.y + b4ac) / (2 * c.z);
+			float z3 = (-c.y - b4ac) / (2 * c.z);
+
+			if(z2 > z3)
+			{
+				float tempz = z3;
+				z3 = z2;
+				z2 = tempz;
+			}
+
+			if (zf <= z2)
+			{
+				G = 0.0f;
+			}
+			else if(zf <= z3)
+			{
+				G = (zf*z3 - bprime.x*(zf+z3) + bprime.y)/((z3-z2)*(zf-z2));
+			}
 			else
 			{
-				FragColor = vec4(Ii * NL * BRDF,1.0);
+				G = 1.0f - ((z2*z3 - bprime.x*(z2+z3) + bprime.y)/((zf-z2)*(zf-z3)));				
 			}
 		}
 		else
-			FragColor = vec4(Ii * NL * BRDF,1.0);
+			G = 0.0f;
 	}
 	else
-		FragColor = vec4(0,0,0,0);
+		G = 1.0f;
+
+	FragColor = (1-G) * vec4(Ii * NL * BRDF,1.0);
 
 	switch(GBufferShow)
 	{
