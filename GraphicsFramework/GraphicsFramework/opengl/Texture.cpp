@@ -33,17 +33,21 @@ Texture::Texture(int channels, int width, int height) : mBPP(channels), mRendere
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 
 	GLint format;
+	GLint internalformat;
 	switch (mBPP) {
 
 	case 1: format = GL_RED;
+		internalformat = GL_R32F;
 		break;
 	case 3: format = GL_RGB;
+		internalformat = GL_RGB32F;
 		break;
 	case 4: format = GL_RGBA;
+		internalformat = GL_RGBA32F;
 		break;
 	}
 
-	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, format, mWidth, mHeight, 0, format, GL_UNSIGNED_BYTE, NULL));
+	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, internalformat, mWidth, mHeight, 0, format, GL_FLOAT, NULL));
 	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 }
 

@@ -43,4 +43,6 @@ private:
 	float angle;
 	glm::vec3 lightColors[40][40];
 	glm::vec3 trans1, trans2, trans3;
+	Texture* horizontalBlurred;
+	Texture* blurredShadowMap;
 };

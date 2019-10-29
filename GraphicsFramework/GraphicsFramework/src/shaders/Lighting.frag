@@ -78,7 +78,7 @@ void main()
 			vec4 b = texture(shadowmap,shadowIndex);
 			float zf = shadowCoord.w;			
 
-			vec4 bprime = (1 - biasAlpha) * b + biasAlpha * vec4(0.5);
+			vec4 bprime = (1 - biasAlpha) * b + biasAlpha * vec4(0.5);//vec4(maxDepth/2);
 
 			vec3 c = Cholesky(1.0f, bprime.x, bprime.y, bprime.y, bprime.z, bprime.w, 1.0f, zf, zf*zf);
 

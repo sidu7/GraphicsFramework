@@ -63,8 +63,8 @@ void Scene::Init()
 	blurSize = 5;
 	int s = blurSize / 2;
 	float normB = 1.0f / (s * sqrt(3.141592f * 2));
-	//for (int i = -blurSize; i <= blurSize; ++i)
-	for (int i = 0; i <= blurSize; ++i)
+	for (int i = -blurSize; i <= blurSize; ++i)
+	//for (int i = 0; i <= blurSize; ++i)
 	{
 		float w = normB * exp(-(i*i)/(2.0f*s*s));
 		blurWeights.emplace_back(w);
@@ -86,6 +86,8 @@ void Scene::Init()
 	blurShader = new Shader("src/shaders/Blur.vert", "src/shaders/Blur.frag");
 	BlurFBO[0] = new FrameBuffer(ShadowMap->mWidth, ShadowMap->mHeight);
 	BlurFBO[1] = new FrameBuffer(ShadowMap->mWidth, ShadowMap->mHeight);
+	horizontalBlurred = new Texture(4, ShadowMap->mWidth, ShadowMap->mHeight);
+	blurredShadowMap = new Texture(4, ShadowMap->mWidth, ShadowMap->mHeight);
 }
 
 bool lighton = true;
@@ -123,8 +125,8 @@ void Scene::Draw()
 		int s = blurSize / 2;
 		float normB = 1.0f / (s * sqrt(3.141592f * 2));
 		blurWeights.clear();
-		//for (int i = -blurSize; i <= blurSize; ++i)
-		for (int i = 0; i <= blurSize; ++i)
+		for (int i = -blurSize; i <= blurSize; ++i)
+		//for (int i = 0; i <= blurSize; ++i)
 		{
 			float w = normB * exp(-(i * i) / (2.0f * s * s));
 			blurWeights.emplace_back(w);
@@ -170,13 +172,12 @@ void Scene::Draw()
 	ShadowMap->Unbind();
 
 	//Blur Compute Shader
-	/*block->Bind(2);
+	block->Bind(2);
 	block->SubData(sizeof(float) * blurWeights.size(), &blurWeights[0]);
 	blurHorizontal->Bind();	
-	Texture horizontalBlurred = Texture(4,ShadowMap->mWidth,ShadowMap->mHeight);
 
 	blurHorizontal->SetInputUniformImage("src", ShadowMap->m_TextureID[0], 0, 4);
-	blurHorizontal->SetOutputUniformImage("dst", horizontalBlurred.GetTextureID(), 1, 4);
+	blurHorizontal->SetOutputUniformImage("dst", horizontalBlurred->GetTextureID(), 1, 4);
 	blurHorizontal->SetUniform1i("width", blurSize);
 	blurHorizontal->SetUniformBlock("blurKernel", 2);
 
@@ -184,19 +185,18 @@ void Scene::Draw()
 	blurHorizontal->Unbind();
 
 	blurVertical->Bind();
-	Texture blurredShadowMap = Texture(4, ShadowMap->mWidth, ShadowMap->mHeight);
 
-	blurVertical->SetInputUniformImage("src", horizontalBlurred.GetTextureID(), 0, 4);
-	blurVertical->SetOutputUniformImage("dst", blurredShadowMap.GetTextureID(), 1, 4);
+	blurVertical->SetInputUniformImage("src", horizontalBlurred->GetTextureID(), 0, 4);
+	blurVertical->SetOutputUniformImage("dst", blurredShadowMap->GetTextureID(), 1, 4);
 	blurVertical->SetUniform1i("width", blurSize);
 	blurVertical->SetUniformBlock("blurKernel", 2);
 
 	blurVertical->Run(ShadowMap->mWidth, ShadowMap->mHeight/128, 1);
 	blurVertical->Unbind();
-	block->Unbind();*/
+	block->Unbind();
 
 	//Blur Fragment Shader
-	bool horizontal = true, first_iteration = true;
+	/*bool horizontal = true, first_iteration = true;
 	unsigned int amount = blurSize + 1;
 	block->Bind(2);
 	block->SubData(sizeof(float) * blurWeights.size(), &blurWeights[0]);
@@ -223,7 +223,7 @@ void Scene::Draw()
 	}
 	BlurFBO[1]->Unbind();
 	blurShader->Unbind();
-	block->Unbind();
+	block->Unbind();*/
 	//Blur Fragment Shader
 
 	//Ambient light pass
@@ -255,9 +255,9 @@ void Scene::Draw()
 		lighting->SetUniform1i("diffusetex", 3);
 		G_Buffer->TexBind(3, 4);
 		lighting->SetUniform1i("specularalpha", 4);
-		//blurredShadowMap.Bind(5);
+		blurredShadowMap->Bind(5);
 		//ShadowMap->TexBind(0, 5);
-		BlurFBO[!horizontal]->TexBind(0, 5);
+		//BlurFBO[!horizontal]->TexBind(0, 5);
 		lighting->SetUniform1i("shadowmap", 5);
 		lighting->SetUniformMat4f("shadowmat", shadowMatrix);
 		lighting->SetUniform1f("maxDepth", maxDepth);

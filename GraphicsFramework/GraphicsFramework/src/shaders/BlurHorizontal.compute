@@ -23,13 +23,13 @@ void main()
 
 	barrier();
 
-	vec4 sum = vec4(0.0);
+	vec4 sum = vec4(0.0f);
 	uint k = i;
 	for (uint j = 0; j <= 2 * width; ++j)
 	{
 		sum += weights[j] * v[k];
 		++k;
 	}
-	sum = vec4(1, 0, 0, 1);
+
 	imageStore(dst, gpos, sum);
 }
