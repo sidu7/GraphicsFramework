@@ -8,6 +8,7 @@
 #include "ImguiManager.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/compatibility.hpp"
+#include "glm/gtc/type_ptr.hpp"
 
 extern Engine* engine;
 
@@ -35,7 +36,26 @@ void AnimationScene::Init()
 	light->position = glm::vec3(10.0, 100.0, 40.0);
 
 	modelDraw = new Shader("src/animshaders/ModelDraw.vert", "src/animshaders/ModelDraw.frag");
-	Drawing = new Shader("src/animshaders/Drawing.vert", "src/animshaders/Drawing.frag");
+	Drawing = new Shader("src/animshaders/Drawing.vert", "src/animshaders/Drawing.frag");	
+
+	controlPoints.emplace_back(glm::vec4(10.0f, 0.0f, 10.0f, 1.0f));
+	controlPoints.emplace_back(glm::vec4(15.0f, 0.0f, 0.0f, 1.0f));
+	controlPoints.emplace_back(glm::vec4(-10.0f, 0.0f, 10.0f, 1.0f));
+	controlPoints.emplace_back(glm::vec4(-15.0f, 0.0f, 0.0f, 1.0f));
+
+	BSplineMatrix[0] = glm::vec4(-1.0f, 3.0f, -3.0f, 1.0f);
+	BSplineMatrix[1] = glm::vec4(3.0f, -6.0f, 3.0f, 0.0f);
+	BSplineMatrix[2] = glm::vec4(-3.0f, 0.0f, 3.0f, 0.0f);
+	BSplineMatrix[3] = glm::vec4(1.0f, 4.0f, 1.0f, 0.0f);
+
+	BSplineMatrix /= 6.0f;
+	
+	controlPointsMatrix[0] = controlPoints[0];
+	controlPointsMatrix[1] = controlPoints[1];
+	controlPointsMatrix[2] = controlPoints[2];
+	controlPointsMatrix[3] = controlPoints[3];
+
+	controlPointsMatrix = glm::transpose(controlPointsMatrix);
 }
 
 void AnimationScene::Draw()
@@ -103,7 +123,7 @@ void AnimationScene::Draw()
 	modelDraw->SetUniformMat4f("projection", engine->pCamera->mProjection);
 	modelDraw->SetUniformMat4f("view", engine->pCamera->mView);
 
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 7.5f, 0.0f));
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(0.1f));
 
 	if (drawModel)
@@ -139,12 +159,37 @@ void AnimationScene::Draw()
 			std::pair<VertexArray*, ElementArrayBuffer*> shape = ShapeManager::Instance().mShapes[Shapes::CUBE];
 			Renderer::Instance().Draw(*shape.first, *shape.second, *Drawing);
 		}
-		VertexArray VBO = CreateBonesData();
+		VertexArray VAO = CreateBonesData();
+		VAO.Bind();
 		glDrawArrays(GL_LINES, 0, demoModel.mBones.size() * 2 - 2);
+		VAO.Unbind();		
 		Drawing->SetUniform1i("lighting", 1);
 	}
 
 	glEnable(GL_DEPTH_TEST);
+
+	for (unsigned int i = 0; i < controlPoints.size(); ++i)
+	{
+		glm::mat4 controlModel = glm::translate(glm::mat4(1.0f), glm::vec3(controlPoints[i]));
+		controlModel = glm::translate(controlModel, glm::vec3(0.0f,0.125f,0.0f));
+		controlModel = glm::scale(controlModel, glm::vec3(0.25f));
+		Drawing->SetUniformMat4f("model", controlModel);
+		Drawing->SetUniform3f("diffuse", 0.0f, 0.0f, 1.0f);
+		std::pair<VertexArray*, ElementArrayBuffer*> shape = ShapeManager::Instance().mShapes[Shapes::CUBE];
+		Renderer::Instance().Draw(*shape.first, *shape.second, *Drawing);
+	}
+
+	std::vector<glm::vec4> curvePoints;
+	for (float i = 0.0f; i <= 1.0f; i += 0.01f)
+	{
+		glm::vec4 point = GetPointOnCurve(i);
+		curvePoints.emplace_back(point);
+		curvePoints.emplace_back(point);
+	}
+	VertexArray va = CreateVec4VAO(curvePoints);
+	va.Bind();
+	glDrawArrays(GL_LINES, 1, curvePoints.size() * 2 - 1);
+	va.Unbind();
 
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
@@ -269,5 +314,35 @@ VertexArray AnimationScene::CreateBonesData()
 	va.AddLayout();
 
 	vb.Unbind();
+	va.Unbind();
+	return va;
+}
+
+inline glm::vec4 AnimationScene::GetPointOnCurve(float t)
+{		
+	//Bezier
+	//BSplineMatrix[0] = glm::vec4(-1.0f, 3.0f, -3.0f, 1.0f);
+	//BSplineMatrix[1] = glm::vec4(3.0f, -6.0f, 3.0f, 0.0f);
+	//BSplineMatrix[2] = glm::vec4(-3.0f, 3.0f, 0.0f, 0.0f);
+	//BSplineMatrix[3] = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);	
+	//
+	//glm::vec4 point = glm::vec4(1.0f,1.0f,1.0f, 1.0f)* BSplineMatrix* controlPointsMatrix;
+
+	return glm::vec4(t*t*t, t*t, t, 1.0f) * BSplineMatrix * controlPointsMatrix;
+}
+
+VertexArray AnimationScene::CreateVec4VAO(std::vector<glm::vec4>& pointList)
+{
+	VertexArray va;
+	VertexBuffer vb;
+
+	va.AddBuffer(vb);
+	vb.AddData(&pointList[0], pointList.size() * sizeof(glm::vec4));
+
+	va.Push(4, GL_FLOAT, sizeof(float));
+	va.AddLayout();
+
+	vb.Unbind();
+	va.Unbind();
 	return va;
 }

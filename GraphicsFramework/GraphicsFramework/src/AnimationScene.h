@@ -30,6 +30,8 @@ private:
 			}
 		}
 	}
+	inline glm::vec4 GetPointOnCurve(float t);
+	VertexArray CreateVec4VAO(std::vector<glm::vec4>& pointList);
 
 private:
 	Model demoModel; 
@@ -43,4 +45,9 @@ private:
 	std::vector<glm::mat4> mBonesTransformation;
 	double RunTime;
 	bool isPaused;
+
+	//Curve
+	std::vector<glm::vec4> controlPoints;
+	glm::mat4 BSplineMatrix;
+	glm::mat4 controlPointsMatrix;
 };
