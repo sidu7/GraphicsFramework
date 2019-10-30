@@ -409,5 +409,6 @@
     <None Include="src\animshaders\ModelDraw.frag" />
     <None Include="src\animshaders\Drawing.vert" />
     <None Include="src\animshaders\Drawing.frag" />
+    <None Include="res\JSON Data\ControlPoints.json" />
   </ItemGroup>
 </Project>

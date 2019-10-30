@@ -64,7 +64,6 @@ void Renderer::Draw(const VertexArray& va, const ElementArrayBuffer& ib, const S
 	va.Bind();
 	ib.Bind();
 	GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
-	shader.Unbind();
 	va.Unbind();
 	ib.Unbind();
 }

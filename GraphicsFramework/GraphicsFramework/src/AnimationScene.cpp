@@ -11,6 +11,12 @@
 #include "glm/gtx/compatibility.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#include <fstream>
+#include <rapidjson/document.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/filewritestream.h>
+#include <rapidjson/ostreamwrapper.h>
+
 extern Engine* engine;
 
 std::string animation;
@@ -39,12 +45,20 @@ void AnimationScene::Init()
 	modelDraw = new Shader("src/animshaders/ModelDraw.vert", "src/animshaders/ModelDraw.frag");
 	Drawing = new Shader("src/animshaders/Drawing.vert", "src/animshaders/Drawing.frag");	
 
-	controlPoints.emplace_back(glm::vec4(-25.0f, 0.0f, 0.0f, 1.0f));
-	controlPoints.emplace_back(glm::vec4(-20.0f, 0.0f, 20.0f, 1.0f));
-	controlPoints.emplace_back(glm::vec4(20.0f, 0.0f, 20.0f, 1.0f));
-	controlPoints.emplace_back(glm::vec4(25.0f, 0.0f, 0.0f, 1.0f));
-	controlPoints.emplace_back(glm::vec4(45.0f, 0.0f, 15.0f, 1.0f));
-	controlPoints.emplace_back(glm::vec4(25.0f, 0.0f, 45.0f, 1.0f));
+	std::ifstream file("res/JSON Data/ControlPoints.json");
+	std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>()); 
+	file.close();
+	rapidjson::Document root; 
+	root.Parse(contents.c_str()); 
+	if (!root.IsObject()) { std::cout << "Error reading ControlPoints.json" << std::endl; }
+
+	rapidjson::Value::Array points = root["ControlPoints"].GetArray();
+	controlPoints.clear();
+	for (unsigned int i = 0; i < points.Size(); ++i)
+	{
+		rapidjson::Value::Array arr = points[i].GetArray();
+		controlPoints.emplace_back(glm::vec4(arr[0].GetFloat(), arr[1].GetFloat(), arr[2].GetFloat(), 1.0f));
+	}
 
 	CurveMatrix[0] = glm::vec4(-1.0f, 3.0f, -3.0f, 1.0f);
 	CurveMatrix[1] = glm::vec4(3.0f, -6.0f, 3.0f, 0.0f);
@@ -57,12 +71,15 @@ void AnimationScene::Init()
 
 	RecalculateMatrices();
 
-	mArcLengthTable.emplace_back(MAKE_TUPLE(0.0f, 0.0f, 0));
-	CreateAxisLengthTable();	
+	CreateAxisLengthTable();
+
+	CreateControlPointsVAO();
 
 	mPathMatrix = glm::mat4(1.0f);
 
-	mSpeed = 9.0f;
+	mSpeed = 18.0f;
+
+	showControlWindow = false;
 }
 
 void AnimationScene::Draw()
@@ -71,7 +88,7 @@ void AnimationScene::Draw()
 
 	if (!isPaused)
 	{
-		AnimationRunTime += Time::Instance().deltaTime/2.0f;
+		AnimationRunTime += Time::Instance().deltaTime;
 		PathRunTime += Time::Instance().deltaTime;
 	}
 
@@ -121,20 +138,38 @@ void AnimationScene::Draw()
 		isPaused = true;
 		AnimationRunTime += 2.0f * Time::Instance().deltaTime;
 	}
-	if (ImGui::TreeNode("ControlPoints"))
+	if (ImGui::Button(showControlWindow ? "Hide Control Points Window" : "Show Control Points Window"))
 	{
+		showControlWindow = !showControlWindow;
+	}
+	if (showControlWindow)
+	{
+		ImGui::Begin("Control Points");
+		if (ImGui::Button("New Control Point"))
+		{
+			controlPoints.emplace_back(controlPoints[controlPoints.size() - 1]);
+			RecalculateMatrices();
+			CreateAxisLengthTable();
+			CreateControlPointsVAO();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Save Control Points"))
+		{
+			Deserialize();
+		}
 		for (unsigned int i = 0; i < controlPoints.size(); ++i)
 		{
-			if (ImGui::SliderFloat3(std::string("Point" + std::to_string(i)).c_str(), (float*)&controlPoints[i], -150.0f, 150.0f, "%.1f"))
+			if (ImGui::SliderFloat3(std::string("Point" + std::to_string(i+1)).c_str(), (float*)&controlPoints[i], -150.0f, 150.0f, "%.1f"))
 			{
 				controlPoints[i].y = 0.0f;
 				RecalculateMatrices();
+				CreateAxisLengthTable();
+				CreateControlPointsVAO();
 			}
 		}
-		ImGui::TreePop();
+		ImGui::End();
 	}
 	ImGui::InputFloat("Velocity", &mSpeed, 0.25f);
-
 	ImGui::End();
 
 	AnimatorUpdate(animation);
@@ -193,14 +228,14 @@ void AnimationScene::Draw()
 		Drawing->SetUniform1i("lighting", 0);
 		for (unsigned int i = 0; i < demoModel.mBones.size(); ++i)
 		{
-			Drawing->SetUniformMat4f("model", model * demoModel.mBones[i].mCurrentTransformation);
+			Drawing->SetUniformMat4f("model", mPathMatrix * model * demoModel.mBones[i].mCurrentTransformation);
 			Drawing->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
 			std::pair<VertexArray*, ElementArrayBuffer*> shape = ShapeManager::Instance().mShapes[Shapes::CUBE];
 			Renderer::Instance().Draw(*shape.first, *shape.second, *Drawing);
 		}
 		VertexArray VAO = CreateBonesData();
 		VAO.Bind();
-		glLineWidth(1.0f);
+		//glLineWidth(1.0f);
 		glDrawArrays(GL_LINES, 0, demoModel.mBones.size() * 2 - 2);
 		VAO.Unbind();		
 		Drawing->SetUniform1i("lighting", 1);
@@ -222,21 +257,11 @@ void AnimationScene::Draw()
 
 	Drawing->Bind();
 	Drawing->SetUniformMat4f("model", glm::mat4(1.0f));
-	std::vector<glm::vec4> curvePoints;
-	for (unsigned int j = 0; j < controlPointsMatrices.size(); ++j)
-	{
-		for (float i = 0.0f; i <= 1.0f; i += 0.01f)
-		{
-			glm::vec4 pointOnCurve = GetPointOnCurve(i, controlPointsMatrices[j]);
-			curvePoints.emplace_back(pointOnCurve);
-			curvePoints.emplace_back(pointOnCurve);
-		}
-	}
-	VertexArray va = CreateVec4VAO(curvePoints);
-	va.Bind();
-	glLineWidth(5.0f);
-	glDrawArrays(GL_LINES, 1, curvePoints.size() - 1);
-	va.Unbind();
+	
+	mCurveVAO.Bind();
+	//glLineWidth(2.0f);
+	glDrawArrays(GL_LINES, 1, mCurvePointsSize - 1);
+	mCurveVAO.Unbind();
 	
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
@@ -375,6 +400,44 @@ glm::vec4 AnimationScene::GetDerivativeOfPointOnCurve(float t, glm::mat4& contro
 	return glm::vec4(3 * t * t, 2 * t, 1.0f, 0.0f) * CurveMatrix * controlPointMatrix;
 }
 
+void AnimationScene::Deserialize()
+{
+	std::ofstream file("res/JSON Data/ControlPoints.json");
+	rapidjson::StringBuffer s;
+	rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+	writer.StartObject();
+	writer.Key("ControlPoints");
+	writer.StartArray();
+	for (unsigned int i = 0; i < controlPoints.size(); ++i)
+	{
+		writer.StartArray();
+		writer.Double(controlPoints[i].x);
+		writer.Double(controlPoints[i].y);
+		writer.Double(controlPoints[i].z);
+		writer.EndArray();
+	}
+	writer.EndArray();
+	writer.EndObject();
+	file.write(s.GetString(), s.GetSize());
+	std::cout << "Successfully written to File" << std::endl;
+}
+
+void AnimationScene::CreateControlPointsVAO()
+{
+	std::vector<glm::vec4> curvePoints;
+	for (unsigned int j = 0; j < controlPointsMatrices.size(); ++j)
+	{
+		for (float i = 0.0f; i <= 1.0f; i += 0.01f)
+		{
+			glm::vec4 pointOnCurve = GetPointOnCurve(i, controlPointsMatrices[j]);
+			curvePoints.emplace_back(pointOnCurve);
+			curvePoints.emplace_back(pointOnCurve);
+		}
+	}
+	mCurvePointsSize = curvePoints.size();
+	mCurveVAO = CreateVec4VAO(curvePoints);
+}
+
 VertexArray AnimationScene::CreateVec4VAO(std::vector<glm::vec4>& pointList)
 {
 	VertexArray va;
@@ -409,6 +472,8 @@ void AnimationScene::RecalculateMatrices()
 
 void AnimationScene::CreateAxisLengthTable()
 {
+	mArcLengthTable.clear();
+	mArcLengthTable.emplace_back(MAKE_TUPLE(0.0f, 0.0f, 0));
 	for (unsigned int i = 0; i < controlPointsMatrices.size(); ++i)
 	{
 		std::stack<TABLE_ENTRY> adaptiveAlgoStack;
@@ -456,20 +521,22 @@ inline std::pair<float,int> AnimationScene::SearchInTable(float distance)
 		if (tableDistance > distance)
 		{
 			float factor = (distance - mArcLengthTable[i - 1].first) / (tableDistance - mArcLengthTable[i - 1].first);
-			float s;
+			float s; int index;
 			if (mArcLengthTable[i - 1].second.second == mArcLengthTable[i].second.second)
 			{
 				float T2 = mArcLengthTable[i].second.first;
 				float T1 = mArcLengthTable[i - 1].second.first;
 				s = glm::lerp(T1, T2, factor);
+				index = i;
 			}
 			else
 			{
-				s = mArcLengthTable[i].second.first;
+				s = mArcLengthTable[i-1].second.first;
+				index = i - 1;
 			}
-			return std::make_pair(s, mArcLengthTable[i].second.second);
+			return std::make_pair(s, mArcLengthTable[index].second.second);
 		}
 	}
-	int index = mArcLengthTable.size() - 1;
-	return std::make_pair(mArcLengthTable[index].second.first, mArcLengthTable[index].second.second);
+	PathRunTime = 0.0f;
+	return std::make_pair(0, 0);
 }

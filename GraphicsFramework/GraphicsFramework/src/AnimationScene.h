@@ -39,6 +39,8 @@ private:
 	void CreateAxisLengthTable();
 	inline std::pair<float, int> SearchInTable(float distance);
 	glm::vec4 GetDerivativeOfPointOnCurve(float t, glm::mat4& controlPointMatrix);
+	void Deserialize();
+	void CreateControlPointsVAO();
 
 private:
 	Model demoModel; 
@@ -58,9 +60,12 @@ private:
 	float PathRunTime;
 
 	//Curve
+	bool showControlWindow;
 	std::vector<glm::vec4> controlPoints;
 	glm::mat4 CurveMatrix;
 	std::vector<glm::mat4> controlPointsMatrices;
+	VertexArray mCurveVAO;
+	unsigned int mCurvePointsSize;
 	// Table has entries in the form (distance, parameter of curve, curve index)
 	std::vector<TABLE_ENTRY> mArcLengthTable;
 };
