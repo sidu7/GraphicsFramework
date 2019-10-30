@@ -4,6 +4,9 @@
 #include "../opengl/Shader.h"
 #include "Light.h"
 
+#define MAKE_TUPLE(x,y,z) std::make_pair(x,std::make_pair(y,z))
+#define TABLE_ENTRY std::pair<float, std::pair<float, int>>
+
 struct BoneRenderData
 {
 	glm::mat4 transformation;
@@ -30,8 +33,11 @@ private:
 			}
 		}
 	}
-	inline glm::vec4 GetPointOnCurve(float t);
+	inline glm::vec4 GetPointOnCurve(float t, glm::mat4& controlPointMatrix);
 	VertexArray CreateVec4VAO(std::vector<glm::vec4>& pointList);
+	void RecalculateMatrices();
+	void CreateAxisLengthTable();
+	inline glm::vec3 SearchInTable(float distance);
 
 private:
 	Model demoModel; 
@@ -43,11 +49,18 @@ private:
 	Shader* Drawing;
 
 	std::vector<glm::mat4> mBonesTransformation;
-	double RunTime;
+	double AnimationRunTime;
 	bool isPaused;
+	// Model data
+	glm::vec3 mPosition;
+	float mSpeed;
+	glm::mat4 mPathMatrix;
+	float PathRunTime;
 
 	//Curve
 	std::vector<glm::vec4> controlPoints;
-	glm::mat4 BSplineMatrix;
-	glm::mat4 controlPointsMatrix;
+	glm::mat4 CurveMatrix;
+	std::vector<glm::mat4> controlPointsMatrices;
+	// Table has entries in the form (distance, parameter of curve, curve index)
+	std::vector<TABLE_ENTRY> mArcLengthTable;
 };

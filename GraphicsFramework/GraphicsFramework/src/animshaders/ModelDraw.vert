@@ -14,6 +14,7 @@ uniform mat4 model;
 uniform mat4 normaltr;
 uniform mat4 inverseview;
 uniform mat4 boneMatrix[MAX_BONES];
+uniform mat4 pathTr;
 
 out vec3 normalVec;
 out vec3 worldPos;
@@ -28,7 +29,7 @@ void main()
 	BoneTransform += boneMatrix[aBoneIDs[2]] * aWeights[2];
 	BoneTransform += boneMatrix[aBoneIDs[3]] * aWeights[3];
 
-	gl_Position = projection * view * model * BoneTransform * vec4(aPos,1.0);
+	gl_Position = projection * view * pathTr * model * BoneTransform * vec4(aPos,1.0);
 
 	worldPos = (model * BoneTransform * vec4(aPos,1.0)).xyz;
 

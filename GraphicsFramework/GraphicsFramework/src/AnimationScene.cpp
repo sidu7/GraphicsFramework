@@ -6,6 +6,7 @@
 #include <math.h>
 #include "Time.h"
 #include "ImguiManager.h"
+#include <stack>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/compatibility.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -27,7 +28,7 @@ void AnimationScene::Init()
 	drawBones = false;
 
 	engine->pCamera->pitch = -20.0f;
-	engine->pCamera->mCameraPos = glm::vec3(0.0f, 30.0f, 30.0f);
+	engine->pCamera->mCameraPos = glm::vec3(0.0f, 50.0f, 150.0f);
 	engine->pCamera->CalculateFront();
 
 	mBonesTransformation.resize(demoModel.mBones.size());
@@ -38,24 +39,31 @@ void AnimationScene::Init()
 	modelDraw = new Shader("src/animshaders/ModelDraw.vert", "src/animshaders/ModelDraw.frag");
 	Drawing = new Shader("src/animshaders/Drawing.vert", "src/animshaders/Drawing.frag");	
 
-	controlPoints.emplace_back(glm::vec4(10.0f, 0.0f, 10.0f, 1.0f));
-	controlPoints.emplace_back(glm::vec4(15.0f, 0.0f, 0.0f, 1.0f));
-	controlPoints.emplace_back(glm::vec4(-10.0f, 0.0f, 10.0f, 1.0f));
-	controlPoints.emplace_back(glm::vec4(-15.0f, 0.0f, 0.0f, 1.0f));
+	controlPoints.emplace_back(glm::vec4(-25.0f, 0.0f, 0.0f, 1.0f));
+	controlPoints.emplace_back(glm::vec4(-20.0f, 0.0f, 20.0f, 1.0f));
+	controlPoints.emplace_back(glm::vec4(20.0f, 0.0f, 20.0f, 1.0f));
+	controlPoints.emplace_back(glm::vec4(25.0f, 0.0f, 0.0f, 1.0f));
+	controlPoints.emplace_back(glm::vec4(45.0f, 0.0f, 15.0f, 1.0f));
+	controlPoints.emplace_back(glm::vec4(25.0f, 0.0f, 45.0f, 1.0f));
 
-	BSplineMatrix[0] = glm::vec4(-1.0f, 3.0f, -3.0f, 1.0f);
-	BSplineMatrix[1] = glm::vec4(3.0f, -6.0f, 3.0f, 0.0f);
-	BSplineMatrix[2] = glm::vec4(-3.0f, 0.0f, 3.0f, 0.0f);
-	BSplineMatrix[3] = glm::vec4(1.0f, 4.0f, 1.0f, 0.0f);
-
-	BSplineMatrix /= 6.0f;
+	CurveMatrix[0] = glm::vec4(-1.0f, 3.0f, -3.0f, 1.0f);
+	CurveMatrix[1] = glm::vec4(3.0f, -6.0f, 3.0f, 0.0f);
+	CurveMatrix[2] = glm::vec4(-3.0f, 0.0f, 3.0f, 0.0f);
+	CurveMatrix[3] = glm::vec4(1.0f, 4.0f, 1.0f, 0.0f);
 	
-	controlPointsMatrix[0] = controlPoints[0];
-	controlPointsMatrix[1] = controlPoints[1];
-	controlPointsMatrix[2] = controlPoints[2];
-	controlPointsMatrix[3] = controlPoints[3];
+	CurveMatrix /= 6.0f;
 
-	controlPointsMatrix = glm::transpose(controlPointsMatrix);
+	CurveMatrix = glm::transpose(CurveMatrix);
+
+	RecalculateMatrices();
+
+	mArcLengthTable.emplace_back(MAKE_TUPLE(0.0f, 0.0f, 0));
+	CreateAxisLengthTable();	
+
+	mPosition = glm::vec3(0.0f);
+	mPathMatrix = glm::mat4(1.0f);
+
+	mSpeed = 9.0f;
 }
 
 void AnimationScene::Draw()
@@ -64,7 +72,8 @@ void AnimationScene::Draw()
 
 	if (!isPaused)
 	{
-		RunTime += Time::Instance().deltaTime /2.0f;
+		AnimationRunTime += Time::Instance().deltaTime/2.0f;
+		PathRunTime += Time::Instance().deltaTime;
 	}
 
 	glEnable(GL_DEPTH_TEST);
@@ -78,7 +87,7 @@ void AnimationScene::Draw()
 			if (ImGui::Selectable(demoModel.mAnimations[i].c_str(), selected))
 			{
 				animation = demoModel.mAnimations[i];
-				RunTime = 0.01f;
+				AnimationRunTime = 0.01f;
 			}
 		}
 		ImGui::EndCombo();
@@ -88,13 +97,13 @@ void AnimationScene::Draw()
 	if (ImGui::Button("Step --"))
 	{
 		isPaused = true;
-		RunTime -= 2.0f * Time::Instance().deltaTime;
+		AnimationRunTime -= 2.0f * Time::Instance().deltaTime;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Step -"))
 	{
 		isPaused = true;
-		RunTime -= Time::Instance().deltaTime;
+		AnimationRunTime -= Time::Instance().deltaTime;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button(isPaused ? "Start" : "Pause"))
@@ -105,14 +114,24 @@ void AnimationScene::Draw()
 	if (ImGui::Button("Step +"))
 	{
 		isPaused = true;
-		RunTime += Time::Instance().deltaTime;
+		AnimationRunTime += Time::Instance().deltaTime;
 	}
 	ImGui::SameLine();
 	if (ImGui::Button("Step ++"))
 	{
 		isPaused = true;
-		RunTime += 2.0f * Time::Instance().deltaTime;
+		AnimationRunTime += 2.0f * Time::Instance().deltaTime;
 	}
+	static float point[2];
+	if (ImGui::SliderFloat2("Control Point", point, -150.0f, 150.0f, "%.1f"))
+	{
+		controlPoints[0].x = point[0];
+		controlPoints[0].z = point[1];
+
+		RecalculateMatrices();
+	}
+	ImGui::InputFloat("Velocity", &mSpeed, 0.25f);
+
 	ImGui::End();
 
 	AnimatorUpdate(animation);
@@ -125,9 +144,14 @@ void AnimationScene::Draw()
 
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(0.1f));
+	mPosition += glm::vec3(0.0f,0.0f,mSpeed) * Time::Instance().deltaTime;
+	float distance = mSpeed * PathRunTime;
+	glm::vec3 position = SearchInTable(distance);
+	mPathMatrix = glm::translate(glm::mat4(1.0f), position);
 
 	if (drawModel)
 	{
+		modelDraw->SetUniformMat4f("pathTr", mPathMatrix);
 		modelDraw->SetUniformMat4f("model", model);
 		modelDraw->SetUniformMat4f("normaltr", glm::inverse(model));
 		modelDraw->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
@@ -170,6 +194,7 @@ void AnimationScene::Draw()
 
 	for (unsigned int i = 0; i < controlPoints.size(); ++i)
 	{
+		Drawing->Bind();
 		glm::mat4 controlModel = glm::translate(glm::mat4(1.0f), glm::vec3(controlPoints[i]));
 		controlModel = glm::translate(controlModel, glm::vec3(0.0f,0.125f,0.0f));
 		controlModel = glm::scale(controlModel, glm::vec3(0.25f));
@@ -179,18 +204,23 @@ void AnimationScene::Draw()
 		Renderer::Instance().Draw(*shape.first, *shape.second, *Drawing);
 	}
 
+	Drawing->Bind();
+	Drawing->SetUniformMat4f("model", glm::mat4(1.0f));
 	std::vector<glm::vec4> curvePoints;
-	for (float i = 0.0f; i <= 1.0f; i += 0.01f)
+	for (unsigned int j = 0; j < controlPointsMatrices.size(); ++j)
 	{
-		glm::vec4 point = GetPointOnCurve(i);
-		curvePoints.emplace_back(point);
-		curvePoints.emplace_back(point);
+		for (float i = 0.0f; i <= 1.0f; i += 0.01f)
+		{
+			glm::vec4 pointOnCurve = GetPointOnCurve(i, controlPointsMatrices[j]);
+			curvePoints.emplace_back(pointOnCurve);
+			curvePoints.emplace_back(pointOnCurve);
+		}
 	}
 	VertexArray va = CreateVec4VAO(curvePoints);
 	va.Bind();
-	glDrawArrays(GL_LINES, 1, curvePoints.size() * 2 - 1);
+	glDrawArrays(GL_LINES, 1, curvePoints.size() - 1);
 	va.Unbind();
-
+	
 	model = glm::mat4(1.0f);
 	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
 	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
@@ -216,7 +246,7 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 		{
 			//interpolate for timeframe
 			AnimationData& anim = bone.mAnimations[animName];
-			double TimeinTicks = RunTime * anim.mTicksPerSec;
+			double TimeinTicks = AnimationRunTime * anim.mTicksPerSec;
 			double timeFrame = fmod(TimeinTicks, anim.mDuration);
 			unsigned int posIndex = FindLessThaninList<glm::vec3>(timeFrame, anim.mKeyPositions);
 			unsigned int rotIndex = FindLessThaninList<Quaternion>(timeFrame, anim.mKeyRotations);
@@ -318,17 +348,9 @@ VertexArray AnimationScene::CreateBonesData()
 	return va;
 }
 
-inline glm::vec4 AnimationScene::GetPointOnCurve(float t)
+inline glm::vec4 AnimationScene::GetPointOnCurve(float t, glm::mat4& controlPointMatrix)
 {		
-	//Bezier
-	//BSplineMatrix[0] = glm::vec4(-1.0f, 3.0f, -3.0f, 1.0f);
-	//BSplineMatrix[1] = glm::vec4(3.0f, -6.0f, 3.0f, 0.0f);
-	//BSplineMatrix[2] = glm::vec4(-3.0f, 3.0f, 0.0f, 0.0f);
-	//BSplineMatrix[3] = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);	
-	//
-	//glm::vec4 point = glm::vec4(1.0f,1.0f,1.0f, 1.0f)* BSplineMatrix* controlPointsMatrix;
-
-	return glm::vec4(t*t*t, t*t, t, 1.0f) * BSplineMatrix * controlPointsMatrix;
+	return glm::vec4(t*t*t, t*t, t, 1.0f) * CurveMatrix * controlPointMatrix;
 }
 
 VertexArray AnimationScene::CreateVec4VAO(std::vector<glm::vec4>& pointList)
@@ -345,4 +367,77 @@ VertexArray AnimationScene::CreateVec4VAO(std::vector<glm::vec4>& pointList)
 	vb.Unbind();
 	va.Unbind();
 	return va;
+}
+
+void AnimationScene::RecalculateMatrices()
+{
+	controlPointsMatrices.clear();
+
+	for (unsigned int i = 0; i <= controlPoints.size() - 4; ++i)
+	{
+		glm::mat4 matrix;
+		matrix[0] = controlPoints[i];
+		matrix[1] = controlPoints[i + 1];
+		matrix[2] = controlPoints[i + 2];
+		matrix[3] = controlPoints[i + 3];
+
+		controlPointsMatrices.emplace_back(glm::transpose(matrix));
+	}
+}
+
+void AnimationScene::CreateAxisLengthTable()
+{
+	for (unsigned int i = 0; i < controlPointsMatrices.size(); ++i)
+	{
+		std::stack<TABLE_ENTRY> adaptiveAlgoStack;
+		adaptiveAlgoStack.push(MAKE_TUPLE(0.0f,1.0f, i));
+
+		while (adaptiveAlgoStack.size() > 0)
+		{
+			TABLE_ENTRY topValue = adaptiveAlgoStack.top();
+			adaptiveAlgoStack.pop();
+
+			int index = topValue.second.second;
+			float sa = topValue.first;
+			float sb = topValue.second.first;
+			float sm = (sa + sb) / 2;
+
+			glm::vec4 Psm = GetPointOnCurve(sm, controlPointsMatrices[index]);
+			glm::vec4 Psa = GetPointOnCurve(sa, controlPointsMatrices[index]);
+			glm::vec4 Psb = GetPointOnCurve(sb, controlPointsMatrices[index]);
+
+			float A = glm::length(Psm - Psa);
+			float B = glm::length(Psb - Psm);
+			float C = glm::length(Psb - Psa);
+
+			if (A + B - C > 0.0001f)
+			{
+				adaptiveAlgoStack.push(MAKE_TUPLE(sm, sb, index));
+				adaptiveAlgoStack.push(MAKE_TUPLE(sa, sm, index));
+			}
+			else
+			{
+				unsigned int prevIndex = mArcLengthTable.size();
+				float distance = mArcLengthTable[prevIndex - 1].first;
+				mArcLengthTable.emplace_back(MAKE_TUPLE(distance + A, sm, index));
+				mArcLengthTable.emplace_back(MAKE_TUPLE(distance + A + B,sb,index));
+			}
+		}
+	}
+}
+
+inline glm::vec3 AnimationScene::SearchInTable(float distance)
+{
+	for (unsigned int i = 0; i < mArcLengthTable.size(); ++i)
+	{
+		float tableDistance = mArcLengthTable[i].first;
+		if (tableDistance > distance)
+		{
+			float factor = (distance - mArcLengthTable[i - 1].first) / (tableDistance - mArcLengthTable[i - 1].first);
+			float T2 = mArcLengthTable[i].second.first;
+			float T1 = mArcLengthTable[i - 1].second.first;
+			float s = glm::lerp(T1, T2, factor);
+			return GetPointOnCurve(s, controlPointsMatrices[mArcLengthTable[i].second.second]);
+		}
+	}
 }
