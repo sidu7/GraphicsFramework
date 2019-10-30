@@ -60,7 +60,6 @@ void AnimationScene::Init()
 	mArcLengthTable.emplace_back(MAKE_TUPLE(0.0f, 0.0f, 0));
 	CreateAxisLengthTable();	
 
-	mPosition = glm::vec3(0.0f);
 	mPathMatrix = glm::mat4(1.0f);
 
 	mSpeed = 9.0f;
@@ -122,13 +121,17 @@ void AnimationScene::Draw()
 		isPaused = true;
 		AnimationRunTime += 2.0f * Time::Instance().deltaTime;
 	}
-	static float point[2];
-	if (ImGui::SliderFloat2("Control Point", point, -150.0f, 150.0f, "%.1f"))
+	if (ImGui::TreeNode("ControlPoints"))
 	{
-		controlPoints[0].x = point[0];
-		controlPoints[0].z = point[1];
-
-		RecalculateMatrices();
+		for (unsigned int i = 0; i < controlPoints.size(); ++i)
+		{
+			if (ImGui::SliderFloat3(std::string("Point" + std::to_string(i)).c_str(), (float*)&controlPoints[i], -150.0f, 150.0f, "%.1f"))
+			{
+				controlPoints[i].y = 0.0f;
+				RecalculateMatrices();
+			}
+		}
+		ImGui::TreePop();
 	}
 	ImGui::InputFloat("Velocity", &mSpeed, 0.25f);
 
@@ -144,10 +147,22 @@ void AnimationScene::Draw()
 
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	model = glm::scale(model, glm::vec3(0.1f));
-	mPosition += glm::vec3(0.0f,0.0f,mSpeed) * Time::Instance().deltaTime;
 	float distance = mSpeed * PathRunTime;
-	glm::vec3 position = SearchInTable(distance);
+	std::pair<float, int> searchedValue = SearchInTable(distance);
+	glm::vec3 position = GetPointOnCurve(searchedValue.first, controlPointsMatrices[searchedValue.second]);
 	mPathMatrix = glm::translate(glm::mat4(1.0f), position);
+	glm::vec3 viewDirection = GetDerivativeOfPointOnCurve(searchedValue.first, controlPointsMatrices[searchedValue.second]);
+	viewDirection = glm::normalize(viewDirection);
+	glm::vec3 wingDirection = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), viewDirection));
+	glm::vec3 upDirection = glm::normalize(glm::cross(viewDirection, wingDirection));
+
+	glm::mat4 rotation;
+	rotation[0] = glm::vec4(wingDirection, 0.0f);
+	rotation[1] = glm::vec4(upDirection, 0.0f);
+	rotation[2] = glm::vec4(viewDirection, 0.0f);
+	rotation[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+	mPathMatrix *= rotation;
 
 	if (drawModel)
 	{
@@ -185,6 +200,7 @@ void AnimationScene::Draw()
 		}
 		VertexArray VAO = CreateBonesData();
 		VAO.Bind();
+		glLineWidth(1.0f);
 		glDrawArrays(GL_LINES, 0, demoModel.mBones.size() * 2 - 2);
 		VAO.Unbind();		
 		Drawing->SetUniform1i("lighting", 1);
@@ -218,6 +234,7 @@ void AnimationScene::Draw()
 	}
 	VertexArray va = CreateVec4VAO(curvePoints);
 	va.Bind();
+	glLineWidth(5.0f);
 	glDrawArrays(GL_LINES, 1, curvePoints.size() - 1);
 	va.Unbind();
 	
@@ -348,9 +365,14 @@ VertexArray AnimationScene::CreateBonesData()
 	return va;
 }
 
-inline glm::vec4 AnimationScene::GetPointOnCurve(float t, glm::mat4& controlPointMatrix)
+glm::vec4 AnimationScene::GetPointOnCurve(float t, glm::mat4& controlPointMatrix)
 {		
 	return glm::vec4(t*t*t, t*t, t, 1.0f) * CurveMatrix * controlPointMatrix;
+}
+
+glm::vec4 AnimationScene::GetDerivativeOfPointOnCurve(float t, glm::mat4& controlPointMatrix)
+{
+	return glm::vec4(3 * t * t, 2 * t, 1.0f, 0.0f) * CurveMatrix * controlPointMatrix;
 }
 
 VertexArray AnimationScene::CreateVec4VAO(std::vector<glm::vec4>& pointList)
@@ -426,7 +448,7 @@ void AnimationScene::CreateAxisLengthTable()
 	}
 }
 
-inline glm::vec3 AnimationScene::SearchInTable(float distance)
+inline std::pair<float,int> AnimationScene::SearchInTable(float distance)
 {
 	for (unsigned int i = 0; i < mArcLengthTable.size(); ++i)
 	{
@@ -434,10 +456,20 @@ inline glm::vec3 AnimationScene::SearchInTable(float distance)
 		if (tableDistance > distance)
 		{
 			float factor = (distance - mArcLengthTable[i - 1].first) / (tableDistance - mArcLengthTable[i - 1].first);
-			float T2 = mArcLengthTable[i].second.first;
-			float T1 = mArcLengthTable[i - 1].second.first;
-			float s = glm::lerp(T1, T2, factor);
-			return GetPointOnCurve(s, controlPointsMatrices[mArcLengthTable[i].second.second]);
+			float s;
+			if (mArcLengthTable[i - 1].second.second == mArcLengthTable[i].second.second)
+			{
+				float T2 = mArcLengthTable[i].second.first;
+				float T1 = mArcLengthTable[i - 1].second.first;
+				s = glm::lerp(T1, T2, factor);
+			}
+			else
+			{
+				s = mArcLengthTable[i].second.first;
+			}
+			return std::make_pair(s, mArcLengthTable[i].second.second);
 		}
 	}
+	int index = mArcLengthTable.size() - 1;
+	return std::make_pair(mArcLengthTable[index].second.first, mArcLengthTable[index].second.second);
 }

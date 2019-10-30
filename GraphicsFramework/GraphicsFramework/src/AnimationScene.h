@@ -37,7 +37,8 @@ private:
 	VertexArray CreateVec4VAO(std::vector<glm::vec4>& pointList);
 	void RecalculateMatrices();
 	void CreateAxisLengthTable();
-	inline glm::vec3 SearchInTable(float distance);
+	inline std::pair<float, int> SearchInTable(float distance);
+	glm::vec4 GetDerivativeOfPointOnCurve(float t, glm::mat4& controlPointMatrix);
 
 private:
 	Model demoModel; 
@@ -52,7 +53,6 @@ private:
 	double AnimationRunTime;
 	bool isPaused;
 	// Model data
-	glm::vec3 mPosition;
 	float mSpeed;
 	glm::mat4 mPathMatrix;
 	float PathRunTime;
