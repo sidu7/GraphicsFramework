@@ -1,5 +1,6 @@
 #include "ImguiManager.h"
 #include "Engine.h"
+#include "Camera.h"
 
 extern Engine* engine;
 
@@ -26,6 +27,8 @@ void ImguiManager::Update()
 {
 	ImGui::Begin("FPS");
 	ImGui::Text("FPS: %.2f FPS", ImGui::GetIO().Framerate);
+	ImGui::Text("Camera Position: %.1f, %.1f, %.1f", engine->pCamera->mCameraPos.x, engine->pCamera->mCameraPos.y, engine->pCamera->mCameraPos.z);
+	ImGui::Text("Camera Pitch: %.1f Yaw %.1f", engine->pCamera->pitch, engine->pCamera->yaw);
 	ImGui::End();
 	Render();
 }

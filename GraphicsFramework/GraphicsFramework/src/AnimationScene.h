@@ -41,6 +41,7 @@ private:
 	glm::vec4 GetDerivativeOfPointOnCurve(float t, glm::mat4& controlPointMatrix);
 	void Deserialize();
 	void CreateControlPointsVAO();
+	void ImGuiWindow();
 
 private:
 	Model demoModel; 
@@ -58,6 +59,8 @@ private:
 	float mSpeed;
 	glm::mat4 mPathMatrix;
 	float PathRunTime;
+	float totalRunTime;
+	float t1, t2;
 
 	//Curve
 	bool showControlWindow;

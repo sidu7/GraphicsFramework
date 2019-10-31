@@ -16,11 +16,11 @@ public:
 	glm::mat4 mProjection;
 	glm::vec3 mCameraPos;
 	float pitch;
+	float yaw;
 
 private:
 	glm::vec3 mCameraFront;
 	glm::vec3 mCameraUp;
-	float yaw;
 
 	float lastMouseX;
 	float lastMouseY;

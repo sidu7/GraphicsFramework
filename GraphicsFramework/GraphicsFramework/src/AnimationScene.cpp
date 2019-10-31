@@ -33,8 +33,9 @@ void AnimationScene::Init()
 	drawModel = true;
 	drawBones = false;
 
-	engine->pCamera->pitch = -20.0f;
-	engine->pCamera->mCameraPos = glm::vec3(0.0f, 50.0f, 150.0f);
+	engine->pCamera->pitch = -8.0f;
+	engine->pCamera->yaw = 4.8f;
+	engine->pCamera->mCameraPos = glm::vec3(-126.0f, 26.0f, -14.0f);
 	engine->pCamera->CalculateFront();
 
 	mBonesTransformation.resize(demoModel.mBones.size());
@@ -71,13 +72,13 @@ void AnimationScene::Init()
 
 	RecalculateMatrices();
 
-	CreateAxisLengthTable();
+	mSpeed = 18.0f;
+	CreateAxisLengthTable();	
 
 	CreateControlPointsVAO();
 
 	mPathMatrix = glm::mat4(1.0f);
 
-	mSpeed = 18.0f;
 
 	showControlWindow = false;
 }
@@ -88,101 +89,45 @@ void AnimationScene::Draw()
 
 	if (!isPaused)
 	{
-		AnimationRunTime += Time::Instance().deltaTime;
 		PathRunTime += Time::Instance().deltaTime;
 	}
 
 	glEnable(GL_DEPTH_TEST);
 
-	ImGui::Begin("Animation");
-	bool selected = true;
-	if (ImGui::BeginCombo("", "Select Animation"))
-	{
-		for (unsigned int i = 0; i < demoModel.mAnimations.size(); ++i)
-		{
-			if (ImGui::Selectable(demoModel.mAnimations[i].c_str(), selected))
-			{
-				animation = demoModel.mAnimations[i];
-				AnimationRunTime = 0.01f;
-			}
-		}
-		ImGui::EndCombo();
-	}
-	ImGui::Checkbox("Draw Skin", &drawModel);
-	ImGui::Checkbox("Draw Bones", &drawBones);
-	if (ImGui::Button("Step --"))
-	{
-		isPaused = true;
-		AnimationRunTime -= 2.0f * Time::Instance().deltaTime;
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Step -"))
-	{
-		isPaused = true;
-		AnimationRunTime -= Time::Instance().deltaTime;
-	}
-	ImGui::SameLine();
-	if (ImGui::Button(isPaused ? "Start" : "Pause"))
-	{
-		isPaused = !isPaused;
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Step +"))
-	{
-		isPaused = true;
-		AnimationRunTime += Time::Instance().deltaTime;
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Step ++"))
-	{
-		isPaused = true;
-		AnimationRunTime += 2.0f * Time::Instance().deltaTime;
-	}
-	if (ImGui::Button(showControlWindow ? "Hide Control Points Window" : "Show Control Points Window"))
-	{
-		showControlWindow = !showControlWindow;
-	}
-	if (showControlWindow)
-	{
-		ImGui::Begin("Control Points");
-		if (ImGui::Button("New Control Point"))
-		{
-			controlPoints.emplace_back(controlPoints[controlPoints.size() - 1]);
-			RecalculateMatrices();
-			CreateAxisLengthTable();
-			CreateControlPointsVAO();
-		}
-		ImGui::SameLine();
-		if (ImGui::Button("Save Control Points"))
-		{
-			Deserialize();
-		}
-		for (unsigned int i = 0; i < controlPoints.size(); ++i)
-		{
-			if (ImGui::SliderFloat3(std::string("Point" + std::to_string(i+1)).c_str(), (float*)&controlPoints[i], -150.0f, 150.0f, "%.1f"))
-			{
-				controlPoints[i].y = 0.0f;
-				RecalculateMatrices();
-				CreateAxisLengthTable();
-				CreateControlPointsVAO();
-			}
-		}
-		ImGui::End();
-	}
-	ImGui::InputFloat("Velocity", &mSpeed, 0.25f);
-	ImGui::End();
-
-	AnimatorUpdate(animation);
+	ImGuiWindow();
 
 	modelDraw->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
 	modelDraw->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
 	modelDraw->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
 	modelDraw->SetUniformMat4f("projection", engine->pCamera->mProjection);
 	modelDraw->SetUniformMat4f("view", engine->pCamera->mView);
+	
+	float speed;
+	float distance;
+	if (PathRunTime < t1)
+	{
+		speed = mSpeed * PathRunTime / t1;
+		distance = 0.5f * mSpeed / t1 * PathRunTime * PathRunTime;
+	}
+	else if (PathRunTime > t1 && PathRunTime <= t2)
+	{
+		speed = mSpeed;
+		distance = mSpeed * t1 * 0.5f + mSpeed * (PathRunTime - t1);
+	}
+	else if (PathRunTime > t2 && PathRunTime <= totalRunTime)
+	{
+		speed = mSpeed * (totalRunTime - PathRunTime) / (totalRunTime - t2);
+		distance = mSpeed * t1 * 0.5f + mSpeed * (t2 - t1) + (mSpeed - (mSpeed * (PathRunTime - t2) / (totalRunTime - t2)) * 0.5f) *
+			(PathRunTime - t2);
+	}
+	else
+	{
+		PathRunTime = 0.0f;
+		distance = 0.0f;
+		speed = 0.0f;
+	}
 
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(0.1f));
-	float distance = mSpeed * PathRunTime;
+	//float distance = mSpeed * PathRunTime;
 	std::pair<float, int> searchedValue = SearchInTable(distance);
 	glm::vec3 position = GetPointOnCurve(searchedValue.first, controlPointsMatrices[searchedValue.second]);
 	mPathMatrix = glm::translate(glm::mat4(1.0f), position);
@@ -199,6 +144,16 @@ void AnimationScene::Draw()
 
 	mPathMatrix *= rotation;
 
+	if (!isPaused)
+	{
+		float speedFactor = speed / mSpeed;
+		AnimationRunTime += Time::Instance().deltaTime * speedFactor;
+	}
+
+	AnimatorUpdate(animation);
+
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	model = glm::scale(model, glm::vec3(0.1f));
 	if (drawModel)
 	{
 		modelDraw->SetUniformMat4f("pathTr", mPathMatrix);
@@ -391,7 +346,7 @@ VertexArray AnimationScene::CreateBonesData()
 }
 
 glm::vec4 AnimationScene::GetPointOnCurve(float t, glm::mat4& controlPointMatrix)
-{		
+{
 	return glm::vec4(t*t*t, t*t, t, 1.0f) * CurveMatrix * controlPointMatrix;
 }
 
@@ -436,6 +391,86 @@ void AnimationScene::CreateControlPointsVAO()
 	}
 	mCurvePointsSize = curvePoints.size();
 	mCurveVAO = CreateVec4VAO(curvePoints);
+}
+
+void AnimationScene::ImGuiWindow()
+{
+	ImGui::Begin("Animation");
+	bool selected = true;
+	if (ImGui::BeginCombo("", "Select Animation"))
+	{
+		for (unsigned int i = 0; i < demoModel.mAnimations.size(); ++i)
+		{
+			if (ImGui::Selectable(demoModel.mAnimations[i].c_str(), selected))
+			{
+				animation = demoModel.mAnimations[i];
+				AnimationRunTime = 0.01f;
+			}
+		}
+		ImGui::EndCombo();
+	}
+	ImGui::Checkbox("Draw Skin", &drawModel);
+	ImGui::Checkbox("Draw Bones", &drawBones);
+	if (ImGui::Button("Step --"))
+	{
+		isPaused = true;
+		AnimationRunTime -= 2.0f * Time::Instance().deltaTime;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Step -"))
+	{
+		isPaused = true;
+		AnimationRunTime -= Time::Instance().deltaTime;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button(isPaused ? "Start" : "Pause"))
+	{
+		isPaused = !isPaused;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Step +"))
+	{
+		isPaused = true;
+		AnimationRunTime += Time::Instance().deltaTime;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Step ++"))
+	{
+		isPaused = true;
+		AnimationRunTime += 2.0f * Time::Instance().deltaTime;
+	}
+	if (ImGui::Button(showControlWindow ? "Hide Control Points Window" : "Show Control Points Window"))
+	{
+		showControlWindow = !showControlWindow;
+	}
+	if (showControlWindow)
+	{
+		ImGui::Begin("Control Points");
+		if (ImGui::Button("New Control Point"))
+		{
+			controlPoints.emplace_back(controlPoints[controlPoints.size() - 1]);
+			RecalculateMatrices();
+			CreateAxisLengthTable();
+			CreateControlPointsVAO();
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Save Control Points"))
+		{
+			Deserialize();
+		}
+		for (unsigned int i = 0; i < controlPoints.size(); ++i)
+		{
+			if (ImGui::SliderFloat3(std::string("Point" + std::to_string(i + 1)).c_str(), (float*)&controlPoints[i], -150.0f, 150.0f, "%.1f"))
+			{
+				controlPoints[i].y = 0.0f;
+				RecalculateMatrices();
+				CreateAxisLengthTable();
+				CreateControlPointsVAO();
+			}
+		}
+		ImGui::End();
+	}
+	ImGui::End();
 }
 
 VertexArray AnimationScene::CreateVec4VAO(std::vector<glm::vec4>& pointList)
@@ -511,6 +546,15 @@ void AnimationScene::CreateAxisLengthTable()
 			}
 		}
 	}
+
+	totalRunTime = mArcLengthTable[mArcLengthTable.size() - 1].first / mSpeed;
+	
+	//V((t1 + (t3 - t2)) / 2)
+	float t3 = totalRunTime;
+	t1 = totalRunTime * 0.2f;
+	t2 = totalRunTime * 0.9f;
+
+	totalRunTime += ((t3 - t2) + t1);
 }
 
 inline std::pair<float,int> AnimationScene::SearchInTable(float distance)
