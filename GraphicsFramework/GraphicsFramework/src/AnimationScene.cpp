@@ -73,12 +73,12 @@ void AnimationScene::Init()
 	RecalculateMatrices();
 
 	mSpeed = 18.0f;
+	mTolerance = 0.0001f;
 	CreateAxisLengthTable();	
 
 	CreateControlPointsVAO();
 
 	mPathMatrix = glm::mat4(1.0f);
-
 
 	showControlWindow = false;
 }
@@ -156,14 +156,17 @@ void AnimationScene::Draw()
 	model = glm::scale(model, glm::vec3(0.1f));
 	if (drawModel)
 	{
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
 		modelDraw->SetUniformMat4f("pathTr", mPathMatrix);
 		modelDraw->SetUniformMat4f("model", model);
-		modelDraw->SetUniformMat4f("normaltr", glm::inverse(model));
+		modelDraw->SetUniformMat4f("normaltr", glm::inverse(mPathMatrix * model));
 		modelDraw->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
 		modelDraw->SetUniform3f("specular", 1.0f, 1.0f, 1.0f);
-		modelDraw->SetUniform1f("shininess", 0.1f);
+		modelDraw->SetUniform1f("shininess", 1.0f);
 
 		demoModel.Draw(modelDraw);
+		glDisable(GL_CULL_FACE);
 	}
 	
 
@@ -443,6 +446,11 @@ void AnimationScene::ImGuiWindow()
 	{
 		showControlWindow = !showControlWindow;
 	}
+	if (ImGui::InputFloat("ArcTable Tolerance", &mTolerance, 0.0005f,0.005f,4))
+	{
+		mTolerance = mTolerance < 0.0f ? 0.0001f : mTolerance;
+		CreateAxisLengthTable();
+	}
 	if (showControlWindow)
 	{
 		ImGui::Begin("Control Points");
@@ -532,7 +540,7 @@ void AnimationScene::CreateAxisLengthTable()
 			float B = glm::length(Psb - Psm);
 			float C = glm::length(Psb - Psa);
 
-			if (A + B - C > 0.0001f)
+			if (A + B - C > mTolerance)
 			{
 				adaptiveAlgoStack.push(MAKE_TUPLE(sm, sb, index));
 				adaptiveAlgoStack.push(MAKE_TUPLE(sa, sm, index));

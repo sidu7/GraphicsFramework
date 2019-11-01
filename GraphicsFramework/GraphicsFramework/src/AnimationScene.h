@@ -69,6 +69,7 @@ private:
 	std::vector<glm::mat4> controlPointsMatrices;
 	VertexArray mCurveVAO;
 	unsigned int mCurvePointsSize;
+	float mTolerance;
 	// Table has entries in the form (distance, parameter of curve, curve index)
 	std::vector<TABLE_ENTRY> mArcLengthTable;
 };
