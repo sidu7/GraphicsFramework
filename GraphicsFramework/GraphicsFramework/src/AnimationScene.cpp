@@ -573,19 +573,15 @@ inline std::pair<float,int> AnimationScene::SearchInTable(float distance)
 		if (tableDistance > distance)
 		{
 			float factor = (distance - mArcLengthTable[i - 1].first) / (tableDistance - mArcLengthTable[i - 1].first);
-			float s; int index;
+			float s; int index;			
+			float T2 = mArcLengthTable[i].second.first;
+			float T1 = 0.0f;
 			if (mArcLengthTable[i - 1].second.second == mArcLengthTable[i].second.second)
 			{
-				float T2 = mArcLengthTable[i].second.first;
-				float T1 = mArcLengthTable[i - 1].second.first;
-				s = glm::lerp(T1, T2, factor);
-				index = i;
+				T1 = mArcLengthTable[i - 1].second.first;
 			}
-			else
-			{
-				s = mArcLengthTable[i-1].second.first;
-				index = i - 1;
-			}
+			s = glm::lerp(T1, T2, factor);
+			index = i;
 			return std::make_pair(s, mArcLengthTable[index].second.second);
 		}
 	}
