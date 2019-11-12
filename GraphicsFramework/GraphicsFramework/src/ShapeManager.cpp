@@ -2,6 +2,7 @@
 #include "../opengl/VertexArray.h"
 #include "../opengl/ElementArrayBuffer.h"
 #include "../opengl/VertexBuffer.h"
+#include <algorithm>
 
 void ShapeManager::Init()
 {
@@ -451,6 +452,16 @@ void ShapeManager::Init()
 	}
 
 	MakeVAO(vertices, indices, TEAPOT);
+}
+
+void ShapeManager::Close()
+{
+	std::for_each(mShapes.begin(), mShapes.end(), 
+		[](std::pair<VertexArray*, ElementArrayBuffer*> x)
+	{
+		delete x.first;
+		delete x.second;
+	});
 }
 
 void ShapeManager::MakeVAO(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Shapes shape)
