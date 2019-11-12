@@ -137,6 +137,7 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <ClInclude Include="opengl\VertexBuffer.h" />
     <ClInclude Include="src\AnimationScene.h" />
     <ClInclude Include="src\Camera.h" />
+    <ClInclude Include="src\Components.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\ImguiManager.h" />
     <ClInclude Include="src\Inputs.h" />
@@ -230,6 +231,10 @@ copy /y DLLs\*.dll $(SolutionDir)$(ConfigurationName)</Command>
     <None Include="res\crysis-nano-suit-2\scene.fbx" />
     <None Include="res\gh_sample_animation.fbx" />
     <None Include="res\JSON Data\ControlPoints.json" />
+    <None Include="res\JSON Data\Floor.json" />
+    <None Include="res\JSON Data\Teapot1.json" />
+    <None Include="res\JSON Data\Teapot2.json" />
+    <None Include="res\JSON Data\Teapot3.json" />
     <None Include="src\animshaders\Drawing.frag" />
     <None Include="src\animshaders\Drawing.vert" />
     <None Include="src\animshaders\ModelDraw.frag" />

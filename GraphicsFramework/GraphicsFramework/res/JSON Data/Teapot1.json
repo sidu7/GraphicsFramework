@@ -1,0 +1,20 @@
+{
+  "Components": [
+    {
+      "Type": 0,
+      "Position": [ 0.0, 0.0, 0.0 ],
+      "Rotation": [ -90.0, 0.0, 0.0 ],
+      "Scale": [ 3.0, 3.0, 3.0 ]
+    },
+    {
+      "Type": 1,
+      "Diffuse": [ 1.0, 1.0, 1.0 ],
+      "Specular": [ 0.2, 0.2, 0.2 ],
+      "Shininess": 1.0
+    },
+    {
+      "Type": 2,
+      "Shape": 0
+    }
+  ]
+}

@@ -1,19 +1,57 @@
 #include "Object.h"
 #include "JSONHelper.h"
 #include "ShapeManager.h"
+#include "../opengl/Shader.h"
+#include "../opengl/Renderer.h"
 
-void Object::Update()
+Object::Object() : pTransform(nullptr), pMaterial(nullptr), pShape(nullptr), pRotate(nullptr)
 {
+}
+
+Object::~Object()
+{
+	delete pTransform;
+	delete pMaterial;
+	delete pShape;
+	delete pRotate;
+}
+
+void Object::Update(Shader* shader)
+{
+	if (pRotate) pRotate->Update();
+	if (pMaterial) pMaterial->Update(shader);
+	if (pTransform) pTransform->Update(shader);
+	Renderer::Instance().Draw(*pShape->mShapeData.first, *pShape->mShapeData.second, *shader);
 }
 
 void Object::Serialize(const rapidjson::Value::Object& data)
 {
-	mPosition = JSONHelper::GetVec3F(data["Position"].GetArray());
-	mScale = JSONHelper::GetVec3F(data["Scale"].GetArray());
-	mRotation = JSONHelper::GetVec3F(data["Rotation"].GetArray());
-	mDiffuse = JSONHelper::GetVec3F(data["Diffuse"].GetArray());
-	mSpecular = JSONHelper::GetVec3F(data["Specular"].GetArray());
-	mShininess = data["Shininess"].GetFloat();
-	mShape = (Shapes)data["Shape"].GetUint();
-	mShapeData = ShapeManager::Instance().mShapes[mShape];
+	rapidjson::Value::Array components = data["Components"].GetArray();
+	for (unsigned int i = 0; i < components.Size(); ++i)
+	{
+		ComponentType type = (ComponentType)components[i]["Type"].GetUint();
+		switch (type)
+		{
+		case TRANSFORM:
+			pTransform = new Transform();
+			pTransform->Serialize(components[i].GetObject());
+			pTransform->mOwner = this;
+			break;
+		case MATERIAL:
+			pMaterial = new Material();
+			pMaterial->Serialize(components[i].GetObject());
+			pMaterial->mOwner = this;
+			break;
+		case SHAPE:
+			pShape = new Shape();
+			pShape->Serialize(components[i].GetObject());
+			pShape->mOwner = this;
+			break;
+		case ROTATEINCIRCLE:
+			pRotate = new RotateInCircle();
+			pRotate->Serialize(components[i].GetObject());
+			pRotate->mOwner = this;
+			break;
+		}
+	}
 }

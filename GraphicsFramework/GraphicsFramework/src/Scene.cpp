@@ -7,6 +7,7 @@
 #include "Time.h"
 #include "ImguiManager.h"
 #include <time.h>
+#include "ObjectManager.h"
 
 
 extern Engine* engine;
@@ -88,6 +89,12 @@ void Scene::Init()
 	BlurFBO[1] = new FrameBuffer(ShadowMap->mWidth, ShadowMap->mHeight);
 	horizontalBlurred = new Texture(4, ShadowMap->mWidth, ShadowMap->mHeight);
 	blurredShadowMap = new Texture(4, ShadowMap->mWidth, ShadowMap->mHeight);
+
+	// Load Objects in Scene
+	ObjectManager::Instance().AddObject("res/JSON Data/Floor.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Teapot1.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Teapot2.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Teapot3.json");
 }
 
 bool lighton = true;

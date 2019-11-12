@@ -416,6 +416,9 @@
     <ClInclude Include="src\ObjectManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Components.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\gh_sample_animation.fbx" />
@@ -425,5 +428,9 @@
     <None Include="src\animshaders\Drawing.vert" />
     <None Include="src\animshaders\Drawing.frag" />
     <None Include="res\JSON Data\ControlPoints.json" />
+    <None Include="res\JSON Data\Floor.json" />
+    <None Include="res\JSON Data\Teapot1.json" />
+    <None Include="res\JSON Data\Teapot2.json" />
+    <None Include="res\JSON Data\Teapot3.json" />
   </ItemGroup>
 </Project>
