@@ -17,6 +17,7 @@
 #include "Scene.h"
 #include "ImguiManager.h"
 #include "AnimationScene.h"
+#include "ObjectManager.h"
 
 
 void Engine::Start()
@@ -110,6 +111,8 @@ void Engine::Run()
 void Engine::Stop()
 {
 	ImguiManager::Instance().Close();
+	ObjectManager::Instance().Close();
+	ShapeManager::Instance().Close();
 	std::cout << "Window closed" << std::endl;
 	SDL_DestroyWindow(pWindow);
 	SDL_Quit();

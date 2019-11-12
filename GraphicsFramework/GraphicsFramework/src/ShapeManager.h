@@ -27,7 +27,7 @@ class ShapeManager
 	SINGLETON(ShapeManager)
 public:	
 	void Init();
-	
+	void Close();
 	std::unordered_map<Shapes, std::pair<VertexArray*, ElementArrayBuffer*>> mShapes;
 
 private:
