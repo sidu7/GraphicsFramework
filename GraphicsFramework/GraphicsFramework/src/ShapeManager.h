@@ -28,7 +28,7 @@ class ShapeManager
 public:	
 	void Init();
 	void Close();
-	std::unordered_map<Shapes, std::pair<VertexArray*, ElementArrayBuffer*>> mShapes;
+	std::vector<std::pair<VertexArray*, ElementArrayBuffer*>> mShapes;
 
 private:
 	void MakeVAO(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Shapes shape);

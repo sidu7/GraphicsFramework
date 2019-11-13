@@ -6,6 +6,11 @@
 
 void ShapeManager::Init()
 {
+	mShapes.emplace_back(std::make_pair(nullptr, nullptr));
+	mShapes.emplace_back(std::make_pair(nullptr, nullptr));
+	mShapes.emplace_back(std::make_pair(nullptr, nullptr));
+	mShapes.emplace_back(std::make_pair(nullptr, nullptr));
+
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 

@@ -15,8 +15,6 @@ public:
 	void Draw();
 
 private:
-	void ObjectsDraw(Shader* shader);
-private:
 	Shader* shader;
 	Shader* lighting;
 	Shader* ambient;

@@ -84,7 +84,7 @@ public:
 	template<typename T>
 	static void Write(const char* key, const T& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
 	{
-		HW_CORE_ERROR("No specialized template for this value type");
+		std::cout << "No specialized template for this value type" << std::endl;
 	}
 
 	template<>

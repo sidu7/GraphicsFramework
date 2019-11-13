@@ -2,6 +2,7 @@
 #include "JSONHelper.h"
 #include "ShapeManager.h"
 #include "../opengl/Shader.h"
+#include "Components.h"
 #include "../opengl/Renderer.h"
 
 Object::Object() : pTransform(nullptr), pMaterial(nullptr), pShape(nullptr), pRotate(nullptr)
@@ -21,6 +22,17 @@ void Object::Update(Shader* shader)
 	if (pRotate) pRotate->Update();
 	if (pMaterial) pMaterial->Update(shader);
 	if (pTransform) pTransform->Update(shader);
+	if (glIsEnabled(GL_CULL_FACE))
+	{
+		if (pShape->mShape == Shapes::QUAD)
+		{
+			glCullFace(GL_BACK);
+		}
+		else
+		{
+			glCullFace(GL_FRONT);
+		}
+	}
 	Renderer::Instance().Draw(*pShape->mShapeData.first, *pShape->mShapeData.second, *shader);
 }
 

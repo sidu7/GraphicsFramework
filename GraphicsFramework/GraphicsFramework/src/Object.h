@@ -1,7 +1,10 @@
 #pragma once
 #include <rapidjson/document.h>
-#include "Components.h"
 
+class Transform;
+class Material;
+class Shape;
+class RotateInCircle;
 class VertexArray;
 class ElementArrayBuffer;
 enum Shapes;

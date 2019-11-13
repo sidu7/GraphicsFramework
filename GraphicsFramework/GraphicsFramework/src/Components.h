@@ -4,10 +4,12 @@
 #include "JSONHelper.h"
 #include "Time.h"
 #include "Object.h"
+#include "glm/gtc/matrix_transform.hpp"
 
 enum Shapes;
 class VertexArray;
 class ElementArrayBuffer;
+class Object;
 
 enum ComponentType
 {
@@ -17,13 +19,15 @@ enum ComponentType
 	ROTATEINCIRCLE
 };
 
-struct Component
+class Component
 {
+public:
 	Object* mOwner;
 };
 
-struct Transform : public Component
+class Transform : public Component
 {
+public:
 	glm::vec3 mPosition;
 	glm::vec3 mScale;
 	glm::vec3 mRotation;
@@ -31,7 +35,15 @@ struct Transform : public Component
 
 	void Update(Shader* shader)
 	{
-
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, mPosition);
+		model = glm::rotate(model, glm::radians(mRotation.z), glm::vec3(0.0, 0.0, 1.0));
+		model = glm::rotate(model, glm::radians(mRotation.y), glm::vec3(0.0, 1.0, 0.0));
+		model = glm::rotate(model, glm::radians(mRotation.x), glm::vec3(1.0, 0.0, 0.0));
+		model = glm::scale(model, mScale);
+		mModelTransformation = model;
+		shader->SetUniformMat4f("model", mModelTransformation);
+		shader->SetUniformMat4f("normaltr", glm::inverse(mModelTransformation));
 	}
 
 	void Serialize(rapidjson::Value::Object data)
@@ -42,15 +54,18 @@ struct Transform : public Component
 	}
 };
 
-struct Material : public Component
+class Material : public Component
 {
+public:
 	glm::vec3 mDiffuse;
 	glm::vec3 mSpecular;
 	float mShininess;
 
 	void Update(Shader* shader)
 	{
-
+		shader->SetUniform3f("diffuse", mDiffuse.x, mDiffuse.y, mDiffuse.z);
+		shader->SetUniform3f("specular", mSpecular.x, mSpecular.y, mSpecular.z);
+		shader->SetUniform1f("shininess", mShininess);
 	}
 
 	void Serialize(rapidjson::Value::Object data)
@@ -61,8 +76,9 @@ struct Material : public Component
 	}
 };
 
-struct Shape : public Component
+class Shape : public Component
 {
+public:
 	std::pair<VertexArray*, ElementArrayBuffer*> mShapeData;
 	Shapes mShape;
 
@@ -78,8 +94,9 @@ struct Shape : public Component
 	}
 };
 
-struct RotateInCircle : public Component
+class RotateInCircle : public Component
 {
+public:
 	float mTParam; // Position on circumference of circle
 	float mAngle; // Angular rotation around itself
 	float mRotationFactor;
@@ -92,6 +109,7 @@ struct RotateInCircle : public Component
 		mTParam += Time::Instance().deltaTime;
 		mOwner->pTransform->mPosition.x = mRadius * glm::cos(mTParam * mSpeed);
 		mOwner->pTransform->mPosition.z = mRadius * glm::sin(mTParam * mSpeed);
+		mOwner->pTransform->mRotation.y = mAngle;
 	}
 
 	void Serialize(rapidjson::Value::Object data)

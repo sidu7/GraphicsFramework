@@ -16,7 +16,7 @@ void ObjectManager::ObjectsDraw(Shader* shader)
 {
 	for (auto object : mObjects)
 	{
-		
+		object->Update(shader);
 	}
 }
 
