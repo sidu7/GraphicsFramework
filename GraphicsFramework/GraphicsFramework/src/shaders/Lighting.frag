@@ -17,7 +17,6 @@ uniform vec3 Light;
 uniform int GBufferShow;
 uniform mat4 inverseview;
 uniform mat4 shadowmat;
-uniform float maxDepth;
 uniform float biasAlpha;
 
 vec3 Cholesky(float m11, float m12, float m13, float m22, float m23, float m33, float z1, float z2, float z3)
@@ -78,7 +77,7 @@ void main()
 			vec4 b = texture(shadowmap,shadowIndex);
 			float zf = shadowCoord.w;			
 
-			vec4 bprime = (1 - biasAlpha) * b + biasAlpha * vec4(0.5);//vec4(maxDepth/2);
+			vec4 bprime = (1 - biasAlpha) * b + biasAlpha * vec4(0.5);
 
 			vec3 c = Cholesky(1.0f, bprime.x, bprime.y, bprime.y, bprime.z, bprime.w, 1.0f, zf, zf*zf);
 

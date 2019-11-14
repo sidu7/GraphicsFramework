@@ -80,7 +80,6 @@ void Scene::Init()
 
 	block = new UniformBuffer(101 * sizeof(float));
 
-	maxDepth = 350.0f;
 	biasAlpha = 0.057f;
 
 	//Fragment Shader blur
@@ -95,6 +94,8 @@ void Scene::Init()
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot1.json");
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot2.json");
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot3.json");
+
+	showLocalLights = true;
 }
 
 bool lighton = true;
@@ -105,6 +106,7 @@ void Scene::Draw()
 
 	ImGui::Begin("G-Buffer");
 	ImGui::Checkbox("Lighting", &lighton);
+	ImGui::Checkbox("Local Lights", &showLocalLights);
 	bool selected = true;
 	if (ImGui::BeginCombo("", "Select G-Buffer"))
 	{
@@ -125,7 +127,6 @@ void Scene::Draw()
 	{
 		light->position = glm::vec3(lp[0], lp[1], lp[2]);
 	}
-	ImGui::InputFloat("MaxDepth", &maxDepth, 10.0f);
 	ImGui::InputFloat("biasAlpha", &biasAlpha, 0.0005);
 	if (ImGui::InputInt("BlurSize", &blurSize))
 	{
@@ -133,13 +134,10 @@ void Scene::Draw()
 		float normB = 1.0f / (s * sqrt(3.141592f * 2));
 		blurWeights.clear();
 		for (int i = -blurSize; i <= blurSize; ++i)
-		//for (int i = 0; i <= blurSize; ++i)
 		{
 			float w = normB * exp(-(i * i) / (2.0f * s * s));
 			blurWeights.emplace_back(w);
 		}
-		//delete block;
-		//block = new UniformBuffer(blurWeights.size() * sizeof(float));
 	}
 	ImGui::End();
 	
@@ -267,7 +265,6 @@ void Scene::Draw()
 		//BlurFBO[!horizontal]->TexBind(0, 5);
 		lighting->SetUniform1i("shadowmap", 5);
 		lighting->SetUniformMat4f("shadowmat", shadowMatrix);
-		lighting->SetUniform1f("maxDepth", maxDepth);
 		lighting->SetUniform1f("biasAlpha", biasAlpha);
 
 		lighting->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
@@ -277,7 +274,7 @@ void Scene::Draw()
 		lighting->Unbind();
 	}
 
-	if (gBuffershow == 0)
+	if (gBuffershow == 0 && showLocalLights)
 	{
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_FRONT);

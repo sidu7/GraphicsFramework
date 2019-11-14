@@ -27,7 +27,6 @@ private:
 	int blurSize;
 	std::vector<float> blurWeights;
 	UniformBuffer* block;
-	float maxDepth;
 	float biasAlpha;
 
 	//Blur NormalShader
@@ -38,6 +37,7 @@ private:
 	FrameBuffer* G_Buffer;
 	FrameBuffer* ShadowMap;
 	int gBuffershow;
+	bool showLocalLights;
 	float angle;
 	glm::vec3 lightColors[40][40];
 	glm::vec3 trans1, trans2, trans3;
