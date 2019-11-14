@@ -7,6 +7,8 @@
 #include "../opengl/UniformBuffer.h"
 #include "Light.h"
 
+class Object;
+
 class Scene
 {
 	SINGLETON(Scene)
@@ -43,4 +45,9 @@ private:
 	glm::vec3 trans1, trans2, trans3;
 	Texture* horizontalBlurred;
 	Texture* blurredShadowMap;
+
+	// PBL-IBL
+	Object* skyDome;
+	Shader* skyDomeShader;
+	Texture* skyDomeTexture;
 };

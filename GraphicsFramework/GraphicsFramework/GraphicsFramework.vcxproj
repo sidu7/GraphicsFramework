@@ -232,6 +232,7 @@
     <None Include="res\gh_sample_animation.fbx" />
     <None Include="res\JSON Data\ControlPoints.json" />
     <None Include="res\JSON Data\Floor.json" />
+    <None Include="res\JSON Data\SkyDome.json" />
     <None Include="res\JSON Data\Teapot1.json" />
     <None Include="res\JSON Data\Teapot2.json" />
     <None Include="res\JSON Data\Teapot3.json" />

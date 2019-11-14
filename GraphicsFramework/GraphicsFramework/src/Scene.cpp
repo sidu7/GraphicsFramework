@@ -8,6 +8,8 @@
 #include "ImguiManager.h"
 #include <time.h>
 #include "ObjectManager.h"
+#include "Object.h"
+#include "Components.h"
 
 
 extern Engine* engine;
@@ -89,12 +91,17 @@ void Scene::Init()
 	horizontalBlurred = new Texture(4, ShadowMap->mWidth, ShadowMap->mHeight);
 	blurredShadowMap = new Texture(4, ShadowMap->mWidth, ShadowMap->mHeight);
 
+	//SkyDome shaders
+	skyDomeShader = new Shader("src/shaders/SkyDome.vert", "src/shaders/SkyDome.frag");
+	skyDomeTexture = new Texture("res/Textures/SkyDome.hdr");
+	
 	// Load Objects in Scene
 	ObjectManager::Instance().AddObject("res/JSON Data/Floor.json");
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot1.json");
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot2.json");
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot3.json");
-
+	skyDome = ObjectManager::Instance().ReadObject("res/JSON Data/SkyDome.json");
+	skyDome->pTransform->mModelTransformation =	glm::scale(glm::mat4(1.0f), skyDome->pTransform->mScale);	
 	showLocalLights = true;
 }
 
@@ -167,11 +174,7 @@ void Scene::Draw()
 
 	shadowMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)) * LightProj * LightLookAt;
 
-	//glEnable(GL_CULL_FACE);
-	
 	ObjectManager::Instance().ObjectsDraw(shadow);
-
-	//glDisable(GL_CULL_FACE);
 
 	shadow->Unbind();
 	ShadowMap->Unbind();
@@ -244,6 +247,7 @@ void Scene::Draw()
 	Renderer::Instance().DrawQuad();
 	ambient->Unbind();
 
+	// Global Lighting pass
 	if (gBuffershow == 0)
 	{
 		glEnable(GL_BLEND);
@@ -274,6 +278,7 @@ void Scene::Draw()
 		lighting->Unbind();
 	}
 
+	// Local Lighting pass
 	if (gBuffershow == 0 && showLocalLights)
 	{
 		glEnable(GL_CULL_FACE);
@@ -309,5 +314,25 @@ void Scene::Draw()
 		}
 
 		glDisable(GL_CULL_FACE);
+		glDisable(GL_BLEND);
+		glEnable(GL_DEPTH_TEST);
+		
+		// Copy depth contents from G-Buffer
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, G_Buffer->GetFrameBufferID());
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);// write to default framebuffer
+		glBlitFramebuffer(0, 0, G_Buffer->mWidth, G_Buffer->mHeight,
+			0, 0, G_Buffer->mWidth, G_Buffer->mHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		
+		// Forward render Skydome
+		skyDomeShader->Bind();
+		skyDomeShader->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
+		skyDomeShader->SetUniformMat4f("view", engine->pCamera->mView);
+		skyDomeShader->SetUniformMat4f("projection", engine->pCamera->mProjection);		
+		skyDomeShader->SetUniformMat4f("model", skyDome->pTransform->mModelTransformation);
+		skyDomeTexture->Bind(1);
+		skyDomeShader->SetUniform1i("skyDome", 1);
+		Renderer::Instance().Draw(*skyDome->pShape->mShapeData.first, *skyDome->pShape->mShapeData.second, *skyDomeShader);
+		skyDomeShader->Unbind();
 	}
 }

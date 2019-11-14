@@ -11,6 +11,7 @@ class ObjectManager
 	SINGLETON(ObjectManager);
 public:
 	void AddObject(std::string path);
+	static Object* ReadObject(std::string path);
 	void ObjectsDraw(Shader* shader);
 	void Close();
 private:

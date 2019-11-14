@@ -30,4 +30,5 @@ public:
 	void DepthUnbind();
 	void Delete() const;
 	void ChangeSize(unsigned int width, unsigned int height);
+	unsigned int GetFrameBufferID() { return m_RendererID; }
 };
