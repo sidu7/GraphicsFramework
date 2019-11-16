@@ -76,7 +76,7 @@ void Engine::Start()
 	ImguiManager::Instance().Init();
 
 	pCamera = new Camera();
-	pCamera->Init(glm::radians(45.0f), 0.1f, 2000.0f);
+	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
 
 	//CS562
 	Scene::Instance().Init();

@@ -94,6 +94,8 @@ void Scene::Init()
 	//SkyDome shaders
 	skyDomeShader = new Shader("src/shaders/SkyDome.vert", "src/shaders/SkyDome.frag");
 	skyDomeTexture = new Texture("res/Textures/SkyDome.hdr");
+	exposure = 1.8f;
+	contrast = 1.4f;
 	
 	// Load Objects in Scene
 	ObjectManager::Instance().AddObject("res/JSON Data/Floor.json");
@@ -146,6 +148,8 @@ void Scene::Draw()
 			blurWeights.emplace_back(w);
 		}
 	}
+	ImGui::InputFloat("Exposure", &exposure, 0.2);
+	ImGui::InputFloat("Contrast", &contrast, 0.2);
 	ImGui::End();
 	
 	//G-Buffer pass
@@ -270,6 +274,8 @@ void Scene::Draw()
 		lighting->SetUniform1i("shadowmap", 5);
 		lighting->SetUniformMat4f("shadowmat", shadowMatrix);
 		lighting->SetUniform1f("biasAlpha", biasAlpha);
+		lighting->SetUniform1f("exposure", exposure);
+		lighting->SetUniform1f("contrast", contrast);
 
 		lighting->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
 		lighting->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
@@ -332,6 +338,8 @@ void Scene::Draw()
 		skyDomeShader->SetUniformMat4f("model", skyDome->pTransform->mModelTransformation);
 		skyDomeTexture->Bind(1);
 		skyDomeShader->SetUniform1i("skyDome", 1);
+		skyDomeShader->SetUniform1f("exposure", exposure);
+		skyDomeShader->SetUniform1f("contrast", contrast);
 		Renderer::Instance().Draw(*skyDome->pShape->mShapeData.first, *skyDome->pShape->mShapeData.second, *skyDomeShader);
 		skyDomeShader->Unbind();
 	}

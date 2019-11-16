@@ -18,6 +18,8 @@ uniform int GBufferShow;
 uniform mat4 inverseview;
 uniform mat4 shadowmat;
 uniform float biasAlpha;
+uniform float exposure;
+uniform float contrast;
 
 vec3 Cholesky(float m11, float m12, float m13, float m22, float m23, float m33, float z1, float z2, float z3)
 {
@@ -50,6 +52,7 @@ void main()
 	vec3 L = normalize(lightVec);
 	vec3 V = normalize(eyeVec);
 	vec3 H = normalize(L + V);
+
 	float NL = max(dot(L,N),0.0);
 	float NH = max(dot(N,H),0.0);
 	float LH = max(dot(L,H),0.0);
@@ -111,6 +114,13 @@ void main()
 	}
 	else
 		G = 1.0f;
+
+	vec4 OutColor = (1-G) * vec4(Ii * NL * BRDF,1.0);
+
+	// Tone Mapping and Gamma Correction
+	vec4 base = exposure * OutColor / (exposure * OutColor + vec4(1,1,1,1));
+
+	FragColor = pow(base,vec4(contrast/2.2));
 
 	FragColor = (1-G) * vec4(Ii * NL * BRDF,1.0);
 

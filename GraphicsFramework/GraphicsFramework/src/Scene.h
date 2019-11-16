@@ -50,4 +50,6 @@ private:
 	Object* skyDome;
 	Shader* skyDomeShader;
 	Texture* skyDomeTexture;
+	float exposure;
+	float contrast;
 };
