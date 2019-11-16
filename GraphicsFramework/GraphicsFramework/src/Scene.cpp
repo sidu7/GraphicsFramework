@@ -93,7 +93,8 @@ void Scene::Init()
 
 	//SkyDome shaders
 	skyDomeShader = new Shader("src/shaders/SkyDome.vert", "src/shaders/SkyDome.frag");
-	skyDomeTexture = new Texture("res/Textures/SkyDome.hdr");
+	skyDomeTexture = new Texture("res/Textures/skyDome.hdr");
+	skyDomeIrradiance = new Texture("res/Textures/skyDomeIrr.hdr");
 	exposure = 1.8f;
 	contrast = 1.4f;
 	
@@ -166,7 +167,7 @@ void Scene::Draw()
 	G_Buffer->Unbind();
 
 	//ShadowMap pass
-	ShadowMap->Bind();
+	/*ShadowMap->Bind();
 	shadow->Bind();
 
 	glm::mat4 LightLookAt, shadowMatrix, LightProj;
@@ -248,11 +249,17 @@ void Scene::Draw()
 	ambient->Bind();
 	G_Buffer->TexBind(2, 3);
 	ambient->SetUniform1i("diffusetex", 3);
+	G_Buffer->TexBind(0, 2);
+	ambient->SetUniform1i("normaltex", 2);
+	skyDomeIrradiance->Bind(4);
+	ambient->SetUniform1i("irradiance", 4);
+	ambient->SetUniform1f("exposure", exposure);
+	ambient->SetUniform1f("contrast", contrast);
 	Renderer::Instance().DrawQuad();
 	ambient->Unbind();
 
 	// Global Lighting pass
-	if (gBuffershow == 0)
+	/*if (gBuffershow == 0)
 	{
 		glEnable(GL_BLEND);
 	}
@@ -309,38 +316,37 @@ void Scene::Draw()
 			for (unsigned int j = 0; j < 40; ++j)
 			{
 				glm::mat4 model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2 , j * lightRadius * 2 - 40.0f * lightRadius));
+				model = glm::translate(model, glm::vec3(i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2, j * lightRadius * 2 - 40.0f * lightRadius));
 				model = glm::scale(model, glm::vec3(lightRadius));
 				locallight->SetUniform3f("lightPos", i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2, j * lightRadius * 2 - 40.0f * lightRadius);
 				locallight->SetUniformMat4f("model", model);
-				locallight->SetUniform3f("Light",lightColors[i][j].x, lightColors[i][j].y, lightColors[i][j].z);
+				locallight->SetUniform3f("Light", lightColors[i][j].x, lightColors[i][j].y, lightColors[i][j].z);
 				std::pair<VertexArray*, ElementArrayBuffer*> shape = ShapeManager::Instance().mShapes[Shapes::SPHERE];
 				Renderer::Instance().Draw(*shape.first, *shape.second, *locallight);
 			}
 		}
-
-		glDisable(GL_CULL_FACE);
-		glDisable(GL_BLEND);
-		glEnable(GL_DEPTH_TEST);
+	}*/
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
 		
-		// Copy depth contents from G-Buffer
-		glBindFramebuffer(GL_READ_FRAMEBUFFER, G_Buffer->GetFrameBufferID());
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);// write to default framebuffer
-		glBlitFramebuffer(0, 0, G_Buffer->mWidth, G_Buffer->mHeight,
-			0, 0, G_Buffer->mWidth, G_Buffer->mHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// Copy depth contents from G-Buffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, G_Buffer->GetFrameBufferID());
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);// write to default framebuffer
+	glBlitFramebuffer(0, 0, G_Buffer->mWidth, G_Buffer->mHeight,
+		0, 0, G_Buffer->mWidth, G_Buffer->mHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		
-		// Forward render Skydome
-		skyDomeShader->Bind();
-		skyDomeShader->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
-		skyDomeShader->SetUniformMat4f("view", engine->pCamera->mView);
-		skyDomeShader->SetUniformMat4f("projection", engine->pCamera->mProjection);		
-		skyDomeShader->SetUniformMat4f("model", skyDome->pTransform->mModelTransformation);
-		skyDomeTexture->Bind(1);
-		skyDomeShader->SetUniform1i("skyDome", 1);
-		skyDomeShader->SetUniform1f("exposure", exposure);
-		skyDomeShader->SetUniform1f("contrast", contrast);
-		Renderer::Instance().Draw(*skyDome->pShape->mShapeData.first, *skyDome->pShape->mShapeData.second, *skyDomeShader);
-		skyDomeShader->Unbind();
-	}
+	// Forward render Skydome
+	skyDomeShader->Bind();
+	skyDomeShader->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
+	skyDomeShader->SetUniformMat4f("view", engine->pCamera->mView);
+	skyDomeShader->SetUniformMat4f("projection", engine->pCamera->mProjection);		
+	skyDomeShader->SetUniformMat4f("model", skyDome->pTransform->mModelTransformation);
+	skyDomeTexture->Bind(1);
+	skyDomeShader->SetUniform1i("skyDome", 1);
+	skyDomeShader->SetUniform1f("exposure", exposure);
+	skyDomeShader->SetUniform1f("contrast", contrast);
+	Renderer::Instance().Draw(*skyDome->pShape->mShapeData.first, *skyDome->pShape->mShapeData.second, *skyDomeShader);
+	skyDomeShader->Unbind();
 }
