@@ -2,22 +2,19 @@
 
 out vec4 FragColor;
 
-const float pi = 22/7;
+const float pi = 22.0f/7.0f;
 
-in vec3 worldPos;
+in vec3 fragPos;
 
 uniform sampler2D skyDome;
-uniform mat4 inverseview;
 uniform float exposure;
 uniform float contrast;
 
 void main()
 {
-	vec3 eyePos = (inverseview * vec4(0,0,0,1)).xyz;
-	vec3 eyeVec = eyePos - worldPos;
-	vec3 V = normalize(eyeVec);
+	vec3 V = normalize(fragPos);
 
-	vec2 uv = vec2(1/2 - atan(V.z,V.x)/(2*pi),  acos(V.y)/pi);
+	vec2 uv = vec2(1/2 - atan(V.z,V.x)/(2*pi),  acos(-V.y)/pi);
 
 	vec4 OutColor = vec4(texture(skyDome,uv).rgb,1.0);
 

@@ -97,6 +97,13 @@ void Scene::Init()
 	skyDomeIrradiance = new Texture("res/Textures/skyDomeIrr.hdr");
 	exposure = 1.8f;
 	contrast = 1.4f;
+
+	// IBL
+	Hblock.N = HBlockSize;
+	HammersleyRandomPoints();
+	HUniBlock = new UniformBuffer(sizeof(Hblock));
+	HUniBlock->Bind(3);
+	HUniBlock->SubData(sizeof(Hblock), &Hblock);
 	
 	// Load Objects in Scene
 	ObjectManager::Instance().AddObject("res/JSON Data/Floor.json");
@@ -247,14 +254,22 @@ void Scene::Draw()
 	glDisable(GL_BLEND);
 
 	ambient->Bind();
-	G_Buffer->TexBind(2, 3);
-	ambient->SetUniform1i("diffusetex", 3);
 	G_Buffer->TexBind(0, 2);
 	ambient->SetUniform1i("normaltex", 2);
-	skyDomeIrradiance->Bind(4);
-	ambient->SetUniform1i("irradiance", 4);
+	G_Buffer->TexBind(1, 3);
+	ambient->SetUniform1i("worldpostex", 3);
+	G_Buffer->TexBind(2, 4);
+	ambient->SetUniform1i("diffusetex", 4);
+	G_Buffer->TexBind(3, 5);
+	ambient->SetUniform1i("speculartex", 5);
+	skyDomeIrradiance->Bind(6);
+	ambient->SetUniform1i("irradiance", 6);
+	skyDomeTexture->Bind(7);
+	ambient->SetUniform1i("skydome", 7);
 	ambient->SetUniform1f("exposure", exposure);
 	ambient->SetUniform1f("contrast", contrast);
+	ambient->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
+	ambient->SetUniformBlock("HBlock", 3);
 	Renderer::Instance().DrawQuad();
 	ambient->Unbind();
 
@@ -339,7 +354,6 @@ void Scene::Draw()
 		
 	// Forward render Skydome
 	skyDomeShader->Bind();
-	skyDomeShader->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
 	skyDomeShader->SetUniformMat4f("view", engine->pCamera->mView);
 	skyDomeShader->SetUniformMat4f("projection", engine->pCamera->mProjection);		
 	skyDomeShader->SetUniformMat4f("model", skyDome->pTransform->mModelTransformation);
@@ -349,4 +363,25 @@ void Scene::Draw()
 	skyDomeShader->SetUniform1f("contrast", contrast);
 	Renderer::Instance().Draw(*skyDome->pShape->mShapeData.first, *skyDome->pShape->mShapeData.second, *skyDomeShader);
 	skyDomeShader->Unbind();
+}
+
+void Scene::HammersleyRandomPoints()
+{
+	int kk;
+	int pos = 0;
+	float p, u;
+
+	for(int k = 0; k < HBlockSize; ++k)
+	{
+		for (p = 0.5f, kk = k, u = 0.0f; kk; p*=0.5f, kk >>= 1)
+		{
+			if(kk & 1)
+			{
+				u += p;
+			}
+		}
+		float v = (k + 0.5) / HBlockSize;
+		Hblock.hammersley[pos++] = u;
+		Hblock.hammersley[pos++] = v;
+	}
 }

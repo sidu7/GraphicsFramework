@@ -9,12 +9,17 @@
 
 class Object;
 
+#define HBlockSize 30
+
 class Scene
 {
 	SINGLETON(Scene)
 public:
 	void Init();
 	void Draw();
+
+private:
+	void HammersleyRandomPoints();
 
 private:
 	Shader* shader;
@@ -36,6 +41,12 @@ private:
 	FrameBuffer* BlurFBO[2];
 
 	Light* light;
+	/*
+	 * 0 - Normals
+	 * 1 - WorldPos
+	 * 2 - Diffuse
+	 * 3 - Specular,Alpha
+	 */
 	FrameBuffer* G_Buffer;
 	FrameBuffer* ShadowMap;
 	int gBuffershow;
@@ -53,4 +64,10 @@ private:
 	Texture* skyDomeIrradiance;
 	float exposure;
 	float contrast;
+	struct
+	{
+		float N;
+		float hammersley[2 * HBlockSize];
+	} Hblock;
+	UniformBuffer* HUniBlock;
 };

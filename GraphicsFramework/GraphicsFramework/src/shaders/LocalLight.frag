@@ -4,7 +4,7 @@ out vec4 FragColor;
 
 in vec2 TexCoord;
 
-const float pi = 22/7;
+const float pi = 22.0f/7.0f;
 
 uniform sampler2D normaltex;
 uniform sampler2D worldpostex;
