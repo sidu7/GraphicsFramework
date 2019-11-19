@@ -15,6 +15,7 @@ public:
 	glm::vec2 GetWindowSize();
 
 	bool appIsRunning;
+	bool stopMoving;
 
 	SDL_Window* pWindow;
 	SDL_GLContext glContext;

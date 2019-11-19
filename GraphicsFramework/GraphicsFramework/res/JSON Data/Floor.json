@@ -10,7 +10,7 @@
       "Type": 1,
       "Diffuse": [ 1.0, 1.0, 1.0 ],
       "Specular": [ 0.2, 0.2, 0.2 ],
-      "Shininess": 1.0
+      "Shininess": 0.0
     },
     {
       "Type": 2,

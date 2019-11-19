@@ -9,7 +9,7 @@
 
 class Object;
 
-#define HBlockSize 30
+#define HBlockSize 20
 
 class Scene
 {

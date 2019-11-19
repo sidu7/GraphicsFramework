@@ -158,6 +158,7 @@ void Scene::Draw()
 	}
 	ImGui::InputFloat("Exposure", &exposure, 0.2);
 	ImGui::InputFloat("Contrast", &contrast, 0.2);
+	ImGui::Checkbox("Pause Moving", &engine->stopMoving);
 	ImGui::End();
 	
 	//G-Buffer pass
@@ -371,7 +372,7 @@ void Scene::HammersleyRandomPoints()
 	int pos = 0;
 	float p, u;
 
-	for(int k = 0; k < HBlockSize; ++k)
+	for(int k = 0; k < Hblock.N; ++k)
 	{
 		for (p = 0.5f, kk = k, u = 0.0f; kk; p*=0.5f, kk >>= 1)
 		{
@@ -380,7 +381,7 @@ void Scene::HammersleyRandomPoints()
 				u += p;
 			}
 		}
-		float v = (k + 0.5) / HBlockSize;
+		float v = (k + 0.5) / Hblock.N;
 		Hblock.hammersley[pos++] = u;
 		Hblock.hammersley[pos++] = v;
 	}

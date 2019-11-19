@@ -5,11 +5,14 @@
 #include "Time.h"
 #include "Object.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "Engine.h"
 
 enum Shapes;
 class VertexArray;
 class ElementArrayBuffer;
 class Object;
+
+extern Engine* engine;
 
 enum ComponentType
 {
@@ -105,6 +108,10 @@ public:
 	
 	void Update()
 	{
+		if(engine->stopMoving)
+		{
+			return;
+		}		
 		mAngle += Time::Instance().deltaTime * mRotationFactor;
 		mTParam += Time::Instance().deltaTime;
 		mOwner->pTransform->mPosition.x = mRadius * glm::cos(mTParam * mSpeed);
