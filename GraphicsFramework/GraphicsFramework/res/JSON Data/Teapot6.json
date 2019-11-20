@@ -18,7 +18,7 @@
     },
     {
       "Type": 3,
-      "Radius": 60.0,
+      "Radius": 120.0,
       "RotationFactor": 50.0,
       "Speed": 0.1
     }

@@ -6,8 +6,9 @@ layout (location = 3) out vec4 SpecularAlpha;
 
 in vec3 normalVec;
 in vec3 worldPos;
+in vec2 TexCoords;
 
-uniform sampler2D texture_diffuse1;
+uniform sampler2D texDiff;
 uniform vec3 diffuse;
 uniform vec3 specular;
 uniform float shininess;
@@ -16,7 +17,7 @@ void main()
 {    
 	Normals.xyz = normalize(normalVec);
 	WorldPosition.xyz = worldPos;
-	DiffuseColor.xyz = diffuse;
+	DiffuseColor.xyz = diffuse + texture(texDiff,TexCoords).rgb;
 	SpecularAlpha.xyz = specular;
 	SpecularAlpha.w = shininess;
 }

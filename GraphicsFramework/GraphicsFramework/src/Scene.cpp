@@ -38,8 +38,9 @@ void Scene::Init()
 	lp[2] = 10.0f;
 	light->distance = 200.0f;
 
-	engine->pCamera->pitch = -20.0f;
-	engine->pCamera->mCameraPos = glm::vec3(0.0f, 40.0f, 100.0f);
+	engine->pCamera->pitch = -15.0f;
+	engine->pCamera->yaw = -279.3f;
+	engine->pCamera->mCameraPos = glm::vec3(27.8f, 25.9f, -65.7f);
 	engine->pCamera->CalculateFront();
 
 	lighting->Bind();
@@ -95,8 +96,8 @@ void Scene::Init()
 	skyDomeShader = new Shader("src/shaders/SkyDome.vert", "src/shaders/SkyDome.frag");
 	skyDomeTexture = new Texture("res/Textures/skyDome.hdr");
 	skyDomeIrradiance = new Texture("res/Textures/skyDomeIrr.hdr");
-	exposure = 1.8f;
-	contrast = 1.4f;
+	exposure = 5.2f;
+	contrast = 1.0f;	
 
 	// IBL
 	Hblock.N = HBlockSize;
@@ -110,6 +111,9 @@ void Scene::Init()
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot1.json");
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot2.json");
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot3.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Teapot4.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Teapot5.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Teapot6.json");
 	skyDome = ObjectManager::Instance().ReadObject("res/JSON Data/SkyDome.json");
 	skyDome->pTransform->mModelTransformation =	glm::scale(glm::mat4(1.0f), skyDome->pTransform->mScale);	
 	showLocalLights = true;
@@ -364,6 +368,7 @@ void Scene::Draw()
 	skyDomeShader->SetUniform1f("contrast", contrast);
 	Renderer::Instance().Draw(*skyDome->pShape->mShapeData.first, *skyDome->pShape->mShapeData.second, *skyDomeShader);
 	skyDomeShader->Unbind();
+	engine->stopMoving = true;
 }
 
 void Scene::HammersleyRandomPoints()

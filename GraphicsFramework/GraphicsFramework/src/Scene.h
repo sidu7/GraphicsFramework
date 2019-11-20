@@ -9,7 +9,7 @@
 
 class Object;
 
-#define HBlockSize 20
+#define HBlockSize 30
 
 class Scene
 {
@@ -67,7 +67,7 @@ private:
 	struct
 	{
 		float N;
-		float hammersley[2 * HBlockSize];
+		float hammersley[2 * 100];
 	} Hblock;
 	UniformBuffer* HUniBlock;
 };

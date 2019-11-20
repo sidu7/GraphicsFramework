@@ -433,5 +433,8 @@
     <None Include="res\JSON Data\Teapot2.json" />
     <None Include="res\JSON Data\Teapot3.json" />
     <None Include="res\JSON Data\SkyDome.json" />
+    <None Include="res\JSON Data\Teapot4.json" />
+    <None Include="res\JSON Data\Teapot5.json" />
+    <None Include="res\JSON Data\Teapot6.json" />
   </ItemGroup>
 </Project>

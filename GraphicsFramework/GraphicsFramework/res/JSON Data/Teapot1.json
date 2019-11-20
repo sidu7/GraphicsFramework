@@ -8,9 +8,9 @@
     },
     {
       "Type": 1,
-      "Diffuse": [ 0.0, 0.0, 1.0 ],
-      "Specular": [ 1.0,1.0,1.0 ],
-      "Shininess": 1.0
+      "Diffuse": [ 0.0, 0.2, 0.5 ],
+      "Specular": [ 0.03,0.03,0.0 ],
+      "Shininess": 50.0
     },
     {
       "Type": 2,
@@ -18,7 +18,7 @@
     },
     {
       "Type": 3,
-      "Radius": 40.0,
+      "Radius": 20.0,
       "RotationFactor": 50.0,
       "Speed": 0.09
     }

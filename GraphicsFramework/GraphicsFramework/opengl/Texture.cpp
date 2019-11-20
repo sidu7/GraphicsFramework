@@ -61,6 +61,7 @@ Texture::Texture(int channels, int width, int height) : mBPP(channels), mRendere
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+	GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
 	GLint format;
 	GLint internalformat;
@@ -99,8 +100,9 @@ void Texture::Bind(unsigned int slot) const
 	GLCall(glBindTexture(GL_TEXTURE_2D, mRendererID));
 }
 
-void Texture::Unbind() const
+void Texture::Unbind(unsigned int slot) const
 {
+	GLCall(glActiveTexture(GL_TEXTURE0 + slot));
 	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
