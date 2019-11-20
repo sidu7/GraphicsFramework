@@ -105,6 +105,8 @@ void Scene::Init()
 	HUniBlock = new UniformBuffer(sizeof(Hblock));
 	HUniBlock->Bind(3);
 	HUniBlock->SubData(sizeof(Hblock), &Hblock);
+	IBLDiffuse = true;
+	IBLSpecular = true;
 	
 	// Load Objects in Scene
 	ObjectManager::Instance().AddObject("res/JSON Data/Floor.json");
@@ -114,6 +116,9 @@ void Scene::Init()
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot4.json");
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot5.json");
 	ObjectManager::Instance().AddObject("res/JSON Data/Teapot6.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Teapot7.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Teapot8.json");
+	//ObjectManager::Instance().AddObject("res/JSON Data/Teapot9.json");
 	skyDome = ObjectManager::Instance().ReadObject("res/JSON Data/SkyDome.json");
 	skyDome->pTransform->mModelTransformation =	glm::scale(glm::mat4(1.0f), skyDome->pTransform->mScale);	
 	showLocalLights = true;
@@ -163,6 +168,8 @@ void Scene::Draw()
 	ImGui::InputFloat("Exposure", &exposure, 0.2);
 	ImGui::InputFloat("Contrast", &contrast, 0.2);
 	ImGui::Checkbox("Pause Moving", &engine->stopMoving);
+	ImGui::Checkbox("Show IBL Diffuse", &IBLDiffuse);
+	ImGui::Checkbox("Show IBL Specular", &IBLSpecular);
 	ImGui::End();
 	
 	//G-Buffer pass
@@ -273,6 +280,8 @@ void Scene::Draw()
 	ambient->SetUniform1i("skydome", 7);
 	ambient->SetUniform1f("exposure", exposure);
 	ambient->SetUniform1f("contrast", contrast);
+	ambient->SetUniform1i("showDiffuse", IBLDiffuse);
+	ambient->SetUniform1i("showSpecular", IBLSpecular);
 	ambient->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
 	ambient->SetUniformBlock("HBlock", 3);
 	Renderer::Instance().DrawQuad();

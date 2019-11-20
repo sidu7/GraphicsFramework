@@ -70,4 +70,5 @@ private:
 		float hammersley[2 * 100];
 	} Hblock;
 	UniformBuffer* HUniBlock;
+	bool IBLDiffuse,IBLSpecular;
 };

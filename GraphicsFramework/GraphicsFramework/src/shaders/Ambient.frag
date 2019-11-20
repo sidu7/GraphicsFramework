@@ -22,6 +22,8 @@ uniform sampler2D irradiance;
 uniform sampler2D skydome;
 uniform float exposure;
 uniform float contrast;
+uniform bool showDiffuse;
+uniform bool showSpecular;
 
 vec3 TexRead(vec3 w,sampler2D tex, float level)
 {
@@ -37,19 +39,6 @@ vec3 Fresnel(vec3 L, vec3 H, vec3 Ks)
 float Distribution(vec3 N, vec3 H, float alpha)
 {
 	return (alpha + 2) * pow(max(dot(N,H),0.0),alpha) / (2*pi);
-}
-
-float GTerm(float roughness, float V, float L)
-{
-	float k = (roughness + 1)*(roughness + 1) / 8;
-	float GL = L/(L*(1-k)+k);
-	float GV = V/(V*(1-k)+k);
-	return GL*GV;
-}
-
-float Pdf(float u, float v, float alpha)
-{
-	return (alpha + 1)*pow(cos(u),alpha)*sin(u)/(2*pi);
 }
 
 void main()
@@ -84,14 +73,19 @@ void main()
 		float level = max(0.5f * log2(1.0f * skydomesize.x * skydomesize.y / Num) - 0.5f * log2(Distribution(N,H,alpha)),0.0f);
 		vec2 Xuv = vec2(0.5 + atan(wk.z,-wk.x)/(2*pi),  acos(-wk.y)/pi);
 		vec3 Li = textureLod(skydome,Xuv,level).xyz;
-		specular += Fresnel(wk,H,Ks)/4.0f * Li * max(dot(wk,N),0.0f);
+		specular +=  (1/pow(max(dot(wk,H),0.0),2)) * Fresnel(wk,H,Ks)/4.0f * Li * max(dot(wk,N),0.0f);
 	}
 
 	specular /= Num;
 
 	vec3 diffuse = IrrAmbient * Kd / pi;
+	vec3 color = vec3(0);
+	if(showDiffuse)
+	color += diffuse;
+	if(showSpecular)
+	color += specular;
 
-	vec4 OutColor = vec4(diffuse + specular,1.0);
+	vec4 OutColor = vec4(color,1.0);
 
 	// Tone Mapping and Gamma Correction
 	vec4 base = exposure * OutColor / (exposure * OutColor + vec4(1,1,1,1));

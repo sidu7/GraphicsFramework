@@ -2,25 +2,19 @@
   "Components": [
     {
       "Type": 0,
-      "Position": [ 0.0, 0.0, 0.0 ],
+      "Position": [ 40.0, 0.0, 20.0 ],
       "Rotation": [ -90.0, 0.0, 0.0 ],
       "Scale": [ 3.0, 3.0, 3.0 ]
     },
     {
       "Type": 1,
-      "Texture": "res/Textures/cracks.png",
-      "Specular": [ 0.08,0.08,0.08 ],
-      "Shininess": 5000.0
+      "Diffuse": [ 0.5, 0.0, 0.0 ],
+      "Specular": [ 0.03, 0.03, 0.03 ],
+      "Shininess": 500.0
     },
     {
       "Type": 2,
       "Shape": 3
-    },
-    {
-      "Type": 3,
-      "Radius": 120.0,
-      "RotationFactor": 50.0,
-      "Speed": 0.1
     }
   ]
 }
