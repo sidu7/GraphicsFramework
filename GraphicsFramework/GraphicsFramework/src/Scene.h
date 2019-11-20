@@ -67,7 +67,7 @@ private:
 	struct
 	{
 		float N;
-		float hammersley[2 * HBlockSize];
+		float hammersley[2 * 100];
 	} Hblock;
 	UniformBuffer* HUniBlock;
 };

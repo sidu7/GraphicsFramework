@@ -9,8 +9,8 @@
     {
       "Type": 1,
       "Diffuse": [ 1.0, 1.0, 1.0 ],
-      "Specular": [ 0.0, 0.0, 0.1 ],
-      "Shininess": 100.0
+      "Specular": [ 0.0, 0.1, 0.0 ],
+      "Shininess": 120.0
     },
     {
       "Type": 2,
