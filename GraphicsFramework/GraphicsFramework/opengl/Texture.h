@@ -26,7 +26,7 @@ public:
 	inline unsigned int GetTextureID() { return mRendererID; }
 
 	void Bind(unsigned int slot = 0) const;
-	void Unbind() const;
+	void Unbind(unsigned int slot = 0) const;
 	void EnableTiling() const;
 
 private:

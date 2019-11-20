@@ -5,6 +5,7 @@
 #include "Time.h"
 #include "Object.h"
 #include "glm/gtc/matrix_transform.hpp"
+#include "../opengl/Texture.h"
 #include "Engine.h"
 
 enum Shapes;
@@ -63,6 +64,7 @@ public:
 	glm::vec3 mDiffuse;
 	glm::vec3 mSpecular;
 	float mShininess;
+	Texture* pTexture;
 
 	void Update(Shader* shader)
 	{
@@ -73,7 +75,16 @@ public:
 
 	void Serialize(rapidjson::Value::Object data)
 	{
-		mDiffuse = JSONHelper::GetVec3F(data["Diffuse"].GetArray());
+		if (data.HasMember("Diffuse"))
+		{
+			mDiffuse = JSONHelper::GetVec3F(data["Diffuse"].GetArray());
+			pTexture = nullptr;
+		}
+		else
+		{
+			pTexture = new Texture(data["Texture"].GetString());
+			mDiffuse = glm::vec3(0.0f);
+		}
 		mSpecular = JSONHelper::GetVec3F(data["Specular"].GetArray());
 		mShininess = data["Shininess"].GetFloat();
 	}

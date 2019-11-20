@@ -36,7 +36,7 @@ vec3 Fresnel(vec3 L, vec3 H, vec3 Ks)
 
 float Distribution(vec3 N, vec3 H, float alpha)
 {
-	return (alpha + 2) * pow(dot(N,H),alpha) / (2*pi);
+	return (alpha + 2) * pow(max(dot(N,H),0.0),alpha) / (2*pi);
 }
 
 float GTerm(float roughness, float V, float L)
@@ -83,7 +83,7 @@ void main()
 		vec3 H = normalize(wk + V);
 		float level = max(0.5f * log2(1.0f * skydomesize.x * skydomesize.y / Num) - 0.5f * log2(Distribution(N,H,alpha)),0.0f);
 		vec2 Xuv = vec2(0.5 + atan(wk.z,-wk.x)/(2*pi),  acos(-wk.y)/pi);
-		vec3 Li = textureLod(skydome,Xuv,0).xyz;
+		vec3 Li = textureLod(skydome,Xuv,level).xyz;
 		specular += Fresnel(wk,H,Ks)/4.0f * Li * max(dot(wk,N),0.0f);
 	}
 
@@ -91,7 +91,7 @@ void main()
 
 	vec3 diffuse = IrrAmbient * Kd / pi;
 
-	vec4 OutColor = vec4(specular,1.0);
+	vec4 OutColor = vec4(diffuse + specular,1.0);
 
 	// Tone Mapping and Gamma Correction
 	vec4 base = exposure * OutColor / (exposure * OutColor + vec4(1,1,1,1));

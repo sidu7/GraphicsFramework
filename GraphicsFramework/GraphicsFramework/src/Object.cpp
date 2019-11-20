@@ -20,7 +20,14 @@ Object::~Object()
 void Object::Update(Shader* shader)
 {
 	if (pRotate) pRotate->Update();
-	if (pMaterial) pMaterial->Update(shader);
+	if (pMaterial) {
+		pMaterial->Update(shader);
+		if (pMaterial->pTexture)
+		{
+			pMaterial->pTexture->Bind(8);
+			shader->SetUniform1i("texDiff", 8);
+		}
+	}
 	if (pTransform) pTransform->Update(shader);
 	if (glIsEnabled(GL_CULL_FACE))
 	{
@@ -34,6 +41,10 @@ void Object::Update(Shader* shader)
 		}
 	}
 	Renderer::Instance().Draw(*pShape->mShapeData.first, *pShape->mShapeData.second, *shader);
+	if (pMaterial && pMaterial->pTexture)
+	{
+		pMaterial->pTexture->Unbind(8);
+	}
 }
 
 void Object::Serialize(const rapidjson::Value::Object& data)
