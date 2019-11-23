@@ -24,8 +24,10 @@ struct Bone
 	unsigned int mIndex;
 	unsigned int mParentIndex;
 	glm::mat4 mTransformation;
-	glm::mat4 mCurrentTransformation;
+	glm::mat4 mCurrentLocalTransformation;
+	glm::mat4 mCurrentGlobalTransformation;
 	glm::mat4 mOffset;
+	glm::mat4 mIKTransformation;
 	bool isAnimated;
 	std::string mName;
 	std::unordered_map<std::string, AnimationData> mAnimations;

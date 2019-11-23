@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 out vec4 FragColor;
 
@@ -8,6 +8,11 @@ uniform HBlock
 { 
 	float Num;
 	float Numbers[2 * 100];
+};
+
+layout(std430, binding = 3) buffer IrradianceCoeff
+{ 
+	vec3 ETerms[9]; 
 };
 
 in vec2 TexCoord;
@@ -41,6 +46,50 @@ float Distribution(vec3 N, vec3 H, float alpha)
 	return (alpha + 2) * pow(max(dot(N,H),0.0),alpha) / (2*pi);
 }
 
+float YFunction(vec3 xyz, int index)
+{
+	switch (index)
+	{
+	case 0:
+		return 0.28209f;
+		break;
+	case 1:
+		return 0.48860f * xyz.y;
+		break;
+	case 2:
+		return 0.48860f * xyz.z;
+		break;
+	case 3:
+		return 0.48860f * xyz.x;
+		break;
+	case 4:
+		return 1.09254f * xyz.x * xyz.y;
+		break;
+	case 5:
+		return 1.09254f * xyz.y * xyz.z;
+		break;
+	case 6:
+		return 0.31539f * (3 * xyz.z * xyz.z - 1);
+		break;
+	case 7:
+		return 1.09254f * xyz.x * xyz.z;
+		break;
+	case 8:
+		return 0.54627f * (xyz.x * xyz.x - xyz.y * xyz.y);
+		break;
+	}
+}
+
+vec3 IrradianceMap(vec3 N)
+{
+	vec3 result = vec3(0.0f);
+	for(int i = 0; i < 9; ++i)
+	{
+		result += ETerms[i] * YFunction(N,i);
+	}
+	return result;
+}
+
 void main()
 {
 	vec3 Kd = texture(diffusetex,TexCoord).xyz;
@@ -54,6 +103,7 @@ void main()
 	vec3 N = normalize(texture(normaltex,TexCoord).xyz);
 	vec3 R = normalize(2.0f*N*dot(V,N) - V);
 	vec3 IrrAmbient = TexRead(-N,irradiance,0);
+	//vec3 IrrAmbient = IrradianceMap(N);
 	ivec2 skydomesize = textureSize(skydome,0);
 
 	vec3 A = normalize(vec3(R.z,0,-R.x));

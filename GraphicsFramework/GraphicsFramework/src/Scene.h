@@ -5,6 +5,7 @@
 #include "../opengl/FrameBuffer.h"
 #include "../opengl/ComputeShader.h"
 #include "../opengl/UniformBuffer.h"
+#include "../opengl/ShaderStorageBuffer.h"
 #include "Light.h"
 
 class Object;
@@ -62,6 +63,8 @@ private:
 	Shader* skyDomeShader;
 	Texture* skyDomeTexture;
 	Texture* skyDomeIrradiance;
+	ComputeShader* irradianceCompute;
+	ShaderStorageBuffer* IrradianceETerms;
 	float exposure;
 	float contrast;
 	struct

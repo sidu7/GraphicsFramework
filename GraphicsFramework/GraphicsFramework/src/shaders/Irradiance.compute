@@ -1,0 +1,77 @@
+#version 430
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+uniform sampler2D skydome;
+uniform int width;
+uniform int height;
+
+const float pi = 22.0f / 7.0f;
+
+layout(std430, binding = 3) buffer IrradianceCoeff
+{ 
+	vec3 ETerms[9]; 
+};
+
+const float A[9] = { 3.14159f,
+					 2.09439f, 2.09439f, 2.09439f,
+					 0.78539f, 0.78539f, 0.78539f, 0.78539f, 0.78539f, };
+
+float YFunction(vec3 xyz, uint index)
+{
+	switch (index)
+	{
+	case 0:
+		return 0.28209f;
+		break;
+	case 1:
+		return 0.48860f * xyz.y;
+		break;
+	case 2:
+		return 0.48860f * xyz.z;
+		break;
+	case 3:
+		return 0.48860f * xyz.x;
+		break;
+	case 4:
+		return 1.09254f * xyz.x * xyz.y;
+		break;
+	case 5:
+		return 1.09254f * xyz.y * xyz.z;
+		break;
+	case 6:
+		return 0.31539f * (3 * xyz.z * xyz.z - 1);
+		break;
+	case 7:
+		return 1.09254f * xyz.x * xyz.z;
+		break;
+	case 8:
+		return 0.54627f * (xyz.x * xyz.x - xyz.y * xyz.y);
+		break;
+	}
+}
+
+void main()
+{
+	uint gpos = gl_GlobalInvocationID.x;
+
+	vec3 Llm = vec3(0.0f);
+
+	for (int i = 0; i < height; ++i)
+	{
+		for (int j = 0; j < width; ++j)
+		{
+			vec3 Lij = texture(skydome, vec2((1.0f*j)/width,(1.0f*i)/height)).rgb;//imageLoad(skydome, ivec2(i, j)).rgb;
+
+			float theta = pi*(i+0.5f)/height;
+			float fi = 2*pi*(j+0.5f)/width;
+
+			vec3 xyz = vec3(sin(theta) * cos(fi), cos(theta), sin(theta) * sin(fi));
+
+			float Yterm = YFunction(xyz,gpos);
+
+			Llm += Lij * Yterm * sin(theta);
+		}
+	}
+
+	ETerms[gpos] = A[gpos] * Llm;
+}

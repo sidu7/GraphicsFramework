@@ -98,6 +98,7 @@
     <ClCompile Include="opengl\Quaternion.cpp" />
     <ClCompile Include="opengl\Renderer.cpp" />
     <ClCompile Include="opengl\Shader.cpp" />
+    <ClCompile Include="opengl\ShaderStorageBuffer.cpp" />
     <ClCompile Include="opengl\Texture.cpp" />
     <ClCompile Include="opengl\UniformBuffer.cpp" />
     <ClCompile Include="opengl\VertexArray.cpp" />
@@ -131,6 +132,7 @@
     <ClInclude Include="opengl\Quaternion.h" />
     <ClInclude Include="opengl\Renderer.h" />
     <ClInclude Include="opengl\Shader.h" />
+    <ClInclude Include="opengl\ShaderStorageBuffer.h" />
     <ClInclude Include="opengl\Texture.h" />
     <ClInclude Include="opengl\UniformBuffer.h" />
     <ClInclude Include="opengl\VertexArray.h" />

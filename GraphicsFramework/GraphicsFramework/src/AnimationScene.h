@@ -42,9 +42,12 @@ private:
 	void Deserialize();
 	void CreateControlPointsVAO();
 	void ImGuiWindow();
+	void IKUpdate(glm::mat4 model, float time);
 
 private:
-	Model demoModel; 
+	Model demoModel;
+
+	glm::vec3 mGoalPosition;
 
 	Light* light;
 
@@ -63,6 +66,7 @@ private:
 	float t1, t2;
 
 	//Curve
+	bool mPathWalk;
 	bool showControlWindow;
 	std::vector<glm::vec4> controlPoints;
 	glm::mat4 CurveMatrix;
@@ -72,4 +76,8 @@ private:
 	float mTolerance;
 	// Table has entries in the form (distance, parameter of curve, curve index)
 	std::vector<TABLE_ENTRY> mArcLengthTable;
+
+	//IK
+	std::vector<unsigned int> mIKBones;
+	glm::vec3 mEndEffector;
 };

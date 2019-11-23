@@ -98,7 +98,29 @@ void Scene::Init()
 	skyDomeIrradiance = new Texture("res/Textures/skyDomeIrr.hdr");
 	exposure = 5.2f;
 	contrast = 1.0f;	
+	irradianceCompute = new ComputeShader("src/shaders/Irradiance.compute");
+	IrradianceETerms = new ShaderStorageBuffer();
+	IrradianceETerms->CreateBuffer(sizeof(float) * 3 * 9);
+	float* eterms = static_cast<float*>(IrradianceETerms->GetBufferWritePointer(true));
 
+	for(unsigned int i = 0; i < 27; ++i)
+	{
+		eterms[i] = 1.0f;
+	}
+
+	IrradianceETerms->ReleaseBufferPointer();
+
+	//IrradianceETerms->Bind(3);
+	//irradianceCompute->Bind();
+	////irradianceCompute->SetInputUniformImage("skydome", skyDomeTexture->GetTextureID(), 0, skyDomeTexture->mBPP);
+	//skyDomeTexture->Bind();
+	//irradianceCompute->SetUniform1i("skydome", 0);
+	//irradianceCompute->SetUniform1i("width", skyDomeTexture->mWidth);
+	//irradianceCompute->SetUniform1i("height", skyDomeTexture->mHeight);
+	//irradianceCompute->Run(9, 1, 1);
+	//ShaderStorageBuffer::PutMemoryBarrier();
+	//IrradianceETerms->Bind(3);
+	
 	// IBL
 	Hblock.N = HBlockSize;
 	HammersleyRandomPoints();
@@ -258,6 +280,17 @@ void Scene::Draw()
 	block->Unbind();*/
 	//Blur Fragment Shader
 
+	//IrradianceETerms->Bind(3);
+	//irradianceCompute->Bind();
+	////irradianceCompute->SetInputUniformImage("skydome", skyDomeTexture->GetTextureID(), 0, skyDomeTexture->mBPP);
+	//skyDomeTexture->Bind();
+	//irradianceCompute->SetUniform1i("skydome", 0);
+	//irradianceCompute->SetUniform1i("width", skyDomeTexture->mWidth);
+	//irradianceCompute->SetUniform1i("height", skyDomeTexture->mHeight);
+	//irradianceCompute->Run(9, 1, 1);
+	//ShaderStorageBuffer::PutMemoryBarrier();
+	//IrradianceETerms->Bind(3);
+
 	//Ambient light pass
 	glViewport(0, 0, engine->scrWidth, engine->scrHeight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -265,6 +298,8 @@ void Scene::Draw()
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 
+	IrradianceETerms->Bind(3);
+	
 	ambient->Bind();
 	G_Buffer->TexBind(0, 2);
 	ambient->SetUniform1i("normaltex", 2);
@@ -286,6 +321,8 @@ void Scene::Draw()
 	ambient->SetUniformBlock("HBlock", 3);
 	Renderer::Instance().DrawQuad();
 	ambient->Unbind();
+
+	IrradianceETerms->Unbind(3);
 
 	// Global Lighting pass
 	/*if (gBuffershow == 0)
