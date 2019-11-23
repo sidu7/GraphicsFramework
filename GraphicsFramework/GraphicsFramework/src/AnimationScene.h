@@ -21,6 +21,7 @@ public:
 
 private:
 	void AnimatorUpdate(std::string animName);
+	inline glm::mat4 RotationFromDirection(const glm::vec3& direction);
 	VertexArray CreateBonesData();
 	template<typename T>
 	inline unsigned int FindLessThaninList(double time, std::vector<std::pair<double,T>> list)
@@ -80,4 +81,6 @@ private:
 	//IK
 	std::vector<unsigned int> mIKBones;
 	glm::vec3 mEndEffector;
+	int maxIterations;
+	float sqrDistanceError;
 };

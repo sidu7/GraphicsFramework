@@ -44,7 +44,8 @@ void AnimationScene::Init()
 	{
 		if(demoModel.mBones[i].mName == "RightArm" ||
 			demoModel.mBones[i].mName == "RightForeArm" ||
-			demoModel.mBones[i].mName == "RightHand")
+			demoModel.mBones[i].mName == "RightHand" ||
+			demoModel.mBones[i].mName == "RightShoulder")
 		{
 			mIKBones.push_back(i);
 		}
@@ -107,6 +108,8 @@ void AnimationScene::Init()
 
 	showControlWindow = false;
 	mGoalPosition = glm::vec3(0.0f, 14.0f, 10.0f);
+	maxIterations = 10;
+	sqrDistanceError = 0.01f;
 }
 
 void AnimationScene::Draw()
@@ -189,7 +192,7 @@ void AnimationScene::Draw()
 	{
 		mEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
 	}
-	double D = 2.0;
+	double D = 5.0;
 	
 	IKUpdate(model, AnimationRunTime/D);
 
@@ -544,55 +547,70 @@ void AnimationScene::ImGuiWindow()
 
 void AnimationScene::IKUpdate(glm::mat4 model, float time)
 {
-	glm::vec<3, bool, glm::defaultp> cond = glm::vec<3, bool, glm::defaultp>(false, false, false);
-	glm::vec3 currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
-	glm::vec3 prevEndEffector = glm::vec3(0.0f);
 	glm::vec3 Goal = glm::inverse(model) * glm::vec4(mGoalPosition,1.0);
+	glm::vec3 currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
+	if (time > 1.0f) time = 1.0f;
 	glm::vec3 Gprime = (1 - time) * mEndEffector + (time)*Goal;
-	float lengthToGoal = glm::length(currentEndEffector - Gprime);
-	while (lengthToGoal > 0.01f && currentEndEffector != prevEndEffector)
-	{
-		prevEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
-		for (unsigned int i = 1; i < mIKBones.size(); ++i)
-		{
-			glm::vec3 originOfRotation = demoModel.mBones[mIKBones[i]].mCurrentGlobalTransformation[3];
-			currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
-			glm::vec3 B = glm::normalize(currentEndEffector - originOfRotation);
-			glm::vec3 C = glm::normalize(Gprime - originOfRotation);
-			float alpha = acos(glm::dot(B, C));
-			if (alpha == 0.0f || std::isnan(alpha))
-			{
-				continue;
-			}
-			glm::vec3 axis = glm::normalize(glm::cross(B, C));
-			axis = glm::inverse(demoModel.mBones[mIKBones[i]].mCurrentGlobalTransformation) * glm::vec4(axis, 0.0f);
-			float alen = glm::length(axis);
-			glm::quat q = glm::quat(cos(alpha / 2.0f), sin(alpha / 2.0f) * axis.x / alen,
-				sin(alpha / 2.0f) * axis.y / alen, sin(alpha / 2.0f) * axis.z / alen);
-			demoModel.mBones[mIKBones[i]].mIKTransformation = demoModel.mBones[mIKBones[i]].mIKTransformation *
-				glm::toMat4(q);
+	//Gprime = Goal;
+	float sqrDistance = 0.0f;
 
-			for (int j = 0; j < demoModel.mBones.size(); ++j)
+	int iterationCount = 0;
+	do
+	{
+		for (int i = 0; i < mIKBones.size() - 2; ++i)
+		{
+			for (int j = 1; j < i + 3 && j < mIKBones.size(); ++j)
 			{
-				Bone& bone = demoModel.mBones[j];
-				if (bone.mParentIndex == mIKBones[i] || bone.mIndex == mIKBones[i])
+				glm::vec3 originOfRotation = demoModel.mBones[mIKBones[j]].mCurrentGlobalTransformation[3];
+				currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
+				glm::vec3 B = glm::normalize(currentEndEffector - originOfRotation);
+				glm::vec3 C = glm::normalize(Gprime - originOfRotation);
+				float alpha = acos(glm::dot(B, C));
+				if (alpha == 0.0f || std::isnan(alpha))
 				{
+					continue;
+				}
+				glm::vec3 axis = glm::normalize(glm::cross(B, C));
+				axis = glm::inverse(demoModel.mBones[mIKBones[j]].mCurrentGlobalTransformation) * glm::vec4(axis, 0.0f);
+				float alen = glm::length(axis);
+				glm::quat q = glm::quat(cos(alpha / 2.0f), sin(alpha / 2.0f) * axis.x / alen,
+					sin(alpha / 2.0f) * axis.y / alen, sin(alpha / 2.0f) * axis.z / alen);
+				demoModel.mBones[mIKBones[j]].mIKTransformation = demoModel.mBones[mIKBones[j]].mIKTransformation *
+					glm::toMat4(q);
+
+				for (int k = j; k >= 0; --k)
+				{
+					Bone& bone = demoModel.mBones[mIKBones[k]];
 					bone.mCurrentGlobalTransformation = demoModel.mBones[bone.mParentIndex].mCurrentGlobalTransformation *
-						bone.mCurrentLocalTransformation * bone.mIKTransformation;
+							bone.mCurrentLocalTransformation * bone.mIKTransformation;
+				}
+
+				currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
+
+				sqrDistance = glm::length2(currentEndEffector - Gprime);
+
+				if (sqrDistance <= sqrDistanceError)
+				{
+					goto Update_children;
 				}
 			}
-
-			/*originOfRotation = model * demoModel.mBones[mIKBones[i]].mCurrentGlobalTransformation[3];
-			currentEndEffector = model * demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
-			B = glm::normalize(currentEndEffector - originOfRotation);
-			C = glm::normalize(Gprime - originOfRotation);
-			alpha = acos(glm::dot(B, C));
-			std::cout << alpha << std::endl;*/
-			//demoModel.mBones[mIKBones[i]].mCurrentGlobalTransformation = demoModel.mBones[demoModel.mBones[mIKBones[i]].mParentIndex].mCurrentGlobalTransformation *
-				//demoModel.mBones[mIKBones[i]].mCurrentLocalTransformation * demoModel.mBones[mIKBones[i]].mIKTransformation;
 		}
+
 		currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
-		lengthToGoal = glm::length(currentEndEffector - Gprime);
+		sqrDistance = glm::length2(currentEndEffector - Gprime);
+		++iterationCount;
+	} while (sqrDistance > sqrDistanceError && iterationCount <= maxIterations);
+
+	Update_children:
+	//Update end effectors children
+	for (unsigned int i = 0; i < demoModel.mBones.size(); ++i)
+	{
+		Bone& bone = demoModel.mBones[i];
+		if (bone.mParentIndex != -1)
+		{
+			bone.mCurrentGlobalTransformation = demoModel.mBones[bone.mParentIndex].mCurrentGlobalTransformation *
+				bone.mCurrentLocalTransformation * bone.mIKTransformation;
+		}
 	}
 }
 
@@ -702,4 +720,16 @@ inline std::pair<float,int> AnimationScene::SearchInTable(float distance)
 	}
 	PathRunTime = 0.0f;
 	return std::make_pair(0, 0);
+}
+
+inline glm::mat4 AnimationScene::RotationFromDirection(const glm::vec3& direction)
+{
+	float angle = std::atan2(direction.y, direction.x);
+	glm::mat4 glmrotXY = glm::rotate(angle, glm::vec3(0.0f, 0.0f, 1.0f));
+	// Find the angle with the xy with plane (0, 0, 1); the - there is because we want to 
+	// 'compensate' for that angle (a 'counter-angle')
+	float angleZ = -std::asin(direction.z);
+	// Make the matrix for that, assuming that Y is your 'side' vector; makes the model 'pitch'
+	glm::mat4 glmrotZ = glm::rotate(angleZ, glm::vec3(0.0f, 1.0f, 0.0f));
+	return glmrotXY * glmrotZ;
 }
