@@ -76,9 +76,10 @@ void FrameBuffer::TexBind(unsigned int index, unsigned int slot)
 	glBindTexture(GL_TEXTURE_2D, m_TextureID[index]);
 }
 
-void FrameBuffer::TexUnbind(unsigned int index)
+void FrameBuffer::TexUnbind(unsigned int index,unsigned int slot)
 {
-
+	glActiveTexture(GL_TEXTURE0 + slot);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void FrameBuffer::Clear() const

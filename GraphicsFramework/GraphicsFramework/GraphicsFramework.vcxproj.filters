@@ -111,6 +111,9 @@
     <ClCompile Include="opengl\ShaderStorageBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Project5.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="opengl\FrameBuffer.h">
@@ -425,6 +428,9 @@
     <ClInclude Include="opengl\ShaderStorageBuffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Project5.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\gh_sample_animation.fbx" />
@@ -444,5 +450,7 @@
     <None Include="res\JSON Data\Teapot4.json" />
     <None Include="res\JSON Data\Teapot7.json" />
     <None Include="res\JSON Data\Teapot8.json" />
+    <None Include="src\motionblur\Reconstruction.vert" />
+    <None Include="src\motionblur\Reconstruction.frag" />
   </ItemGroup>
 </Project>

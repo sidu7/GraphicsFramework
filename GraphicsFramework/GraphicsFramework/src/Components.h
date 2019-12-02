@@ -6,6 +6,7 @@
 #include "Object.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "../opengl/Texture.h"
+#include "ShapeManager.h"
 #include "Engine.h"
 
 enum Shapes;
@@ -20,7 +21,8 @@ enum ComponentType
 	TRANSFORM,
 	MATERIAL,
 	SHAPE,
-	ROTATEINCIRCLE
+	ROTATEINCIRCLE,
+	MOVE
 };
 
 class Component
@@ -36,6 +38,7 @@ public:
 	glm::vec3 mScale;
 	glm::vec3 mRotation;
 	glm::mat4 mModelTransformation;
+	glm::mat4 mPrevModelTransformation;
 
 	void Update(Shader* shader)
 	{
@@ -45,8 +48,10 @@ public:
 		model = glm::rotate(model, glm::radians(mRotation.y), glm::vec3(0.0, 1.0, 0.0));
 		model = glm::rotate(model, glm::radians(mRotation.x), glm::vec3(1.0, 0.0, 0.0));
 		model = glm::scale(model, mScale);
+		mPrevModelTransformation = mModelTransformation;
 		mModelTransformation = model;
 		shader->SetUniformMat4f("model", mModelTransformation);
+		shader->SetUniformMat4f("prevmodel", mPrevModelTransformation);
 		shader->SetUniformMat4f("normaltr", glm::inverse(mModelTransformation));
 	}
 
@@ -55,6 +60,7 @@ public:
 		mPosition = JSONHelper::GetVec3F(data["Position"].GetArray());
 		mScale = JSONHelper::GetVec3F(data["Scale"].GetArray());
 		mRotation = JSONHelper::GetVec3F(data["Rotation"].GetArray());
+		mModelTransformation = glm::mat4(1.0f);
 	}
 };
 
@@ -137,5 +143,57 @@ public:
 		mSpeed = data["Speed"].GetFloat();
 		mTParam = 0.0f;
 		mAngle = 0.0f;
+	}
+};
+
+class Move : public Component
+{
+public:
+	float mTime;
+	float mSpeed;
+	bool mHorizontal;
+	float mCurrentTime;
+	bool mFlip;
+
+	void Update()
+	{
+		float deltaTime = Time::Instance().deltaTime;
+		mCurrentTime += deltaTime;
+		if(mHorizontal)
+		{
+			if (mFlip)
+			{
+				mOwner->pTransform->mPosition.x += mSpeed * deltaTime;
+			}
+			else
+			{
+				mOwner->pTransform->mPosition.x -= mSpeed * deltaTime;
+			}
+		}
+		else
+		{
+			if (mFlip)
+			{
+				mOwner->pTransform->mPosition.y += mSpeed * deltaTime;
+			}
+			else
+			{
+				mOwner->pTransform->mPosition.y -= mSpeed * deltaTime;
+			}
+		}
+		if(mCurrentTime >= mTime)
+		{
+			mFlip = !mFlip;
+			mCurrentTime = 0.0f;
+		}
+	}
+
+	void Serialize(rapidjson::Value::Object data)
+	{
+		mTime = data["Time"].GetFloat();
+		mSpeed = data["Speed"].GetFloat();
+		mHorizontal = data["Horizontal"].GetBool();
+		mCurrentTime = 0.0f;
+		mFlip = data["Flip"].GetBool();
 	}
 };

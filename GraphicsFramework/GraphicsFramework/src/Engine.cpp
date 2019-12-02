@@ -18,6 +18,7 @@
 #include "ImguiManager.h"
 #include "AnimationScene.h"
 #include "ObjectManager.h"
+#include "Project5.h"
 
 
 void Engine::Start()
@@ -79,10 +80,13 @@ void Engine::Start()
 	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
 
 	//CS562
-	Scene::Instance().Init();
+	//Scene::Instance().Init();
 
 	//CS560
-	//AnimationScene::Instance().Init();
+	AnimationScene::Instance().Init();
+
+	//CS562 Project 5
+	//Project5::Instance().Init();
 }
 
 void Engine::Run()
@@ -97,10 +101,13 @@ void Engine::Run()
 		pCamera->Update();
 		
 		//CS562
-		Scene::Instance().Draw();
+		//Scene::Instance().Draw();
 
 		//CS560
-		//AnimationScene::Instance().Draw();
+		AnimationScene::Instance().Draw();
+		
+		//CS562 Project 5
+		//Project5::Instance().Draw();
 
 		ImguiManager::Instance().Update();
 		Renderer::Instance().SwapBuffers();

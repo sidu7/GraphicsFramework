@@ -5,7 +5,7 @@
 #include "Components.h"
 #include "../opengl/Renderer.h"
 
-Object::Object() : pTransform(nullptr), pMaterial(nullptr), pShape(nullptr), pRotate(nullptr)
+Object::Object() : pTransform(nullptr), pMaterial(nullptr), pShape(nullptr), pRotate(nullptr), pMove(nullptr)
 {
 }
 
@@ -15,11 +15,13 @@ Object::~Object()
 	delete pMaterial;
 	delete pShape;
 	delete pRotate;
+	delete pMove;
 }
 
 void Object::Update(Shader* shader)
 {
 	if (pRotate) pRotate->Update();
+	if (pMove) pMove->Update();
 	if (pMaterial) {
 		pMaterial->Update(shader);
 		if (pMaterial->pTexture)
@@ -74,6 +76,11 @@ void Object::Serialize(const rapidjson::Value::Object& data)
 			pRotate = new RotateInCircle();
 			pRotate->Serialize(components[i].GetObject());
 			pRotate->mOwner = this;
+			break;
+		case MOVE:
+			pMove = new Move();
+			pMove->Serialize(components[i].GetObject());
+			pMove->mOwner = this;
 			break;
 		}
 	}

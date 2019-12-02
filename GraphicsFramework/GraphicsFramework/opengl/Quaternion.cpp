@@ -7,7 +7,8 @@ Quaternion::Quaternion(float x, float y, float z, float s) : mQuat(glm::vec4(x,y
 
 Quaternion::Quaternion(glm::vec3 axis, float angle)
 {
-	mQuat = glm::vec4(glm::sin(glm::radians(angle)/2) * axis, glm::cos(glm::radians(angle)/2));
+	//mQuat = glm::vec4(glm::sin(glm::radians(angle) / 2) * axis / glm::length(axis), glm::cos(glm::radians(angle) / 2));
+	mQuat = glm::vec4(glm::sin(angle/2) * axis/glm::length(axis), glm::cos(angle/2));
 }
 
 Quaternion::Quaternion(glm::mat4 rotation)

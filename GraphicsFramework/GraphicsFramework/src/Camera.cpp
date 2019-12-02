@@ -19,6 +19,7 @@ void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 	pitch = 0.0f;
 	yaw = -90.0f;
 	CalculateFront();
+	mView = glm::mat4(1.0f);
 }
 
 void Camera::Update()
@@ -54,6 +55,7 @@ void Camera::Update()
 		mCameraPos += mSpeed * Time::Instance().deltaTime * glm::cross(mCameraFront,mCameraUp);
 	}
 
+	mPrevView = mView;
 	mView = glm::lookAt(mCameraPos, mCameraPos + mCameraFront, mCameraUp);
 }
 

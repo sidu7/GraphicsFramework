@@ -38,14 +38,15 @@ void AnimationScene::Init()
 	 *IK bones
 	 *RightArm
 	 *RightForeArm
-	 *RightHand 
+	 *RightHand
+	 *RightShoulder
 	 */
 	for(int i = demoModel.mBones.size() - 1; i >= 0 ; --i)
 	{
 		if(demoModel.mBones[i].mName == "RightArm" ||
 			demoModel.mBones[i].mName == "RightForeArm" ||
-			demoModel.mBones[i].mName == "RightHand" ||
-			demoModel.mBones[i].mName == "RightShoulder")
+			demoModel.mBones[i].mName == "RightHand") 
+			//||demoModel.mBones[i].mName == "RightShoulder")
 		{
 			mIKBones.push_back(i);
 		}
@@ -107,7 +108,7 @@ void AnimationScene::Init()
 	mPathMatrix = glm::mat4(1.0f);
 
 	showControlWindow = false;
-	mGoalPosition = glm::vec3(0.0f, 14.0f, 10.0f);
+	mGoalPosition = glm::vec3(-5.0f, 14.0f, 10.0f);
 	maxIterations = 10;
 	sqrDistanceError = 0.01f;
 }
@@ -192,7 +193,7 @@ void AnimationScene::Draw()
 	{
 		mEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
 	}
-	double D = 5.0;
+	double D = 4.0;
 	
 	IKUpdate(model, AnimationRunTime/D);
 
@@ -557,27 +558,30 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 	int iterationCount = 0;
 	do
 	{
-		for (int i = 0; i < mIKBones.size() - 2; ++i)
+		//for (int i = 0; i < mIKBones.size() - 2; ++i)
 		{
-			for (int j = 1; j < i + 3 && j < mIKBones.size(); ++j)
+			//for (int j = 1; j < i + 3 && j < mIKBones.size(); ++j)
+			for (int j = 1; j < mIKBones.size(); ++j)
 			{
 				glm::vec3 originOfRotation = demoModel.mBones[mIKBones[j]].mCurrentGlobalTransformation[3];
 				currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
 				glm::vec3 B = glm::normalize(currentEndEffector - originOfRotation);
 				glm::vec3 C = glm::normalize(Gprime - originOfRotation);
-				float alpha = acos(glm::dot(B, C));
-				if (alpha == 0.0f || std::isnan(alpha))
+				float dot = glm::dot(B, C);
+				if(dot >= 0.9999f)
 				{
 					continue;
 				}
-				glm::vec3 axis = glm::normalize(glm::cross(B, C));
+				float alpha = glm::acos(dot);
+				glm::vec3 axis = glm::cross(B, C);
 				axis = glm::inverse(demoModel.mBones[mIKBones[j]].mCurrentGlobalTransformation) * glm::vec4(axis, 0.0f);
 				float alen = glm::length(axis);
 				glm::quat q = glm::quat(cos(alpha / 2.0f), sin(alpha / 2.0f) * axis.x / alen,
 					sin(alpha / 2.0f) * axis.y / alen, sin(alpha / 2.0f) * axis.z / alen);
+				glm::normalize(q);
 				demoModel.mBones[mIKBones[j]].mIKTransformation = demoModel.mBones[mIKBones[j]].mIKTransformation *
 					glm::toMat4(q);
-
+				
 				for (int k = j; k >= 0; --k)
 				{
 					Bone& bone = demoModel.mBones[mIKBones[k]];

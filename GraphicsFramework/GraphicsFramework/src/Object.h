@@ -5,6 +5,8 @@ class Transform;
 class Material;
 class Shape;
 class RotateInCircle;
+class Move;
+
 class VertexArray;
 class ElementArrayBuffer;
 enum Shapes;
@@ -23,4 +25,5 @@ public:
 	Material* pMaterial;
 	Shape* pShape;
 	RotateInCircle* pRotate;
+	Move* pMove;
 };

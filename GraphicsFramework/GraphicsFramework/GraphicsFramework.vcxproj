@@ -112,6 +112,7 @@
     <ClCompile Include="src\Light.cpp" />
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\ObjectManager.cpp" />
+    <ClCompile Include="src\Project5.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\ShapeManager.cpp" />
     <ClCompile Include="src\Time.cpp" />
@@ -147,6 +148,7 @@
     <ClInclude Include="src\Light.h" />
     <ClInclude Include="src\Object.h" />
     <ClInclude Include="src\ObjectManager.h" />
+    <ClInclude Include="src\Project5.h" />
     <ClInclude Include="src\Scene.h" />
     <ClInclude Include="src\ShapeManager.h" />
     <ClInclude Include="src\Singleton.h" />
@@ -247,6 +249,8 @@
     <None Include="src\animshaders\Drawing.vert" />
     <None Include="src\animshaders\ModelDraw.frag" />
     <None Include="src\animshaders\ModelDraw.vert" />
+    <None Include="src\motionblur\Reconstruction.frag" />
+    <None Include="src\motionblur\Reconstruction.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
