@@ -83,4 +83,5 @@ private:
 	int AONum;
 	float AORadius;
 	float AOScale;
+	float AOContrast;
 };

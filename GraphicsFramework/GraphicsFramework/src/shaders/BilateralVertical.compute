@@ -22,31 +22,37 @@ void main()
 	uint i = gl_LocalInvocationID.y;
 
 	v[i] = imageLoad(src, gpos + ivec2(0, -width));
-	n[i] = imageLoad(normals, gpos + ivec2(-width, 0));
-	w[i] = imageLoad(worldpos, gpos + ivec2(-width, 0));
+	n[i] = imageLoad(normals, gpos + ivec2(0,-width));
+	w[i] = imageLoad(worldpos, gpos + ivec2(0,-width));
 	if (i < 2 * width)
 	{
 		v[i + 128] = imageLoad(src, gpos + ivec2(0, 128 - width));
-		n[i + 128] = imageLoad(normals, gpos + ivec2(128 - width, 0));
-		w[i + 128] = imageLoad(worldpos, gpos + ivec2(128 - width, 0));
+		n[i + 128] = imageLoad(normals, gpos + ivec2(0,128 - width));
+		w[i + 128] = imageLoad(worldpos, gpos + ivec2(0,128 - width));
 	}
 
 	barrier();
 
-	vec4 sum = vec4(0.0);
+	vec4 sum = vec4(0.0f);
+
+	vec3 N = n[i + width].xyz;
+	float d = w[i + width].w;
+	float weightSum = 0.0f;
 	for (uint j = i; j <= i + 2 * width; ++j)
 	{
-		vec3 N = n[j].xyz;
-		float d = w[j].w;
-		vec3 Ni = n[j - i].xyz;
-		float di = w[j - i].w;
+		vec3 Ni = n[j].xyz;
+		float di = w[j].w;
 
 		float R = max(dot(Ni, N), 0.0f) * (1.0f / sqrt(2.0 * pi * 0.01)) * exp(-pow((di - d), 2) / 0.02f);
 
 		float W = weights[j - i] * R;
 
+		weightSum += W;
+
 		sum += W * v[j];
 	}
+
+	sum /= weightSum;
 
 	imageStore(dst, gpos, sum);
 }

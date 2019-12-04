@@ -118,6 +118,7 @@ void Scene::Init()
 	AONum = 15;
 	AORadius = 10.0f;
 	AOScale = 3.0f;
+	AOContrast = 1.0f;
 	
 	// Load Objects in Scene
 	ObjectManager::Instance().AddObject("res/JSON Data/Floor.json");
@@ -183,7 +184,8 @@ void Scene::Draw()
 	ImGui::Checkbox("Show IBL Specular", &IBLSpecular);
 	ImGui::InputInt("AONum", &AONum);
 	ImGui::InputFloat("AORadius", &AORadius,1.0f);
-	ImGui::InputFloat("AOScale", &AOScale,0.1f);
+	ImGui::InputFloat("AOScale", &AOScale, 0.1f);
+	ImGui::InputFloat("AOContrast", &AOContrast,0.1f);
 	ImGui::End();
 	
 	//G-Buffer pass
@@ -294,7 +296,7 @@ void Scene::Draw()
 	AOShader->SetUniform1i("normaltex", 2);
 	G_Buffer->TexBind(1, 3);
 	AOShader->SetUniform1i("worldpostex", 3);
-	AOShader->SetUniform1f("contrast", contrast);
+	AOShader->SetUniform1f("contrast", AOContrast);
 	AOShader->SetUniform1i("AOn", AONum);
 	AOShader->SetUniform1f("AOR", AORadius);
 	AOShader->SetUniform1f("AOscale", AOScale);
@@ -351,8 +353,8 @@ void Scene::Draw()
 	ambient->SetUniform1i("irradiance", 6);
 	skyDomeTexture->Bind(7);
 	ambient->SetUniform1i("skydome", 7);
-	//ResultBlurredAO->Bind(8);
-	BlurredAO->TexBind(0, 8);
+	ResultBlurredAO->Bind(8);
+	//BlurredAO->TexBind(0, 8);
 	ambient->SetUniform1i("AOtex", 8);
 	ambient->SetUniform1f("exposure", exposure);
 	ambient->SetUniform1f("contrast", contrast);
@@ -360,9 +362,6 @@ void Scene::Draw()
 	ambient->SetUniform1i("showSpecular", IBLSpecular);
 	ambient->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
 	ambient->SetUniformBlock("HBlock", 3);
-	ambient->SetUniform1i("AOn", AONum);
-	ambient->SetUniform1f("AOR", AORadius);
-	ambient->SetUniform1f("AOscale", AOScale);
 	Renderer::Instance().DrawQuad();
 	ambient->Unbind();
 
@@ -372,8 +371,8 @@ void Scene::Draw()
 	G_Buffer->TexUnbind(3, 5);
 	skyDomeIrradiance->Unbind(6);
 	skyDomeTexture->Unbind(7);
-	BlurredAO->TexUnbind(0, 8);
-	//ResultBlurredAO->Unbind(8);
+	//BlurredAO->TexUnbind(0, 8);
+	ResultBlurredAO->Unbind(8);
 
 	// Global Lighting pass
 	/*if (gBuffershow == 0)

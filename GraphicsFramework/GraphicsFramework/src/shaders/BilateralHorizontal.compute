@@ -35,19 +35,24 @@ void main()
 
 	vec4 sum = vec4(0.0f);
 
+	vec3 N = n[i + width].xyz;
+	float d = w[i + width].w;
+	float weightSum = 0.0f;
 	for (uint j = i; j <= i + 2 * width; ++j)
 	{
-		vec3 Ni = n[j - i].xyz;
-		float di = w[j - i].w;
-		vec3 N = n[j].xyz;
-		float d = w[j].w;
+		vec3 Ni = n[j].xyz;
+		float di = w[j].w;
 
 		float R = max(dot(Ni, N), 0.0f) * (1.0f / sqrt(2.0 * pi * 0.01)) * exp(-pow((di - d), 2) / 0.02f);
 
 		float W = weights[j - i] * R;
 
+		weightSum += W;
+
 		sum += W * v[j];
 	}
+
+	sum /= weightSum;
 
 	imageStore(dst, gpos, sum);
 }
