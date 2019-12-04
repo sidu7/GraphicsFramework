@@ -6,3 +6,5 @@ Release/
 #files
 *.user
 *.obj
+/GraphicsFramework/GraphicsFramework/src/shaders/AOblurV.compute
+/GraphicsFramework/GraphicsFramework/src/shaders/AOblur.compute

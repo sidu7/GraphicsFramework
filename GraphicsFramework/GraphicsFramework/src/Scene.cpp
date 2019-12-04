@@ -329,7 +329,7 @@ void Scene::Draw()
 	BilateralVertical->SetUniform1i("width", blurSize);
 	BilateralVertical->SetUniformBlock("blurKernel", 2);
 
-	BilateralVertical->Run(BlurredAO->mWidth, BlurredAO->mHeight / 128, 1);
+	BilateralVertical->Run(BlurredAO->mWidth, BlurredAO->mHeight / 128 + 1, 1);
 	BilateralVertical->Unbind();
 	block->Unbind();
 
