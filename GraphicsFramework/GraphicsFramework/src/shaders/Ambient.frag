@@ -10,11 +10,6 @@ uniform HBlock
 	float Numbers[2 * 100];
 };
 
-layout(std430, binding = 3) buffer IrradianceCoeff
-{ 
-	vec3 ETerms[9]; 
-};
-
 in vec2 TexCoord;
 
 uniform vec3 Ambient;
@@ -29,6 +24,7 @@ uniform float exposure;
 uniform float contrast;
 uniform bool showDiffuse;
 uniform bool showSpecular;
+uniform sampler2D AOtex;
 
 vec3 TexRead(vec3 w,sampler2D tex, float level)
 {
@@ -46,57 +42,15 @@ float Distribution(vec3 N, vec3 H, float alpha)
 	return (alpha + 2) * pow(max(dot(N,H),0.0),alpha) / (2*pi);
 }
 
-float YFunction(vec3 xyz, int index)
-{
-	switch (index)
-	{
-	case 0:
-		return 0.28209f;
-		break;
-	case 1:
-		return 0.48860f * xyz.y;
-		break;
-	case 2:
-		return 0.48860f * xyz.z;
-		break;
-	case 3:
-		return 0.48860f * xyz.x;
-		break;
-	case 4:
-		return 1.09254f * xyz.x * xyz.y;
-		break;
-	case 5:
-		return 1.09254f * xyz.y * xyz.z;
-		break;
-	case 6:
-		return 0.31539f * (3 * xyz.z * xyz.z - 1);
-		break;
-	case 7:
-		return 1.09254f * xyz.x * xyz.z;
-		break;
-	case 8:
-		return 0.54627f * (xyz.x * xyz.x - xyz.y * xyz.y);
-		break;
-	}
-}
-
-vec3 IrradianceMap(vec3 N)
-{
-	vec3 result = vec3(0.0f);
-	for(int i = 0; i < 9; ++i)
-	{
-		result += ETerms[i] * YFunction(N,i);
-	}
-	return result;
-}
-
 void main()
 {
 	vec3 Kd = texture(diffusetex,TexCoord).xyz;
 	vec4 val = texture(speculartex,TexCoord);
 	float alpha = val.w;
 	vec3 Ks = val.xyz;
-	vec3 worldPos = texture(worldpostex,TexCoord).xyz;
+	vec4 worldPosdepth = texture(worldpostex,TexCoord);
+	vec3 worldPos = worldPosdepth.xyz;
+	float depth = worldPosdepth.w;
 	vec3 eyePos = (inverseview * vec4(0,0,0,1)).xyz;
 	vec3 eyeVec = eyePos - worldPos;
 	vec3 V = normalize(eyeVec);
@@ -141,4 +95,36 @@ void main()
 	vec4 base = exposure * OutColor / (exposure * OutColor + vec4(1,1,1,1));
 
 	FragColor = pow(base,vec4(contrast/2.2));
+
+	// SSAO
+	//float S = 0.0f;
+	//int xp = int(gl_FragCoord.x);
+	//int yp = int(gl_FragCoord.y);
+	//int hash = (30*xp ^ yp) + 10*xp*yp;
+	//for(int i = 0; i < AOn; ++i)
+	//{
+	//	float AOalpha = (i + 0.5f)/AOn;
+	//	float AOh = AOalpha * AOR / depth;
+	//	float AOtheta = 2 * pi * AOalpha * (7*AOn/9) + hash;
+	//	vec2 AOuv = TexCoord + AOh * vec2(cos(AOtheta),sin(AOtheta));
+	//	vec4 Pidepth = texture(worldpostex,AOuv);
+	//	vec3 Pi = Pidepth.xyz;
+	//	float di = Pidepth.w;
+	//	vec3 wi = Pi - worldPos;
+	//	int Heaviside = 1;
+	//	if((AOR - length(wi)) < 0.0f)
+	//	{
+	//		Heaviside = 0;
+	//	}
+	//	S += max(0,dot(N,wi)-0.001*di) * Heaviside / max(0.1f*AOR*0.1f*AOR,dot(wi,wi));
+	//}
+	//
+	//S = ((2 * pi * 0.1f * AOR) / AOn) * S;
+	//
+	//float AO = max(0.0f,pow(1 - AOscale*S,contrast));
+
+	float AO = texture(AOtex,TexCoord).r;
+
+	FragColor.xyz = FragColor.xyz * AO;
+	//FragColor.xyz = vec3(AO);
 }

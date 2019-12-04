@@ -63,8 +63,6 @@ private:
 	Shader* skyDomeShader;
 	Texture* skyDomeTexture;
 	Texture* skyDomeIrradiance;
-	ComputeShader* irradianceCompute;
-	ShaderStorageBuffer* IrradianceETerms;
 	float exposure;
 	float contrast;
 	struct
@@ -74,4 +72,15 @@ private:
 	} Hblock;
 	UniformBuffer* HUniBlock;
 	bool IBLDiffuse,IBLSpecular;
+
+	//SSAO
+	Shader* AOShader;
+	FrameBuffer* BlurredAO;
+	ComputeShader* BilateralHorizontal;
+	ComputeShader* BilateralVertical;
+	Texture* HorizontalBlurredAO;
+	Texture* ResultBlurredAO;
+	int AONum;
+	float AORadius;
+	float AOScale;
 };

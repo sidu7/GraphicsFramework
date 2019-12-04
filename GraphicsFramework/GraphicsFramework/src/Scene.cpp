@@ -98,29 +98,7 @@ void Scene::Init()
 	skyDomeIrradiance = new Texture("res/Textures/skyDomeIrr.hdr");
 	exposure = 5.2f;
 	contrast = 1.0f;	
-	irradianceCompute = new ComputeShader("src/shaders/Irradiance.compute");
-	IrradianceETerms = new ShaderStorageBuffer();
-	IrradianceETerms->CreateBuffer(sizeof(float) * 3 * 9);
-	float* eterms = static_cast<float*>(IrradianceETerms->GetBufferWritePointer(true));
 
-	for(unsigned int i = 0; i < 27; ++i)
-	{
-		eterms[i] = 1.0f;
-	}
-
-	IrradianceETerms->ReleaseBufferPointer();
-
-	//IrradianceETerms->Bind(3);
-	//irradianceCompute->Bind();
-	////irradianceCompute->SetInputUniformImage("skydome", skyDomeTexture->GetTextureID(), 0, skyDomeTexture->mBPP);
-	//skyDomeTexture->Bind();
-	//irradianceCompute->SetUniform1i("skydome", 0);
-	//irradianceCompute->SetUniform1i("width", skyDomeTexture->mWidth);
-	//irradianceCompute->SetUniform1i("height", skyDomeTexture->mHeight);
-	//irradianceCompute->Run(9, 1, 1);
-	//ShaderStorageBuffer::PutMemoryBarrier();
-	//IrradianceETerms->Bind(3);
-	
 	// IBL
 	Hblock.N = HBlockSize;
 	HammersleyRandomPoints();
@@ -129,6 +107,17 @@ void Scene::Init()
 	HUniBlock->SubData(sizeof(Hblock), &Hblock);
 	IBLDiffuse = true;
 	IBLSpecular = true;
+
+	//SSAO
+	AOShader = new Shader("src/shaders/AO.vert", "src/shaders/AO.frag");
+	BlurredAO = new FrameBuffer(engine->scrWidth, engine->scrHeight);
+	BilateralHorizontal = new ComputeShader("src/shaders/BilateralHorizontal.compute");
+	BilateralVertical = new ComputeShader("src/shaders/BilateralVertical.compute");
+	HorizontalBlurredAO = new Texture(4, engine->scrWidth, engine->scrHeight);
+	ResultBlurredAO = new Texture(4, engine->scrWidth, engine->scrHeight);
+	AONum = 15;
+	AORadius = 10.0f;
+	AOScale = 3.0f;
 	
 	// Load Objects in Scene
 	ObjectManager::Instance().AddObject("res/JSON Data/Floor.json");
@@ -192,6 +181,9 @@ void Scene::Draw()
 	ImGui::Checkbox("Pause Moving", &engine->stopMoving);
 	ImGui::Checkbox("Show IBL Diffuse", &IBLDiffuse);
 	ImGui::Checkbox("Show IBL Specular", &IBLSpecular);
+	ImGui::InputInt("AONum", &AONum);
+	ImGui::InputFloat("AORadius", &AORadius,1.0f);
+	ImGui::InputFloat("AOScale", &AOScale,0.1f);
 	ImGui::End();
 	
 	//G-Buffer pass
@@ -291,6 +283,54 @@ void Scene::Draw()
 	//ShaderStorageBuffer::PutMemoryBarrier();
 	//IrradianceETerms->Bind(3);
 
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+	//AO Pass
+	BlurredAO->Bind();
+
+	AOShader->Bind();
+	G_Buffer->TexBind(0, 2);
+	AOShader->SetUniform1i("normaltex", 2);
+	G_Buffer->TexBind(1, 3);
+	AOShader->SetUniform1i("worldpostex", 3);
+	AOShader->SetUniform1f("contrast", contrast);
+	AOShader->SetUniform1i("AOn", AONum);
+	AOShader->SetUniform1f("AOR", AORadius);
+	AOShader->SetUniform1f("AOscale", AOScale);
+	Renderer::Instance().DrawQuad();
+	AOShader->Unbind();
+
+	BlurredAO->Unbind();
+
+	//Bilateral Filter
+	block->Bind(2);
+	block->SubData(sizeof(float)* blurWeights.size(), &blurWeights[0]);
+	BilateralHorizontal->Bind();
+
+	BilateralHorizontal->SetInputUniformImage("src", BlurredAO->m_TextureID[0], 0, 4);
+	BilateralHorizontal->SetInputUniformImage("normals", G_Buffer->m_TextureID[0], 1, 4);
+	BilateralHorizontal->SetInputUniformImage("worldpos", G_Buffer->m_TextureID[1], 2, 4);
+	BilateralHorizontal->SetOutputUniformImage("dst", HorizontalBlurredAO->GetTextureID(), 3, 4);
+	BilateralHorizontal->SetUniform1i("width", blurSize);
+	BilateralHorizontal->SetUniformBlock("blurKernel", 2);
+
+	BilateralHorizontal->Run(BlurredAO->mWidth / 128, BlurredAO->mHeight, 1);
+	BilateralHorizontal->Unbind();
+
+	BilateralVertical->Bind();
+
+	BilateralVertical->SetInputUniformImage("src", HorizontalBlurredAO->GetTextureID(), 0, 4);
+	BilateralHorizontal->SetInputUniformImage("normals", G_Buffer->m_TextureID[0], 1, 4);
+	BilateralHorizontal->SetInputUniformImage("worldpos", G_Buffer->m_TextureID[1], 2, 4);
+	BilateralVertical->SetOutputUniformImage("dst", ResultBlurredAO->GetTextureID(), 3, 4);
+	BilateralVertical->SetUniform1i("width", blurSize);
+	BilateralVertical->SetUniformBlock("blurKernel", 2);
+
+	BilateralVertical->Run(BlurredAO->mWidth, BlurredAO->mHeight / 128, 1);
+	BilateralVertical->Unbind();
+	block->Unbind();
+
 	//Ambient light pass
 	glViewport(0, 0, engine->scrWidth, engine->scrHeight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -298,8 +338,6 @@ void Scene::Draw()
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 
-	IrradianceETerms->Bind(3);
-	
 	ambient->Bind();
 	G_Buffer->TexBind(0, 2);
 	ambient->SetUniform1i("normaltex", 2);
@@ -313,16 +351,29 @@ void Scene::Draw()
 	ambient->SetUniform1i("irradiance", 6);
 	skyDomeTexture->Bind(7);
 	ambient->SetUniform1i("skydome", 7);
+	//ResultBlurredAO->Bind(8);
+	BlurredAO->TexBind(0, 8);
+	ambient->SetUniform1i("AOtex", 8);
 	ambient->SetUniform1f("exposure", exposure);
 	ambient->SetUniform1f("contrast", contrast);
 	ambient->SetUniform1i("showDiffuse", IBLDiffuse);
 	ambient->SetUniform1i("showSpecular", IBLSpecular);
 	ambient->SetUniformMat4f("inverseview", glm::inverse(engine->pCamera->mView));
 	ambient->SetUniformBlock("HBlock", 3);
+	ambient->SetUniform1i("AOn", AONum);
+	ambient->SetUniform1f("AOR", AORadius);
+	ambient->SetUniform1f("AOscale", AOScale);
 	Renderer::Instance().DrawQuad();
 	ambient->Unbind();
 
-	IrradianceETerms->Unbind(3);
+	G_Buffer->TexUnbind(0, 2);
+	G_Buffer->TexUnbind(1, 3);
+	G_Buffer->TexUnbind(2, 4);
+	G_Buffer->TexUnbind(3, 5);
+	skyDomeIrradiance->Unbind(6);
+	skyDomeTexture->Unbind(7);
+	BlurredAO->TexUnbind(0, 8);
+	//ResultBlurredAO->Unbind(8);
 
 	// Global Lighting pass
 	/*if (gBuffershow == 0)
