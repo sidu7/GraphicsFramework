@@ -6,6 +6,7 @@ out vec4 FragColor;
 
 uniform sampler2D Color;
 uniform sampler2D Velocity;
+uniform int S;
 
 void main()
 {
@@ -15,7 +16,7 @@ void main()
 	vec2 velocity = texture(Velocity,screenTexCoords).rg;
 
 	float speed = length(velocity/texelSize);
-	int nSamples = clamp(int(speed),1,MAX_SAMPLES);
+	int nSamples = clamp(int(speed),1,S);
 
 	vec3 result = texture(Color,screenTexCoords).xyz;
 	for(int i = 1; i < nSamples; ++i)

@@ -8,7 +8,7 @@ out vec3 normalVec;
 out vec3 worldPos;
 smooth out vec4 X;
 smooth out vec4 Xprime;
-out float depth;
+smooth out float depth;
 
 uniform mat4 model;
 uniform mat4 view;

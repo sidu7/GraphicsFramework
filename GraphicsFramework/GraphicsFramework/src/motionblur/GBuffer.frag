@@ -10,9 +10,10 @@ in vec3 worldPos;
 in vec2 TexCoords;
 smooth in vec4 X;
 smooth in vec4 Xprime;
-in float depth;
+smooth in float depth;
 
 uniform sampler2D texDiff;
+uniform vec2 windowSize;
 uniform vec3 diffuse;
 uniform vec3 specular;
 uniform float shininess;
@@ -27,11 +28,21 @@ void main()
 	SpecularAlpha.xyz = specular;
 	SpecularAlpha.w = shininess;
 	
-	//vec2 qx = 0.5*(X - Xprime) * deltaTime;
-	//float lenqx = length(qx);
-	//VelocityDepth.xy = qx*max(0.5,min(lenqx,k))/(lenqx + 0.01f);
 	vec2 a = (X.xy/X.w) * 0.5 + 0.5;
 	vec2 b = (Xprime.xy/Xprime.w) * 0.5 + 0.5;
+	//a *= windowSize;
+	//b *= windowSize;
+	//vec2 qx = (a - b);
+	//float lenqx = length(qx);
+	//if(lenqx > 0.0f)
+	//{
+	//	vec2 nqx = normalize(qx);
+	//	VelocityDepth.xy = nqx * clamp(lenqx,0.5f,float(k));
+	//}
+	//else
+	//{
+	//	VelocityDepth.xy = vec2(0.0f);
+	//}
 	VelocityDepth.xy = a - b;
 
 	VelocityDepth.z = depth;

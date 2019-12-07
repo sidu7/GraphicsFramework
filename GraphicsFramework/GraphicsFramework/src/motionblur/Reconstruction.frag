@@ -50,43 +50,43 @@ void main()
 	if(length(vn) <= 0.01f + 0.5f)
 	{
 		FragColor.xyz = Cx; // No Blur
-		return;
 	}
-
-	vec2 Vx = texture(VelocityDepth,TexCoord).xy;
-	float Zx = texture(VelocityDepth,TexCoord).z;
-
-	// Sample current point
-	float weight = 1.0f / length(Vx);
-
-	vec3 sum = Cx * weight;
-
-	// Take S - 1 additional neighbour samples
-	float j = rand(Vx) - 0.5f;
-	for(int i = 0; i < S; ++i)
+	else
 	{
-		if(i == (S-1)/2)
+		vec2 Vx = texture(VelocityDepth,TexCoord).xy;
+		float Zx = texture(VelocityDepth,TexCoord).z;
+
+		// Sample current point
+		float weight = 1.0f / length(Vx);
+
+		vec3 sum = Cx * weight;
+
+		// Take S - 1 additional neighbour samples
+		float j = rand(TexCoord) - 0.5f;
+		for(int i = 0; i < S; ++i)
 		{
-			continue;
+			if(i == (S-1)/2)
+			{
+				continue;
+			}
+
+			float t = mix(-1.0f,1.0f,(i+j+1.0f)/(S+1.0f));
+			vec2 Y = floor(X + vn*t + 0.5f);
+
+			vec2 Vy = texture(VelocityDepth,Y/SSize).xy;
+			float Zy = texture(VelocityDepth,Y/SSize).z;
+
+			float f = softDepthCompare(Zx,Zy);
+			float b = softDepthCompare(Zy,Zx);
+
+			float Ay = f * cone(Y,X,Vy) + b * cone(X,Y,Vx) + cylinder(Y,X,Vy) * cylinder(X,Y,Vx) * 2;
+
+			// Accumulate
+			weight += Ay;
+			vec3 Cy = texture(Color,Y/SSize).xyz;
+			sum += Ay * Cy;
 		}
 
-		float t = mix(-1.0f,1.0f,(i+j+1.0f)/(S+1.0f));
-		vec2 Y = floor(X + vn*t + 0.5f);
-
-		vec2 Vy = texture(VelocityDepth,Y/SSize).xy;
-		float Zy = texture(VelocityDepth,Y/SSize).z;
-
-		float f = softDepthCompare(Zx,Zy);
-		float b = softDepthCompare(Zy,Zx);
-
-		float Ay = f * cone(Y,X,Vy) + b * cone(X,Y,Vx) + cylinder(Y,X,Vy) * cylinder(X,Y,Vx) * 2;
-
-		// Accumulate
-		weight += Ay;
-		vec3 Cy = texture(Color,Y/SSize).xyz;
-		sum += Ay * Cy;
+		FragColor.xyz = sum / weight;
 	}
-
-	FragColor.xyz = sum / weight;
-
 }

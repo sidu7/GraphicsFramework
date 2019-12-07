@@ -49,9 +49,12 @@ void Project5::Init()
 
 	// Load Objects in Scene
 	ObjectManager::Instance().AddObject("res/JSON Data/Floor.json");
-	ObjectManager::Instance().AddObject("res/JSON Data/UpDown Teapot.json");
-	ObjectManager::Instance().AddObject("res/JSON Data/LeftRight Teapot.json");
-	ObjectManager::Instance().AddObject("res/JSON Data/Circle Teapot.json");
+	//ObjectManager::Instance().AddObject("res/JSON Data/UpDown Teapot1.json");
+	//ObjectManager::Instance().AddObject("res/JSON Data/UpDown Teapot2.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/LeftRight Teapot1.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/LeftRight Teapot2.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Circle Teapot1.json");
+	ObjectManager::Instance().AddObject("res/JSON Data/Circle Teapot2.json");
 	//ObjectManager::Instance().AddObject("res/JSON Data/Teapot9.json");
 	skyDome = ObjectManager::Instance().ReadObject("res/JSON Data/SkyDome.json");
 	skyDome->pTransform->mModelTransformation = glm::scale(glm::mat4(1.0f), skyDome->pTransform->mScale);
@@ -78,17 +81,9 @@ void Project5::Draw()
 	ImGui::Begin("G-Buffer");	
 	ImGui::InputFloat("Exposure", &exposure, 0.2);
 	ImGui::InputFloat("Contrast", &contrast, 0.2);
-	ImGui::Checkbox("Pause Moving", &engine->stopMoving);
-	ImGui::InputInt("K", &k);
+	ImGui::Checkbox("Pause", &engine->stopMoving);
+	ImGui::InputInt("Samples", &S);
 	ImGui::Checkbox("MotionBlur", &MotionBlur);
-	if(ImGui::Checkbox("ReconstructionFiler Motion Blur", &ReconBlur))
-	{
-		PerPixel = !ReconBlur;
-	}
-	if(ImGui::Checkbox("PerPixel Motion Blur Technique", &PerPixel))
-	{
-		ReconBlur = !PerPixel;
-	}
 	ImGui::End();
 
 	//G-Buffer pass
@@ -188,63 +183,18 @@ void Project5::Draw()
 	if (MotionBlur)
 	{
 		Color->Unbind();
-
+		glDisable(GL_BLEND);
 		glDisable(GL_DEPTH_TEST);
 
-		if (PerPixel)
-		{
-			MotionBlurShader->Bind();
-			Color->TexBind(0, 1);
-			MotionBlurShader->SetUniform1i("Color", 1);
-			G_Buffer->TexBind(4, 2);
-			MotionBlurShader->SetUniform1i("Velocity", 2);
-			Renderer::Instance().DrawQuad();
+		
+		MotionBlurShader->Bind();
+		Color->TexBind(0, 1);
+		MotionBlurShader->SetUniform1i("Color", 1);
+		G_Buffer->TexBind(4, 2);
+		MotionBlurShader->SetUniform1i("Velocity", 2);
+		MotionBlurShader->SetUniform1i("S", S);
+		Renderer::Instance().DrawQuad();
 
-			MotionBlurShader->Unbind();
-		}
-		if(ReconBlur)
-		{
-			TileMax->Bind();
-			// Tile Max
-			TileMaxShader->Bind();
-			G_Buffer->TexBind(4, 2);
-			TileMaxShader->SetUniform1i("velocityTex", 2);
-			TileMaxShader->SetUniform2f("TileMaxSize", engine->scrWidth / k, engine->scrHeight / k);
-			TileMaxShader->SetUniform1i("k", k);
-			Renderer::Instance().DrawQuad();
-			G_Buffer->TexUnbind(4, 2);
-			TileMaxShader->Unbind();
-			TileMax->Unbind();
-
-			NeighbourMax->Bind();
-			//Neighbour Max
-			NeighbourMaxShader->Bind();
-			TileMax->TexBind(0, 2);
-			NeighbourMaxShader->SetUniform1i("TileMax", 2);
-			NeighbourMaxShader->SetUniform2f("NMaxSize", engine->scrWidth / k, engine->scrHeight / k);
-			NeighbourMaxShader->SetUniform1i("k", k);
-			Renderer::Instance().DrawQuad();
-
-			NeighbourMax->Unbind();
-			NeighbourMaxShader->Unbind();
-
-			glDisable(GL_DEPTH_TEST);
-
-			glViewport(0, 0, engine->scrWidth, engine->scrHeight);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-			ReconstructionShader->Bind();
-			ReconstructionShader->SetUniform1i("k", k);
-			ReconstructionShader->SetUniform1i("S", S);
-			G_Buffer->TexBind(4, 1);
-			ReconstructionShader->SetUniform1i("VelocityDepth", 1);
-			NeighbourMax->TexBind(0, 2);
-			ReconstructionShader->SetUniform1i("NeighbourMax", 2);
-			Color->TexBind(0, 3);
-			ReconstructionShader->SetUniform1i("Color", 3);
-
-			Renderer::Instance().DrawQuad();
-			ReconstructionShader->Unbind();
-		}
+		MotionBlurShader->Unbind();
 	}
 }

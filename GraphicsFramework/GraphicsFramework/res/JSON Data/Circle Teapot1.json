@@ -8,9 +8,9 @@
     },
     {
       "Type": 1,
-      "Texture": "res/Textures/cracks.png",
+      "Diffuse": [0.2,0.2,0.0],
       "Specular": [ 0.08,0.08,0.08 ],
-      "Shininess": 5000.0
+      "Shininess": 5.0
     },
     {
       "Type": 2,
@@ -20,7 +20,7 @@
       "Type": 3,
       "Radius": 40.0,
       "RotationFactor": 50.0,
-      "Speed": 15.0
+      "Speed": 10.0
     }
   ]
 }

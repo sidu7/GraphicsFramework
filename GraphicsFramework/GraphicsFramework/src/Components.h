@@ -48,7 +48,10 @@ public:
 		model = glm::rotate(model, glm::radians(mRotation.y), glm::vec3(0.0, 1.0, 0.0));
 		model = glm::rotate(model, glm::radians(mRotation.x), glm::vec3(1.0, 0.0, 0.0));
 		model = glm::scale(model, mScale);
-		mPrevModelTransformation = mModelTransformation;
+		if (!engine->stopMoving)
+		{
+			mPrevModelTransformation = mModelTransformation;
+		}
 		mModelTransformation = model;
 		shader->SetUniformMat4f("model", mModelTransformation);
 		shader->SetUniformMat4f("prevmodel", mPrevModelTransformation);
@@ -154,9 +157,21 @@ public:
 	bool mHorizontal;
 	float mCurrentTime;
 	bool mFlip;
+	float mWait;
+	bool mWaiting;
+	float mWaitTime;
 
 	void Update()
 	{
+		if (engine->stopMoving)
+		{
+			return;
+		}
+		mWaitTime += Time::Instance().deltaTime;
+		if (mWaiting && mWaitTime < mWait)
+		{
+			return;
+		}
 		float deltaTime = Time::Instance().deltaTime;
 		mCurrentTime += deltaTime;
 		if(mHorizontal)
@@ -185,6 +200,8 @@ public:
 		{
 			mFlip = !mFlip;
 			mCurrentTime = 0.0f;
+			mWaitTime = 0.0f;
+			mWaiting = true;
 		}
 	}
 
@@ -195,5 +212,7 @@ public:
 		mHorizontal = data["Horizontal"].GetBool();
 		mCurrentTime = 0.0f;
 		mFlip = data["Flip"].GetBool();
+		mWait = data["Wait"].GetFloat();
+		mWaitTime = 0.0f;
 	}
 };

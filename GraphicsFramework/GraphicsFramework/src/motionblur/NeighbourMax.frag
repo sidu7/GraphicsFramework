@@ -18,12 +18,15 @@ void main()
 		for(int v = -1; v < 2; ++v)
 		{
 			vec2 uv = TexCoord + vec2(u,v);
-			vec2 val = texture(TileMax,uv).xy;
-			float len = length(val);
-			if(len >= max)
+			if(uv.x >= 0.0f && uv.x <= 1.0f && uv.y >= 0.0f && uv.y <= 1.0f)
 			{
-				max = len;
-				maxval = val;
+				vec2 val = texture(TileMax,uv).xy;
+				float len = length(val);
+				if(len >= max)
+				{
+					max = len;
+					maxval = val;
+				}
 			}
 		}
 	}

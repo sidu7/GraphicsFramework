@@ -2,7 +2,7 @@
   "Components": [
     {
       "Type": 0,
-      "Position": [ 0.0, 3.0, 0.0 ],
+      "Position": [ 0.0, 4.0, 100.0 ],
       "Rotation": [ -90.0, 0.0, 0.0 ],
       "Scale": [ 3.0, 3.0, 3.0 ]
     },
@@ -20,6 +20,7 @@
       "Type": 4,
       "Speed": 250.0,
       "Time": 0.3,
+      "Wait": 0.1,
       "Horizontal": false,
       "Flip": true
     }
