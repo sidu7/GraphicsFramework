@@ -83,10 +83,10 @@ void Engine::Start()
 	//Scene::Instance().Init();
 
 	//CS560
-	//AnimationScene::Instance().Init();
+	AnimationScene::Instance().Init();
 
 	//CS562 Project 5
-	Project5::Instance().Init();
+	//Project5::Instance().Init();
 }
 
 void Engine::Run()
@@ -104,10 +104,10 @@ void Engine::Run()
 		//Scene::Instance().Draw();
 
 		//CS560
-		//AnimationScene::Instance().Draw();
+		AnimationScene::Instance().Draw();
 		
 		//CS562 Project 5
-		Project5::Instance().Draw();
+		//Project5::Instance().Draw();
 
 		ImguiManager::Instance().Update();
 		Renderer::Instance().SwapBuffers();

@@ -79,8 +79,11 @@ private:
 	std::vector<TABLE_ENTRY> mArcLengthTable;
 
 	//IK
+	bool mDoOnce;
 	std::vector<unsigned int> mIKBones;
 	glm::vec3 mEndEffector;
 	int maxIterations;
 	float sqrDistanceError;
+	glm::vec3 mLocalGoalPosition;
+
 };

@@ -45,14 +45,14 @@ void AnimationScene::Init()
 	{
 		if(demoModel.mBones[i].mName == "RightArm" ||
 			demoModel.mBones[i].mName == "RightForeArm" ||
-			demoModel.mBones[i].mName == "RightHand") 
-			//||demoModel.mBones[i].mName == "RightShoulder")
+			demoModel.mBones[i].mName == "RightHand")
 		{
 			mIKBones.push_back(i);
 		}
 		demoModel.mBones[i].mIKTransformation = glm::mat4(1.0f);
 	}
 	mEndEffector = glm::vec3(0.0f);
+	mDoOnce = true;
 	
 	animation = demoModel.mAnimations[3];
 	//demoModel.LoadModel("res/arissa.fbx");
@@ -110,7 +110,7 @@ void AnimationScene::Init()
 	showControlWindow = false;
 	mGoalPosition = glm::vec3(-5.0f, 14.0f, 10.0f);
 	maxIterations = 10;
-	sqrDistanceError = 0.01f;
+	sqrDistanceError = 0.2f;
 }
 
 void AnimationScene::Draw()
@@ -183,11 +183,14 @@ void AnimationScene::Draw()
 		AnimationRunTime += Time::Instance().deltaTime * speedFactor;
 	}
 
-	AnimatorUpdate(animation);
-
+	if (mDoOnce)
+	{
+		AnimatorUpdate(animation);
+		mDoOnce = false;
+	}
 	
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(0.1f));
+	glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	matrix = glm::scale(matrix, glm::vec3(0.1f));
 
 	if(mEndEffector == glm::vec3(0.0f))
 	{
@@ -195,7 +198,7 @@ void AnimationScene::Draw()
 	}
 	double D = 4.0;
 	
-	IKUpdate(model, AnimationRunTime/D);
+	IKUpdate(matrix, AnimationRunTime/D);
 
 	for (unsigned int i = 0; i < demoModel.mBones.size(); ++i)
 	{
@@ -207,8 +210,8 @@ void AnimationScene::Draw()
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
 		modelDraw->SetUniformMat4f("pathTr", mPathMatrix);
-		modelDraw->SetUniformMat4f("model", model);
-		modelDraw->SetUniformMat4f("normaltr", glm::inverse(mPathMatrix * model));
+		modelDraw->SetUniformMat4f("model", matrix);
+		modelDraw->SetUniformMat4f("normaltr", glm::inverse(mPathMatrix * matrix));
 		modelDraw->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
 		modelDraw->SetUniform3f("specular", 1.0f, 1.0f, 1.0f);
 		modelDraw->SetUniform1f("shininess", 1.0f);
@@ -234,7 +237,7 @@ void AnimationScene::Draw()
 		Drawing->SetUniform1i("lighting", 0);
 		for (unsigned int i = 0; i < demoModel.mBones.size(); ++i)
 		{
-			Drawing->SetUniformMat4f("model", mPathMatrix * model * demoModel.mBones[i].mCurrentGlobalTransformation);
+			Drawing->SetUniformMat4f("model", mPathMatrix * matrix * demoModel.mBones[i].mCurrentGlobalTransformation);
 			Drawing->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
 			std::pair<VertexArray*, ElementArrayBuffer*> shape = ShapeManager::Instance().mShapes[Shapes::CUBE];
 			Renderer::Instance().Draw(*shape.first, *shape.second, *Drawing);
@@ -269,23 +272,23 @@ void AnimationScene::Draw()
 	glDrawArrays(GL_LINES, 1, mCurvePointsSize - 1);
 	mCurveVAO.Unbind();
 	
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
-	model = glm::scale(model, glm::vec3(500.0f));
-	Drawing->SetUniformMat4f("model", model);
-	Drawing->SetUniformMat4f("normaltr", glm::inverse(model));
+	matrix = glm::mat4(1.0f);
+	matrix = glm::translate(matrix, glm::vec3(0.0f, 0.0f, 0.0f));
+	matrix = glm::rotate(matrix, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
+	matrix = glm::scale(matrix, glm::vec3(500.0f));
+	Drawing->SetUniformMat4f("model", matrix);
+	Drawing->SetUniformMat4f("normaltr", glm::inverse(matrix));
 	Drawing->SetUniform3f("diffuse", 0.0f, 0.5f, 0.0f);
 	Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
 	Drawing->SetUniform1f("shininess", 1.0f);
 	std::pair<VertexArray*, ElementArrayBuffer*> shape = ShapeManager::Instance().mShapes[Shapes::QUAD];
 	Renderer::Instance().Draw(*shape.first, *shape.second, *Drawing);
 
-	model = glm::mat4(1.0f);
-	model = glm::translate(model, mGoalPosition);
-	model = glm::scale(model, glm::vec3(1.0f));
-	Drawing->SetUniformMat4f("model", model);
-	Drawing->SetUniformMat4f("normaltr", glm::inverse(model));
+	matrix = glm::mat4(1.0f);
+	matrix = glm::translate(matrix, mGoalPosition);
+	matrix = glm::scale(matrix, glm::vec3(1.0f));
+	Drawing->SetUniformMat4f("model", matrix);
+	Drawing->SetUniformMat4f("normaltr", glm::inverse(matrix));
 	Drawing->SetUniform3f("diffuse", 0.5f, 0.0f, 0.0f);
 	Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
 	Drawing->SetUniform1f("shininess", 1.0f);
@@ -299,7 +302,7 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 
 	for (unsigned int i = 0; i < demoModel.mBones.size(); ++i)
 	{
-		Bone& bone = demoModel.mBones[i];
+		Bone& bone = demoModel.mBones[i];	
 		glm::mat4 trans = glm::mat4(1.0f);
 		if (bone.isAnimated)
 		{
@@ -307,7 +310,7 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 			AnimationData& anim = bone.mAnimations[animName];
 			double TimeinTicks = AnimationRunTime * anim.mTicksPerSec;
 			double timeFrame = fmod(TimeinTicks, anim.mDuration);
-			timeFrame = anim.mDuration - 2;
+			timeFrame = anim.mDuration - 2; // Static IK pose
 			unsigned int posIndex = FindLessThaninList<glm::vec3>(timeFrame, anim.mKeyPositions);
 			unsigned int rotIndex = FindLessThaninList<Quaternion>(timeFrame, anim.mKeyRotations);
 			unsigned int sclIndex = FindLessThaninList<glm::vec3>(timeFrame, anim.mKeyScalings);
@@ -516,6 +519,9 @@ void AnimationScene::ImGuiWindow()
 		AnimationRunTime = 0.0f;
 		mEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
 	}
+	ImGui::Text("End effector %f %f %f", demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3].x, demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3].y,
+		demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3].z);
+	//ImGui::Text("Goal %f %f %f",)
 	if (showControlWindow)
 	{
 		ImGui::Begin("Control Points");
@@ -549,14 +555,14 @@ void AnimationScene::ImGuiWindow()
 void AnimationScene::IKUpdate(glm::mat4 model, float time)
 {
 	glm::vec3 Goal = glm::inverse(model) * glm::vec4(mGoalPosition,1.0);
-	glm::vec3 currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
+	glm::vec3 currentEndEffector = (model * demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation)[3];
 	if (time > 1.0f) time = 1.0f;
 	glm::vec3 Gprime = (1 - time) * mEndEffector + (time)*Goal;
-	//Gprime = Goal;
-	float sqrDistance = 0.0f;
+	Gprime = Goal;
+	float sqrDistance = glm::length(currentEndEffector - mGoalPosition);
 
 	int iterationCount = 0;
-	do
+	while (sqrDistance > sqrDistanceError && iterationCount <= maxIterations)
 	{
 		//for (int i = 0; i < mIKBones.size() - 2; ++i)
 		{
@@ -564,7 +570,7 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 			for (int j = 1; j < mIKBones.size(); ++j)
 			{
 				glm::vec3 originOfRotation = demoModel.mBones[mIKBones[j]].mCurrentGlobalTransformation[3];
-				currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
+				currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];				
 				glm::vec3 B = glm::normalize(currentEndEffector - originOfRotation);
 				glm::vec3 C = glm::normalize(Gprime - originOfRotation);
 				float dot = glm::dot(B, C);
@@ -573,6 +579,21 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 					continue;
 				}
 				float alpha = glm::acos(dot);
+				if (j == 1)
+				{
+					glm::vec3 shoulder = demoModel.mBones[mIKBones[j + 1]].mCurrentGlobalTransformation[3];
+					glm::vec3 biceps = glm::normalize(shoulder - originOfRotation);
+					float dot1 = glm::dot(biceps, C);
+					if (dot1 >= 0.9999f)
+					{
+						continue;
+					}
+					float alpha1 = glm::acos(dot1);
+					if (alpha1 >= 2.8)
+					{
+						continue;
+					}
+				}
 				glm::vec3 axis = glm::cross(B, C);
 				axis = glm::inverse(demoModel.mBones[mIKBones[j]].mCurrentGlobalTransformation) * glm::vec4(axis, 0.0f);
 				float alen = glm::length(axis);
@@ -581,6 +602,7 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 				glm::normalize(q);
 				demoModel.mBones[mIKBones[j]].mIKTransformation = demoModel.mBones[mIKBones[j]].mIKTransformation *
 					glm::toMat4(q);
+				//demoModel.mBones[mIKBones[j]].mIKTransformation = glm::toMat4(q);
 				
 				for (int k = j; k >= 0; --k)
 				{
@@ -589,9 +611,9 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 							bone.mCurrentLocalTransformation * bone.mIKTransformation;
 				}
 
-				currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
+				currentEndEffector = (model * demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation)[3];
 
-				sqrDistance = glm::length2(currentEndEffector - Gprime);
+				sqrDistance = glm::length(currentEndEffector - mGoalPosition);
 
 				if (sqrDistance <= sqrDistanceError)
 				{
@@ -600,20 +622,24 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 			}
 		}
 
-		currentEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
-		sqrDistance = glm::length2(currentEndEffector - Gprime);
+		currentEndEffector = (model * demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation)[3];
+		sqrDistance = glm::length(currentEndEffector - mGoalPosition);
 		++iterationCount;
-	} while (sqrDistance > sqrDistanceError && iterationCount <= maxIterations);
+	}
 
 	Update_children:
 	//Update end effectors children
 	for (unsigned int i = 0; i < demoModel.mBones.size(); ++i)
 	{
+		if(std::find(mIKBones.begin(),mIKBones.end(),i) != mIKBones.end())
+		{
+			continue;
+		}
 		Bone& bone = demoModel.mBones[i];
 		if (bone.mParentIndex != -1)
 		{
 			bone.mCurrentGlobalTransformation = demoModel.mBones[bone.mParentIndex].mCurrentGlobalTransformation *
-				bone.mCurrentLocalTransformation * bone.mIKTransformation;
+				bone.mCurrentLocalTransformation;
 		}
 	}
 }
