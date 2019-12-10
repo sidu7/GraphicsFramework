@@ -110,6 +110,7 @@
     <ClCompile Include="src\ImguiManager.cpp" />
     <ClCompile Include="src\Inputs.cpp" />
     <ClCompile Include="src\Light.cpp" />
+    <ClCompile Include="src\Mechanics.cpp" />
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\ObjectManager.cpp" />
     <ClCompile Include="src\Project5.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="src\Inputs.h" />
     <ClInclude Include="src\JSONHelper.h" />
     <ClInclude Include="src\Light.h" />
+    <ClInclude Include="src\Mechanics.h" />
     <ClInclude Include="src\Object.h" />
     <ClInclude Include="src\ObjectManager.h" />
     <ClInclude Include="src\Project5.h" />

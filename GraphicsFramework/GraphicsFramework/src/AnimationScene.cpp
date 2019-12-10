@@ -39,20 +39,21 @@ void AnimationScene::Init()
 	 *RightArm
 	 *RightForeArm
 	 *RightHand
-	 *RightShoulder
 	 */
 	for(int i = demoModel.mBones.size() - 1; i >= 0 ; --i)
 	{
 		if(demoModel.mBones[i].mName == "RightArm" ||
 			demoModel.mBones[i].mName == "RightForeArm" ||
-			demoModel.mBones[i].mName == "RightHand")
+			demoModel.mBones[i].mName == "RightHand" )
 		{
 			mIKBones.push_back(i);
 		}
 		demoModel.mBones[i].mIKTransformation = glm::mat4(1.0f);
+		//std::cout << demoModel.mBones[i].mName << std::endl;
 	}
 	mEndEffector = glm::vec3(0.0f);
 	mDoOnce = true;
+	IKDuration = 1.0f;
 	
 	animation = demoModel.mAnimations[3];
 	//demoModel.LoadModel("res/arissa.fbx");
@@ -196,9 +197,9 @@ void AnimationScene::Draw()
 	{
 		mEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
 	}
-	double D = 4.0;
 	
-	IKUpdate(matrix, AnimationRunTime/D);
+	
+	IKUpdate(matrix, AnimationRunTime/IKDuration);
 
 	for (unsigned int i = 0; i < demoModel.mBones.size(); ++i)
 	{
@@ -511,6 +512,7 @@ void AnimationScene::ImGuiWindow()
 		mTolerance = mTolerance < 0.0f ? 0.0001f : mTolerance;
 		CreateAxisLengthTable();
 	}
+	ImGui::InputFloat("IK Duration", &IKDuration, 0.5f);
 	ImGui::Text("GoalPosition");
 	if(ImGui::InputFloat("X", &mGoalPosition.x, 0.2f) ||
 	ImGui::InputFloat("Y", &mGoalPosition.y, 0.2f) ||
@@ -519,9 +521,7 @@ void AnimationScene::ImGuiWindow()
 		AnimationRunTime = 0.0f;
 		mEndEffector = demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
 	}
-	ImGui::Text("End effector %f %f %f", demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3].x, demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3].y,
-		demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation[3].z);
-	//ImGui::Text("Goal %f %f %f",)
+	
 	if (showControlWindow)
 	{
 		ImGui::Begin("Control Points");
@@ -558,7 +558,7 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 	glm::vec3 currentEndEffector = (model * demoModel.mBones[mIKBones[0]].mCurrentGlobalTransformation)[3];
 	if (time > 1.0f) time = 1.0f;
 	glm::vec3 Gprime = (1 - time) * mEndEffector + (time)*Goal;
-	Gprime = Goal;
+	//Gprime = Goal;
 	float sqrDistance = glm::length(currentEndEffector - mGoalPosition);
 
 	int iterationCount = 0;
@@ -593,7 +593,7 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 					{
 						continue;
 					}
-				}
+				}				
 				glm::vec3 axis = glm::cross(B, C);
 				axis = glm::inverse(demoModel.mBones[mIKBones[j]].mCurrentGlobalTransformation) * glm::vec4(axis, 0.0f);
 				float alen = glm::length(axis);

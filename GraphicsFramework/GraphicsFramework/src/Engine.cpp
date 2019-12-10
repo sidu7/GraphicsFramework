@@ -19,6 +19,7 @@
 #include "AnimationScene.h"
 #include "ObjectManager.h"
 #include "Project5.h"
+#include "Mechanics.h"
 
 
 void Engine::Start()
@@ -83,10 +84,13 @@ void Engine::Start()
 	//Scene::Instance().Init();
 
 	//CS560
-	AnimationScene::Instance().Init();
+	//AnimationScene::Instance().Init();
 
 	//CS562 Project 5
 	//Project5::Instance().Init();
+	
+	//CS560 Project 4
+	Mechanics::Instance().Init();
 }
 
 void Engine::Run()
@@ -104,10 +108,13 @@ void Engine::Run()
 		//Scene::Instance().Draw();
 
 		//CS560
-		AnimationScene::Instance().Draw();
+		//AnimationScene::Instance().Draw();
 		
 		//CS562 Project 5
 		//Project5::Instance().Draw();
+		
+		//CS560 Project 4
+		Mechanics::Instance().Draw();
 
 		ImguiManager::Instance().Update();
 		Renderer::Instance().SwapBuffers();

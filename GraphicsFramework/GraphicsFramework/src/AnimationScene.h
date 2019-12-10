@@ -82,6 +82,7 @@ private:
 	bool mDoOnce;
 	std::vector<unsigned int> mIKBones;
 	glm::vec3 mEndEffector;
+	float IKDuration;
 	int maxIterations;
 	float sqrDistanceError;
 	glm::vec3 mLocalGoalPosition;
