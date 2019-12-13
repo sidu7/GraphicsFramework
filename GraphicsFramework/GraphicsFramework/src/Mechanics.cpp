@@ -9,6 +9,8 @@
 #include "Engine.h"
 #include "Camera.h"
 #include "Time.h"
+#include "Inputs.h"
+#include <Imgui/imgui.h>
 
 extern Engine* engine;
 
@@ -17,23 +19,29 @@ void Mechanics::Init()
 	mLight = new Light();
 	mLight->position = glm::vec3(10.0, 100.0, 40.0);
 
-	engine->pCamera->mCameraPos = glm::vec3(20.0f, 0.0f, 100.0f);
+	engine->pCamera->mCameraPos = glm::vec3(20.0f, 23.0f, 60.0f);	
+	engine->pCamera->pitch = -20.0f;
+	engine->pCamera->CalculateFront();
 	
 	Drawing = new Shader("src/animshaders/Drawing.vert", "src/animshaders/Drawing.frag");
 
-	NodeCount = 20;
-	mSpringLength = 2.0f;
-	mSpringConstant = 0.2f;
-	mSpringFriction = 0.01f;
+	NodeCount = 80;
+	Time = 0.0f;
+	NodeMass = 0.05f;
+	mSpringLength = 0.05f;
+	mSpringConstant = 30.0f;
+	mSpringFriction = 0.2f;
 	mGravitationalForce = glm::vec3(0.0f,-9.8f,0.0f);
 	mAirFriction = 0.02f;
-	mRopeConnectionPosition = glm::vec3(0.0f, 6.0f, 0.0f);
+	mRopeConnectionPosition1 = glm::vec3(0.0f, 6.0f, 0.0f);
+	mRopeConnectionPosition2 = glm::vec3(40.0f, 6.0f, 0.0f);
+	mRopeConnectionVelocity = 50.0f;
 
-	mSpringConstant = 20.0f * mGravitationalForce.y / mSpringLength;
+	//mSpringFriction = NodeCount * NodeMass * -mGravitationalForce.y / (mSpringLength/10.0f);
 
 	for(int i = 0; i < NodeCount; ++i)
 	{
-		Mass m{ 1.0f,glm::vec3(0.0f),glm::vec3(0.0f) };
+		Mass m{ NodeMass,glm::vec3(0.0f),glm::vec3(0.0f) };
 		RopeNode node;
 		node.mBody = m;
 		node.mPosition = glm::vec3(i * mSpringLength, 4.0f, 0.0);
@@ -80,9 +88,18 @@ void Mechanics::Init()
 
 void Mechanics::Draw()
 {
-	float deltaTime = Time::Instance().deltaTime/5.0f;
+	ImGui::Begin("Mechanics");
+	ImGui::InputFloat("Rope Friction Constant", &mSpringFriction);
+	ImGui::InputFloat("Rope Connection Velocity", &mRopeConnectionVelocity,0.5);
+	ImGui::InputFloat("Air Friction", &mAirFriction);
+	ImGui::End();
 
-	float maxDT = 0.002f;
+	
+	float deltaTime = Time::Instance().deltaTime;
+
+	Time += deltaTime;
+		
+	float maxDT = 0.016f;
 
 	int numIterations = (int)(deltaTime / maxDT) + 1;
 
@@ -95,6 +112,65 @@ void Mechanics::Draw()
 	{
 		Simulate(deltaTime);
 	}
+
+	deltaTime = Time::Instance().deltaTime;
+	
+	if (Inputs::Instance().IsPressed(SDL_SCANCODE_LSHIFT))
+	{
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_Y))
+		{
+			mRopeConnectionPosition1 += glm::vec3(0.0f,mRopeConnectionVelocity * deltaTime,0.0f);
+		}
+		if(Inputs::Instance().IsPressed(SDL_SCANCODE_H))
+		{
+			mRopeConnectionPosition1 -= glm::vec3(0.0f, mRopeConnectionVelocity * deltaTime, 0.0f);
+		}
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_UP))
+		{
+			mRopeConnectionPosition2 += glm::vec3(0.0f, mRopeConnectionVelocity * deltaTime, 0.0f);
+		}
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_DOWN))
+		{
+			mRopeConnectionPosition2 -= glm::vec3(0.0f, mRopeConnectionVelocity * deltaTime, 0.0f);
+		}
+	}
+	else
+	{
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_Y))
+		{
+			mRopeConnectionPosition1 -= glm::vec3(0.0f, 0.0f,mRopeConnectionVelocity * deltaTime);
+		}
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_H))
+		{
+			mRopeConnectionPosition1 += glm::vec3(0.0f, 0.0f, mRopeConnectionVelocity * deltaTime);
+		}
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_G))
+		{
+			mRopeConnectionPosition1 -= glm::vec3( mRopeConnectionVelocity * deltaTime, 0.0f, 0.0f);
+		}
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_J))
+		{
+			mRopeConnectionPosition1 += glm::vec3(mRopeConnectionVelocity * deltaTime, 0.0f, 0.0f);
+		}
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_UP))
+		{
+			mRopeConnectionPosition2 -= glm::vec3(0.0f, 0.0f, mRopeConnectionVelocity * deltaTime);
+		}
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_DOWN))
+		{
+			mRopeConnectionPosition2 += glm::vec3(0.0f, 0.0f, mRopeConnectionVelocity * deltaTime);
+		}
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_RIGHT))
+		{
+			mRopeConnectionPosition2 += glm::vec3(mRopeConnectionVelocity * deltaTime, 0.0f, 0.0f);
+		}
+		if (Inputs::Instance().IsPressed(SDL_SCANCODE_LEFT))
+		{
+			mRopeConnectionPosition2 -= glm::vec3(mRopeConnectionVelocity * deltaTime, 0.0f, 0.0f);
+		}
+	}
+
+	
 		
 	Drawing->Bind();
 	
@@ -138,11 +214,11 @@ void Mechanics::Draw()
 	Renderer::Instance().Draw(*shape.first, *shape.second, *Drawing);*/
 }
 
-void Mechanics::Simulate(float deltaTime)
+void Mechanics::Simulate(float time)
 {
 	Start();
 	Solve();
-	Apply(deltaTime);
+	Apply(time);
 }
 
 void Mechanics::Start()
@@ -164,15 +240,13 @@ void Mechanics::Solve()
 
 		glm::vec3 force(0.0f);
 
-		if(r > 0.0f)
-		{
+		if(r != 0)
 			force += -mSpringConstant * (springVec / r) * (r - mSpringLength);
 
-			force += -(spring.mMass1->mBody.mVelocity - spring.mMass2->mBody.mVelocity) * mSpringFriction;
+		force += -(spring.mMass1->mBody.mVelocity - spring.mMass2->mBody.mVelocity) * mSpringFriction;
 
-			spring.mMass1->mBody.mForce += force;
-			spring.mMass2->mBody.mForce += -force;
-		}
+		spring.mMass1->mBody.mForce += force;
+		spring.mMass2->mBody.mForce += -force;		
 	}
 	
 	//Apply Gravitational forces
@@ -180,21 +254,76 @@ void Mechanics::Solve()
 	{
 		Mass& mass = mRopeNodes[i].mBody;
 		mass.mForce += mGravitationalForce * mass.mMass;
-		//mass.mForce += -mAirFriction * mass.mMass;
+		mass.mForce += -mAirFriction * mass.mVelocity;
 	}
 }
 
-void Mechanics::Apply(float deltaTime)
+void Mechanics::Apply(float time)
 {
+	//float deltaTime = Time::Instance().deltaTime;
+	float deltaTime = time;
 	for(int i = 0; i < mRopeNodes.size(); ++i)
 	{
 		RopeNode& node = mRopeNodes[i];
 		Mass& mass = node.mBody;
 
-		mass.mVelocity += (mass.mForce/mass.mMass) * deltaTime;
+		// Euler
+		/*mass.mVelocity += (mass.mForce/mass.mMass) * time;
 		
-		node.mPosition += mass.mVelocity * deltaTime;
+		node.mPosition += mass.mVelocity * time;*/
+
+		// RK4		
+		/*State state;
+		state.mPosition = node.mPosition;
+		state.mVelocity = mass.mVelocity;
+		
+		glm::vec3 acceleration = mass.mForce / mass.mMass;
+		Derivative kv1 = Func(state, 0.0f,Derivative(),acceleration);
+		kv1.mDPosition /= 2.0f; kv1.mDVelocity /= 2.0f;
+		Derivative kv2 = Func(state, deltaTime / 2.0f, kv1 ,acceleration);
+		kv2.mDPosition /= 2.0f; kv2.mDVelocity /= 2.0f;
+		Derivative kv3 = Func(state, deltaTime / 2.0f, kv2 ,acceleration);
+		Derivative kv4 = Func(state, deltaTime, kv3,acceleration);
+		
+		mass.mVelocity += 1 / 6.0f * (kv1.mDVelocity + 2.0f * kv2.mDVelocity + 2.0f * kv3.mDVelocity + kv4.mDVelocity) * deltaTime;
+		node.mPosition += 1 / 6.0f * (kv1.mDPosition + 2.0f * kv2.mDPosition + 2.0f * kv3.mDPosition + kv4.mDPosition) * deltaTime;*/
+		
+		glm::vec3 accleration = mass.mForce / mass.mMass;
+		glm::vec3 kv1 = deltaTime * Func(accleration, 0.0f,accleration);
+		glm::vec3 kv2 = deltaTime * Func(accleration, deltaTime / 2.0f, kv1 / 2.0f); // accl + accle/2
+		glm::vec3 kv3 = deltaTime * Func(accleration, deltaTime / 2.0f, kv2 / 2.0f);
+		glm::vec3 kv4 = deltaTime * Func(accleration, deltaTime, kv3);
+		
+		mass.mVelocity += 1 / 6.0f * (kv1 + 2.0f * kv2 + 2.0f * kv3 + kv4);
+		
+		glm::vec3 kp1 = deltaTime * Func(mass.mVelocity, 0.0f, mass.mVelocity);
+		glm::vec3 kp2 = deltaTime * Func(mass.mVelocity, deltaTime / 2.0f, kp1 / 2.0f);
+		glm::vec3 kp3 = deltaTime * Func(mass.mVelocity, deltaTime / 2.0f, kp2 / 2.0f);
+		glm::vec3 kp4 = deltaTime * Func(mass.mVelocity, deltaTime, kp3);
+		
+		node.mPosition += 1 / 6.0f * (kp1 + 2.0f * kp2 + 2.0f * kp3 + kp4);
 	}
 
-	mRopeNodes[0].mPosition = mRopeConnectionPosition;
+	mRopeNodes[0].mPosition = mRopeConnectionPosition1;
+	mRopeNodes[0].mBody.mVelocity = glm::vec3(0.0f);
+
+	mRopeNodes[mRopeNodes.size() - 1].mPosition = mRopeConnectionPosition2;
+	mRopeNodes[mRopeNodes.size() - 1].mBody.mVelocity = glm::vec3(0.0f);
+}
+
+Derivative Mechanics::Func(const State& initial, float time, const Derivative& x, glm::vec3 acceleration)
+{
+	State state;
+	state.mPosition = initial.mPosition + x.mDPosition * time;
+	state.mVelocity = initial.mVelocity + x.mDVelocity * time;
+
+	Derivative output;
+	output.mDPosition = state.mVelocity;
+	output.mDVelocity = acceleration;
+	return output;
+}
+
+glm::vec3 Mechanics::Func(glm::vec3 initial, float time, glm::vec3 x)
+{
+	return initial + x * time;
 }

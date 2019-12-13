@@ -31,6 +31,18 @@ struct Spring
 	RopeNode* mMass2;
 };
 
+struct State
+{
+	glm::vec3 mPosition;
+	glm::vec3 mVelocity;
+};
+
+struct Derivative
+{
+	glm::vec3 mDPosition;
+	glm::vec3 mDVelocity;
+};
+
 class Mechanics
 {
 	SINGLETON(Mechanics);
@@ -42,12 +54,17 @@ private:
 	void Start();
 	void Solve();
 	void Apply(float deltaTime);
+
+	Derivative Func(const State& initial, float time,const Derivative& x, glm::vec3 acceleration);
+	glm::vec3 Func(glm::vec3 initial, float time, glm::vec3 x);
 	
 private:
 	Light* mLight;
 	Shader* Drawing;
 
+	float Time;
 	int NodeCount;
+	float NodeMass;
 	std::vector<RopeNode> mRopeNodes;
 	std::vector<Spring> mSprings;
 	float mSpringConstant;
@@ -55,5 +72,7 @@ private:
 	float mSpringFriction;
 	glm::vec3 mGravitationalForce;
 	float mAirFriction;
-	glm::vec3 mRopeConnectionPosition;
+	glm::vec3 mRopeConnectionPosition1;
+	glm::vec3 mRopeConnectionPosition2;
+	float mRopeConnectionVelocity;
 };
