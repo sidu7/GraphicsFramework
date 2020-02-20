@@ -18,13 +18,13 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -42,27 +42,37 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor\assimp\include;$(SolutionDir)GraphicsFramework\vendor\GLEW\include;$(SolutionDir)GraphicsFramework\vendor\Imgui;$(SolutionDir)GraphicsFramework\vendor\SDL\include;$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GLEW_STATIC;SDL_MAIN_HANDLED;WINDOWS_IGNORE_PACKING_MISMATCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GF_BUILD_DLL;GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>SDL2.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>cd "$(SolutionDir)"
+
+copy /y "DLLs\*.dll" "$(Configuration)"</Command>
     </PostBuildEvent>
+    <Lib>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -72,24 +82,43 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor\assimp\include;$(SolutionDir)GraphicsFramework\vendor\GLEW\include;$(SolutionDir)GraphicsFramework\vendor\Imgui;$(SolutionDir)GraphicsFramework\vendor\SDL\include;$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GLEW_STATIC;SDL_MAIN_HANDLED;WINDOWS_IGNORE_PACKING_MISMATCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>GF_BUILD_DLL;GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>SDL2.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <SubSystem>
-      </SubSystem>
+      <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>libcmt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
     <PostBuildEvent>
-      <Command>
-      </Command>
+      <Command>cd "$(SolutionDir)"
+
+copy /y "DLLs\*.dll" "$(Configuration)"</Command>
     </PostBuildEvent>
+    <Lib>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)GraphicsFramework\vendor\SDL\lib\x86;$(SolutionDir)GraphicsFramework\vendor\GLEW\lib\Win32;$(SolutionDir)GraphicsFramework\vendor\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="core\Camera.cpp" />
+    <ClCompile Include="core\Components\Material.cpp" />
+    <ClCompile Include="core\Components\Move.cpp" />
+    <ClCompile Include="core\Components\RotateInCircle.cpp" />
+    <ClCompile Include="core\Components\Shape.cpp" />
+    <ClCompile Include="core\Components\Transform.cpp" />
+    <ClCompile Include="core\Engine.cpp" />
+    <ClCompile Include="core\ImguiManager.cpp" />
+    <ClCompile Include="core\Inputs.cpp" />
+    <ClCompile Include="core\Light.cpp" />
+    <ClCompile Include="core\Object.cpp" />
+    <ClCompile Include="core\ObjectManager.cpp" />
+    <ClCompile Include="core\ShapeManager.cpp" />
+    <ClCompile Include="core\Time.cpp" />
     <ClCompile Include="opengl\ComputeShader.cpp" />
     <ClCompile Include="opengl\ElementArrayBuffer.cpp" />
     <ClCompile Include="opengl\FrameBuffer.cpp" />
@@ -103,20 +132,6 @@
     <ClCompile Include="opengl\UniformBuffer.cpp" />
     <ClCompile Include="opengl\VertexArray.cpp" />
     <ClCompile Include="opengl\VertexBuffer.cpp" />
-    <ClCompile Include="src\AnimationScene.cpp" />
-    <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\Engine.cpp" />
-    <ClCompile Include="src\ImguiManager.cpp" />
-    <ClCompile Include="src\Inputs.cpp" />
-    <ClCompile Include="src\Light.cpp" />
-    <ClCompile Include="src\Mechanics.cpp" />
-    <ClCompile Include="src\Object.cpp" />
-    <ClCompile Include="src\ObjectManager.cpp" />
-    <ClCompile Include="src\Project5.cpp" />
-    <ClCompile Include="src\Scene.cpp" />
-    <ClCompile Include="src\ShapeManager.cpp" />
-    <ClCompile Include="src\Time.cpp" />
     <ClCompile Include="vendor\Imgui\imgui.cpp" />
     <ClCompile Include="vendor\Imgui\imgui_demo.cpp" />
     <ClCompile Include="vendor\Imgui\imgui_draw.cpp" />
@@ -126,6 +141,24 @@
     <ClCompile Include="vendor\stbi_image\stbi_image.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="core\Camera.h" />
+    <ClInclude Include="core\Components\Components.h" />
+    <ClInclude Include="core\Components\Material.h" />
+    <ClInclude Include="core\Components\Move.h" />
+    <ClInclude Include="core\Components\RotateInCircle.h" />
+    <ClInclude Include="core\Components\Shape.h" />
+    <ClInclude Include="core\Components\Transform.h" />
+    <ClInclude Include="core\Engine.h" />
+    <ClInclude Include="core\ImguiManager.h" />
+    <ClInclude Include="core\Inputs.h" />
+    <ClInclude Include="core\JSONHelper.h" />
+    <ClInclude Include="core\Light.h" />
+    <ClInclude Include="core\Object.h" />
+    <ClInclude Include="core\ObjectManager.h" />
+    <ClInclude Include="core\Scene.h" />
+    <ClInclude Include="core\ShapeManager.h" />
+    <ClInclude Include="core\Singleton.h" />
+    <ClInclude Include="core\Time.h" />
     <ClInclude Include="opengl\ComputeShader.h" />
     <ClInclude Include="opengl\ElementArrayBuffer.h" />
     <ClInclude Include="opengl\FrameBuffer.h" />
@@ -139,26 +172,6 @@
     <ClInclude Include="opengl\UniformBuffer.h" />
     <ClInclude Include="opengl\VertexArray.h" />
     <ClInclude Include="opengl\VertexBuffer.h" />
-    <ClInclude Include="src\AnimationScene.h" />
-    <ClInclude Include="src\Camera.h" />
-    <ClInclude Include="src\Components.h" />
-    <ClInclude Include="src\Engine.h" />
-    <ClInclude Include="src\ImguiManager.h" />
-    <ClInclude Include="src\Inputs.h" />
-    <ClInclude Include="src\JSONHelper.h" />
-    <ClInclude Include="src\Light.h" />
-    <ClInclude Include="src\Mechanics.h" />
-    <ClInclude Include="src\Object.h" />
-    <ClInclude Include="src\ObjectManager.h" />
-    <ClInclude Include="src\Project5.h" />
-    <ClInclude Include="src\Scene.h" />
-    <ClInclude Include="src\ShapeManager.h" />
-    <ClInclude Include="src\Singleton.h" />
-    <ClInclude Include="src\Time.h" />
-    <ClInclude Include="vendor\GLEW\include\GL\eglew.h" />
-    <ClInclude Include="vendor\GLEW\include\GL\glew.h" />
-    <ClInclude Include="vendor\GLEW\include\GL\glxew.h" />
-    <ClInclude Include="vendor\GLEW\include\GL\wglew.h" />
     <ClInclude Include="vendor\Imgui\imconfig.h" />
     <ClInclude Include="vendor\Imgui\imgui.h" />
     <ClInclude Include="vendor\Imgui\imgui_impl_opengl3.h" />
@@ -247,12 +260,6 @@
     <None Include="res\JSON Data\Teapot6.json" />
     <None Include="res\JSON Data\Teapot7.json" />
     <None Include="res\JSON Data\Teapot8.json" />
-    <None Include="src\animshaders\Drawing.frag" />
-    <None Include="src\animshaders\Drawing.vert" />
-    <None Include="src\animshaders\ModelDraw.frag" />
-    <None Include="src\animshaders\ModelDraw.vert" />
-    <None Include="src\motionblur\Reconstruction.frag" />
-    <None Include="src\motionblur\Reconstruction.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

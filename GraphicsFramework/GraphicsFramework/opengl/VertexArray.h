@@ -34,7 +34,7 @@ private:
 public:
 	VertexArray();
 	~VertexArray();
-
+	 
 	void AddLayout();
 	void AddBuffer(const VertexBuffer& vb) const;
 	void Push(unsigned int count, unsigned int type, unsigned int size);

@@ -2,9 +2,9 @@
 #include <string>
 #include <vector>
 #include "Mesh.h"
-#include "Importer.hpp"
-#include "assimp/scene.h"
-#include "assimp/postprocess.h"
+#include "assimp/include/Importer.hpp"
+#include "assimp/include/assimp/scene.h"
+#include "assimp/include/assimp/postprocess.h"
 #include <unordered_map>
 #include <iostream>
 

@@ -1,9 +1,9 @@
 #include "Model.h"
-#include "GL/glew.h"
+#include "GLEW/include/GL/glew.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/norm.hpp"
 #include <iostream>
-#include "assimp/cimport.h"
+#include "assimp/include/assimp/cimport.h"
 
 void Model::Draw(Shader* shader)
 {

@@ -4,7 +4,7 @@
 class Quaternion
 {
 public:
-	Quaternion() : mQuat(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)) {}
+	Quaternion();
 	//vector (x,y,z) and scalar s
 	Quaternion(float x, float y, float z, float s);
 	//vec3 axis and angle

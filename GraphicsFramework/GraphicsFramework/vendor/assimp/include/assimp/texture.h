@@ -80,7 +80,7 @@ extern "C" {
 #endif
 
 
-#include "./Compiler/pushpack1.h"
+#include "assimp/include/Compiler/pushpack1.h"
 
 // --------------------------------------------------------------------------------
 /** @brief Helper structure to represent a texel in a ARGB8888 format
@@ -115,7 +115,7 @@ struct aiTexel
 
 } PACK_STRUCT;
 
-#include "./Compiler/poppack1.h"
+#include "assimp/include/Compiler/poppack1.h"
 
 #define HINTMAXTEXTURELEN 9
 

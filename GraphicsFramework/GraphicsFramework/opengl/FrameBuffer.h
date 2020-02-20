@@ -20,7 +20,7 @@ public:
 public:
 	FrameBuffer(int width, int height, int Texcount = 1);
 	~FrameBuffer();
-
+	 
 	void Bind() const;
 	void Unbind() const;
 	void TexBind(unsigned int index = 0, unsigned int slot = 0);

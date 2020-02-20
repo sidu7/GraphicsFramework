@@ -7,9 +7,9 @@ Author: Sidhant Tumma
 
 #pragma once
 
-#include "GL/glew.h"
-#include "../src/Singleton.h"
-#include "SDL.h"
+#include "GLEW/include/GL/glew.h"
+#include "../core/Singleton.h"
+#include "SDL/include/SDL.h"
 
 class SDL_Window;
 class Camera;
@@ -35,7 +35,7 @@ public:
 	void Init(SDL_Window* pWindow);
 	void Clear() const;
 	void SwapBuffers() const;
-
+	 
 	void Draw(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const;
 	void DebugDraw(const VertexArray & va, const ElementArrayBuffer& ib, const Shader & shader) const;
 	void DrawDebugCircle(const VertexArray& va, const Shader& shader) const;

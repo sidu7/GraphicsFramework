@@ -15,7 +15,7 @@ private:
 public:
 	VertexBuffer();
 	~VertexBuffer();
-
+	 
 	void AddData(const void* data,unsigned int size) const;
 	void Bind() const;
 	void Unbind() const;

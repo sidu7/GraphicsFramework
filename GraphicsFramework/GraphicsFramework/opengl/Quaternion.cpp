@@ -1,5 +1,9 @@
 #include "Quaternion.h"
 
+Quaternion::Quaternion() : mQuat(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f))
+{
+}
+
 Quaternion::Quaternion(float x, float y, float z, float s) : mQuat(glm::vec4(x,y,z,s))
 {
 	//glm::normalize(mQuat);
