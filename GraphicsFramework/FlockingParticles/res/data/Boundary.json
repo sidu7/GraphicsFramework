@@ -1,0 +1,21 @@
+{
+  "Components": [
+    {
+      "Type": "Transform",
+      "Position": [ 0.0, 0.0, 0.0 ],
+      "Rotation": [ 0.0, 0.0, 0.0 ],
+      "Scale": [ 30.0, 30.0, 30.0 ]
+    },
+    {
+      "Type": "Material",
+      "Diffuse": [ 0.0, 1.0, 0.0 ],
+      "Specular": [ 0.03,0.03,0.0 ],
+      "Shininess": 50.0,
+      "WireMesh": true
+    },
+    {
+      "Type": "Shape",
+      "Shape": 4
+    }
+  ]
+}

@@ -17,6 +17,7 @@
 #include "Scene.h"
 #include "ImguiManager.h"
 #include "ObjectManager.h"
+#include "ComponentManager.h"
 
 
 void Engine::Start(Scene* scene)
@@ -73,6 +74,7 @@ void Engine::Start(Scene* scene)
 	Time::Instance().Init(60);
 	ShapeManager::Instance().Init();
 	ImguiManager::Instance().Init();
+	ComponentManager::Instance().Init();
 
 	pCamera = new Camera();
 	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
@@ -106,6 +108,7 @@ void Engine::Stop()
 	ImguiManager::Instance().Close();
 	ObjectManager::Instance().Close();
 	ShapeManager::Instance().Close();
+	ComponentManager::Instance().Close();
 	std::cout << "Window closed" << std::endl;
 	delete pCamera;
 	SDL_DestroyWindow(pWindow);

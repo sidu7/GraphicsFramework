@@ -1,15 +1,12 @@
 #include <iostream>
 #include <core/Engine.h>
-#include "AnimationScene.h"
-#include "Mechanics.h"
-		
+#include "Flocking.h"
 
 int main(int argc, char* args[])
 {
 	std::cout << "Graphics Framework" << std::endl;
 
-	AnimationScene proj;
-	//Mechanics proj;
+	Flocking proj;
 	
 	Engine::Instance().Start(&proj);
 	Engine::Instance().Run();

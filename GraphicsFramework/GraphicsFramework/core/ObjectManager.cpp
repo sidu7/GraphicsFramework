@@ -1,15 +1,18 @@
 #include "ObjectManager.h"
-#include "JSONHelper.h"
 #include <algorithm>
 #include "Object.h"
+#include "../opengl/Renderer.h"
+#include "../opengl/Shader.h"
+#include "../utils/JSONHelper.h"
 
-void ObjectManager::AddObject(std::string path)
+Object* ObjectManager::AddObject(std::string path)
 {
 	PARSE_JSON_FILE(path);
 
 	Object* object = new Object();
 	object->Serialize(root.GetObject());
 	mObjects.emplace_back(object);
+	return object;
 }
 
 Object* ObjectManager::ReadObject(std::string path)
@@ -23,9 +26,11 @@ Object* ObjectManager::ReadObject(std::string path)
 
 void ObjectManager::ObjectsDraw(Shader* shader)
 {
+	shader->Bind();
 	for (auto object : mObjects)
 	{
 		object->Update(shader);
+		Renderer::Instance().DrawObject(shader,object);
 	}
 }
 

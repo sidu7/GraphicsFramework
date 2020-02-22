@@ -18,7 +18,10 @@ enum Shapes
 	QUAD,
 	SPHERE,
 	CUBE,
-	TEAPOT
+	TEAPOT,
+	WIRECUBE,
+	PYRAMID,
+	SHAPES_NUM
 };
 
 

@@ -117,6 +117,9 @@
     <ClCompile Include="core\Components\Move.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="core\ComponentManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="opengl\FrameBuffer.h">
@@ -389,9 +392,6 @@
     <ClInclude Include="core\Inputs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="core\JSONHelper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="core\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -429,6 +429,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="core\Components\Move.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="core\ComponentManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\Random.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\JSONHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\MathHelper.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

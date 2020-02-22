@@ -12,6 +12,12 @@ Author: Sidhant Tumma
 #include "Shader.h"
 #include <iostream>
 #include "Shader.h"
+#include "../core/ObjectManager.h"
+#include "../core/ShapeManager.h"
+#include "../core/Components/Shape.h"
+#include "../core/Components/Material.h"
+#include "../core/Object.h"
+#include "Texture.h"
 
 extern Shader *gpShader;
 extern Shader *gdShader;
@@ -68,12 +74,66 @@ void Renderer::Draw(const VertexArray& va, const ElementArrayBuffer& ib, const S
 	ib.Unbind();
 }
 
+void Renderer::DrawObject(Shader* shader, Object* obj)
+{	
+	Shape* shape = obj->GetComponent<Shape>();
+	Material* material = obj->GetComponent<Material>();
+	if (shape && glIsEnabled(GL_CULL_FACE))
+	{
+		if (shape->mShape == Shapes::QUAD)
+		{
+			glCullFace(GL_BACK);
+		}
+		else
+		{
+			glCullFace(GL_FRONT);
+		}
+	}
+	shader->SetUniform3f("diffuse", material->mDiffuse);
+	shader->SetUniform1i("lighting", !(material->mWireMesh || material->mDebugMesh));		
+	shader->SetUniform3f("specular", material->mSpecular);
+	shader->SetUniform1f("shininess", material->mShininess);
+	if (material->pTexture)
+	{
+		material->pTexture->Bind(8);
+		shader->SetUniform1i("texDiff", 8);
+	}
+	if(material->mWireMesh)
+	{
+		DebugDrawLines(*shape->mShapeData.first, *shape->mShapeData.second, *shader);
+	}
+	else if(material->mDebugMesh)
+	{
+		DebugDraw(*shape->mShapeData.first, *shape->mShapeData.second, *shader);
+	}
+	else
+	{
+		Draw(*shape->mShapeData.first, *shape->mShapeData.second, *shader);
+	}
+	if (material && material->pTexture)
+	{
+		material->pTexture->Unbind(8);
+	}	
+}
+
 void Renderer::DebugDraw(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const
 {
 	shader.Bind();
 	va.Bind();
 	ib.Bind();
 	GLCall(glDrawElements(GL_LINE_LOOP, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
+	va.Unbind();
+	ib.Unbind();
+}
+
+void Renderer::DebugDrawLines(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const
+{
+	shader.Bind();
+	va.Bind();
+	ib.Bind();
+	GLCall(glDrawElements(GL_LINES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
+	va.Unbind();
+	ib.Unbind();
 }
 
 void Renderer::DrawDebugCircle(const VertexArray& va, const Shader& shader) const
@@ -81,6 +141,7 @@ void Renderer::DrawDebugCircle(const VertexArray& va, const Shader& shader) cons
 	shader.Bind();
 	va.Bind();
 	GLCall(glDrawArrays(GL_LINE_LOOP, 0, 16));
+	va.Unbind();
 }
 
 void Renderer::DrawDebugLine(const VertexArray& va, const Shader& shader) const
@@ -88,6 +149,7 @@ void Renderer::DrawDebugLine(const VertexArray& va, const Shader& shader) const
 	shader.Bind();
 	va.Bind();
 	GLCall(glDrawArrays(GL_LINE_LOOP, 0, 2));
+	va.Unbind();
 }
 
 void Renderer::DrawQuad()

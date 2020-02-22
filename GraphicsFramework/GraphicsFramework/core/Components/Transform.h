@@ -5,10 +5,12 @@ class Shader;
 
 class Transform : public Component
 {
+	GF_COMPONENT(Transform);
 public:
 	glm::vec3 mPosition;
 	glm::vec3 mScale;
 	glm::vec3 mRotation;
+	glm::vec3 mFront;
 	glm::mat4 mModelTransformation;
 	glm::mat4 mPrevModelTransformation;
 

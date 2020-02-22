@@ -106,6 +106,7 @@ copy /y "DLLs\*.dll" "$(Configuration)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="core\Camera.cpp" />
+    <ClCompile Include="core\ComponentManager.cpp" />
     <ClCompile Include="core\Components\Material.cpp" />
     <ClCompile Include="core\Components\Move.cpp" />
     <ClCompile Include="core\Components\RotateInCircle.cpp" />
@@ -142,6 +143,7 @@ copy /y "DLLs\*.dll" "$(Configuration)"</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="core\Camera.h" />
+    <ClInclude Include="core\ComponentManager.h" />
     <ClInclude Include="core\Components\Components.h" />
     <ClInclude Include="core\Components\Material.h" />
     <ClInclude Include="core\Components\Move.h" />
@@ -151,7 +153,7 @@ copy /y "DLLs\*.dll" "$(Configuration)"</Command>
     <ClInclude Include="core\Engine.h" />
     <ClInclude Include="core\ImguiManager.h" />
     <ClInclude Include="core\Inputs.h" />
-    <ClInclude Include="core\JSONHelper.h" />
+    <ClInclude Include="utils\JSONHelper.h" />
     <ClInclude Include="core\Light.h" />
     <ClInclude Include="core\Object.h" />
     <ClInclude Include="core\ObjectManager.h" />
@@ -172,6 +174,8 @@ copy /y "DLLs\*.dll" "$(Configuration)"</Command>
     <ClInclude Include="opengl\UniformBuffer.h" />
     <ClInclude Include="opengl\VertexArray.h" />
     <ClInclude Include="opengl\VertexBuffer.h" />
+    <ClInclude Include="utils\MathHelper.h" />
+    <ClInclude Include="utils\Random.h" />
     <ClInclude Include="vendor\Imgui\imconfig.h" />
     <ClInclude Include="vendor\Imgui\imgui.h" />
     <ClInclude Include="vendor\Imgui\imgui_impl_opengl3.h" />

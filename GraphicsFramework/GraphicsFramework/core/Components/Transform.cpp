@@ -1,5 +1,5 @@
 #include "Transform.h"
-#include "../JSONHelper.h"
+#include "../../utils/JSONHelper.h"
 #include "../Engine.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -29,4 +29,8 @@ void Transform::Serialize(rapidjson::Value::Object data)
 	mScale = JSONHelper::GetVec3F(data["Scale"].GetArray());
 	mRotation = JSONHelper::GetVec3F(data["Rotation"].GetArray());
 	mModelTransformation = glm::mat4(1.0f);
+	if(data.HasMember("Front"))
+	{
+		mFront = JSONHelper::GetVec3F(data["Front"].GetArray());
+	}
 }

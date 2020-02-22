@@ -6,14 +6,71 @@
 
 void ShapeManager::Init()
 {
-	mShapes.emplace_back(std::make_pair(nullptr, nullptr));
-	mShapes.emplace_back(std::make_pair(nullptr, nullptr));
-	mShapes.emplace_back(std::make_pair(nullptr, nullptr));
-	mShapes.emplace_back(std::make_pair(nullptr, nullptr));
+	for(int i = 0; i < SHAPES_NUM; ++i)
+	{
+		mShapes.push_back(std::make_pair(nullptr, nullptr));
+	}
 
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 
+	//WireCube
+	{
+		std::vector<glm::vec3> verts;
+
+		verts.push_back(glm::vec3(0.5f, 0.5f, 0.5f));
+		verts.push_back(glm::vec3(0.5f, 0.5f, -0.5f));
+		verts.push_back(glm::vec3(-0.5f, 0.5f, 0.5f));
+		verts.push_back(glm::vec3(-0.5f, 0.5f, -0.5f));
+		verts.push_back(glm::vec3(0.5f, -0.5f, 0.5f));
+		verts.push_back(glm::vec3(0.5f, -0.5f, -0.5f));
+		verts.push_back(glm::vec3(-0.5f, -0.5f, 0.5f));
+		verts.push_back(glm::vec3(-0.5f, -0.5f, -0.5f));
+
+		unsigned int ind[] = {
+			0, 1, 0, 2, 1, 3, 2, 3, 4, 5, 4, 6, 5, 7, 6, 7, 0, 4, 1, 5, 2, 6, 3, 7
+		};
+
+		VertexBuffer* vbo = new VertexBuffer();
+		VertexArray* vao = new VertexArray();
+		ElementArrayBuffer* ebo = new ElementArrayBuffer();
+		ebo->AddData(&ind[0], 24, sizeof(unsigned int));
+		vao->AddBuffer(*vbo);
+		vbo->AddData(&verts[0], 8 * sizeof(glm::vec3));
+		vao->Push(3, GL_FLOAT, sizeof(float));
+		vao->AddLayout();
+		vao->Unbind();
+
+		mShapes[WIRECUBE] = std::make_pair(vao,ebo);
+	}
+
+	//Pyramid
+	{
+		std::vector<glm::vec3> verts;
+
+		verts.push_back(glm::vec3(0.0f, 0.5f, 0.0f));
+		verts.push_back(glm::vec3(0.5f, -0.5f, 0.5f));
+		verts.push_back(glm::vec3(0.5f, -0.5f, -0.5f));
+		verts.push_back(glm::vec3(-0.5f, -0.5f, 0.5f));
+		verts.push_back(glm::vec3(-0.5f, -0.5f, -0.5f));
+
+		unsigned int ind[] = {
+			1, 0, 2, 2, 0, 3, 3, 0, 4, 4, 0, 1, 1, 2, 3, 3, 2, 4, 4, 3, 2, 2, 3, 1
+		};
+
+		VertexBuffer* vbo = new VertexBuffer();
+		VertexArray* vao = new VertexArray();
+		ElementArrayBuffer* ebo = new ElementArrayBuffer();
+		ebo->AddData(&ind[0], 24, sizeof(unsigned int));
+		vao->AddBuffer(*vbo);
+		vbo->AddData(&verts[0], 5 * sizeof(glm::vec3));
+		vao->Push(3, GL_FLOAT, sizeof(float));
+		vao->AddLayout();
+		vao->Unbind();
+
+		mShapes[PYRAMID] = std::make_pair(vao, ebo);
+	}
+	
 	//Quad
 	for (unsigned int i = 0; i < 4; ++i)
 	{

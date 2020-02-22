@@ -7,6 +7,7 @@ enum Shapes;
 
 class Shape : public Component
 {
+	GF_COMPONENT(Shape);
 public:
 	std::pair<VertexArray*, ElementArrayBuffer*> mShapeData;
 	Shapes mShape;

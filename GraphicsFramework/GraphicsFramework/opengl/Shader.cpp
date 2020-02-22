@@ -10,7 +10,6 @@ Author: Sidhant Tumma
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
 Shader::Shader(std::string vertexFilePath, std::string fragmentFilePath) 
@@ -110,14 +109,29 @@ void Shader::SetUniform3f(const std::string& name, float v1, float v2, float v3)
 	GLCall(glUniform3f(GetUniformLocation(name), v1, v2, v3));
 }
 
+void Shader::SetUniform3f(const std::string& name, glm::vec3 v)
+{
+	GLCall(glUniform3f(GetUniformLocation(name), v.x, v.y, v.z));
+}
+
 void Shader::SetUniform2f(const std::string& name, float v1, float v2)
 {
 	GLCall(glUniform2f(GetUniformLocation(name), v1, v2));
 }
 
+void Shader::SetUniform2f(const std::string& name, glm::vec2 v)
+{
+	GLCall(glUniform2f(GetUniformLocation(name), v.x, v.y));
+}
+
 void Shader::SetUniform4f(const std::string& name, float v1, float v2, float v3, float v4)
 {
 	GLCall(glUniform4f(GetUniformLocation(name), v1, v2, v3, v4));
+}
+
+void Shader::SetUniform4f(const std::string& name, glm::vec4 v)
+{
+	GLCall(glUniform4f(GetUniformLocation(name), v.x, v.y, v.z, v.w));
 }
 
 int Shader::GetUniformLocation(const std::string& name)

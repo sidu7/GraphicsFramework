@@ -10,10 +10,12 @@ class ObjectManager
 {
 	SINGLETON(ObjectManager);
 public:
-	void AddObject(std::string path);
+	Object* AddObject(std::string path);
 	static Object* ReadObject(std::string path);
 	void ObjectsDraw(Shader* shader);
 	void Close();
+
+	friend class Renderer;
 private:
 	std::vector<Object*> mObjects;
 };

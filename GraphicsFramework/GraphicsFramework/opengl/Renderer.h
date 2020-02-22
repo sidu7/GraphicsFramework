@@ -27,6 +27,7 @@ bool GLLogCall(const char* function, const char* file, int line);
 class VertexArray;
 class ElementArrayBuffer;
 class Shader;
+class Object;
 
 class Renderer
 {
@@ -37,7 +38,9 @@ public:
 	void SwapBuffers() const;
 	 
 	void Draw(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const;
-	void DebugDraw(const VertexArray & va, const ElementArrayBuffer& ib, const Shader & shader) const;
+	void DrawObject(Shader* shader, Object* obj);
+	void DebugDraw(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const;
+	void DebugDrawLines(const VertexArray & va, const ElementArrayBuffer& ib, const Shader & shader) const;
 	void DrawDebugCircle(const VertexArray& va, const Shader& shader) const;
 	void DrawDebugLine(const VertexArray& va, const Shader& shader) const;
 	void DrawQuad();

@@ -1,18 +1,10 @@
 #include "Material.h"
 #include "../opengl/Shader.h"
 #include "../opengl/Texture.h"
-#include "../JSONHelper.h"
+#include "../../utils/JSONHelper.h"
 
 void Material::Update(Shader* shader)
 {
-	shader->SetUniform3f("diffuse", mDiffuse.x, mDiffuse.y, mDiffuse.z);
-	shader->SetUniform3f("specular", mSpecular.x, mSpecular.y, mSpecular.z);
-	shader->SetUniform1f("shininess", mShininess);
-	if (pTexture)
-	{
-		pTexture->Bind(8);
-		shader->SetUniform1i("texDiff", 8);
-	}
 }
 
 void Material::Serialize(rapidjson::Value::Object data)
@@ -29,4 +21,12 @@ void Material::Serialize(rapidjson::Value::Object data)
 	}
 	mSpecular = JSONHelper::GetVec3F(data["Specular"].GetArray());
 	mShininess = data["Shininess"].GetFloat();
+	if(data.HasMember("WireMesh"))
+	{
+		mWireMesh = data["WireMesh"].GetBool();
+	}
+	if (data.HasMember("DebugMesh"))
+	{
+		mDebugMesh = data["DebugMesh"].GetBool();
+	}
 }

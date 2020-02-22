@@ -18,7 +18,6 @@ public:
 	void Update(Shader* shader);
 	void Serialize(const rapidjson::Value::Object& data);
 
-	template<typename T>
 	void AddComponent(Component* component);
 
 	template<typename T>
@@ -28,14 +27,6 @@ public:
 	std::unordered_map<std::type_index, Component*> mComponents;
 	std::vector<std::type_index> mIndices;
 };
-
-template <typename T>
-void Object::AddComponent(Component* component)
-{
-	auto index = std::type_index(typeid(T));
-	mComponents[index] = component;
-	mIndices.push_back(index);
-}
 
 template <typename T>
 T* Object::GetComponent()
