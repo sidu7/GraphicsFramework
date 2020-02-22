@@ -140,10 +140,12 @@
     <ClCompile Include="src\Flock.cpp" />
     <ClCompile Include="src\Flocking.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Obstacle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Flock.h" />
     <ClInclude Include="src\Flocking.h" />
+    <ClInclude Include="src\Obstacle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

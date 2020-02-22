@@ -12,11 +12,14 @@
 
 #include "Flock.h"
 #include <glm/gtx/norm.inl>
+#include <Imgui/imgui.h>
+#include "Obstacle.h"
 
 const float PI = 22.0f / 7.0f;
 
 Flocking::~Flocking()
 {
+	std::for_each(mObstacles.begin(), mObstacles.end(), [](Obstacle* x) { delete x; });
 }
 
 void Flocking::Init()
@@ -34,12 +37,19 @@ void Flocking::Init()
 	Boundary = ObjectManager::Instance().AddObject("res/data/Boundary.json");
 	float scale = 30.0f/2;
 
+	mObstacles.push_back(new Wall(glm::vec3(15.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(-15.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, 15.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, -15.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, 15.0f), glm::vec3(0.0f, 0.0f, -1.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 0.0f, 1.0f), 5.0f));
+
 	//PARSE_JSON_FILE("res/data/FlockingSettings.json");
 	mFishViewAngle = 45.0f * PI / 180.0f;
 	mFishViewDistance = 10.0f;
-	mBoidTightness = 1.0f;
-	mMaxAcceleration = 0.02f;
-	mVelocityAttainTime = 0.5f;
+	mBoidTightness = 2.5f;
+	mMaxAcceleration = 10.3f;
+	mVelocityAttainTime = 1.0f;
 	
 	auto rand = Random::Range(-1.0f, 1.0f);
 	auto rand2 = Random::Range();
@@ -79,6 +89,7 @@ void Flocking::Update()
 		if (neighbours.size() > 0)
 		{
 			FirstandThirdAcceleration(neighbours, fish->GetComponent<Transform>()->mPosition, accels[0], accels[2]);
+			AvoidObstacles(accels[0],fish);
 			accels[1] = SecondAcceleration(neighbours, flock->mVelocity);
 			flock->mAcceleration = PrioritizedAcceleration(accels);
 		}
@@ -87,6 +98,11 @@ void Flocking::Update()
 
 void Flocking::DebugDisplay()
 {
+	ImGui::InputFloat("Max Acceleration", &mMaxAcceleration, 0.01f, 0.1f);
+	ImGui::InputFloat("Fish View Angle", &mFishViewAngle, 0.01f, 0.1f);
+	ImGui::InputFloat("Fish View Distance", &mFishViewDistance, 0.01f, 0.1f);
+	ImGui::InputFloat("Boid Tightness", &mBoidTightness, 0.01f, 0.1f);
+	ImGui::InputFloat("Velocity Attain Time", &mVelocityAttainTime, 0.01f,0.1f);
 }
 
 std::vector<Object*> Flocking::FindNeighbours(Object* fish)
@@ -142,6 +158,21 @@ void Flocking::FirstandThirdAcceleration(std::vector<Object*>& neighbours, glm::
 		{
 			a_third += glm::vec3(0.0f);
 			a_first += -mMaxAcceleration * gamma_b * (vec) / glm::length(vec);
+		}
+	}
+}
+
+void Flocking::AvoidObstacles(glm::vec3& a_first, Object* fish)
+{
+	glm::vec3 P = fish->GetComponent<Transform>()->mPosition;
+	glm::vec3 V = fish->GetComponent<Flock>()->mVelocity;
+	glm::vec3 M = fish->GetComponent<Flock>()->mNormal;
+	for(auto obstacle : mObstacles)
+	{
+		if(obstacle->WillCollide(P,V))
+		{
+			glm::vec3 u = obstacle->AvoidanceDirection(P, V, M);
+			a_first += (glm::length(V) * u - V) / mVelocityAttainTime;
 		}
 	}
 }
