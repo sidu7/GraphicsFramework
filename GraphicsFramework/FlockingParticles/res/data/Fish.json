@@ -11,7 +11,7 @@
       "Diffuse": [ 1.0, 0.0, 0.0 ],
       "Specular": [ 0.03,0.03,0.0 ],
       "Shininess": 50.0,
-      "DebugMesh": true
+      "Lighting": false
     },
     {
       "Type": "Shape",

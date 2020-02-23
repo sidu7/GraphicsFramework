@@ -13,6 +13,7 @@ public:
 	Texture* pTexture;
 	bool mWireMesh = false;
 	bool mDebugMesh = false;
+	bool mLighting = false;
 
 	void Update(Shader* shader) override;	
 
