@@ -29,4 +29,8 @@ void Material::Serialize(rapidjson::Value::Object data)
 	{
 		mDebugMesh = data["DebugMesh"].GetBool();
 	}
+	if (data.HasMember("Lighting"))
+	{
+		mLighting = data["Lighting"].GetBool();
+	}
 }

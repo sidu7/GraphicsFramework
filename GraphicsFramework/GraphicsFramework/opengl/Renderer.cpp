@@ -90,7 +90,7 @@ void Renderer::DrawObject(Shader* shader, Object* obj)
 		}
 	}
 	shader->SetUniform3f("diffuse", material->mDiffuse);
-	shader->SetUniform1i("lighting", !(material->mWireMesh || material->mDebugMesh));		
+	shader->SetUniform1i("lighting", material->mLighting);		
 	shader->SetUniform3f("specular", material->mSpecular);
 	shader->SetUniform1f("shininess", material->mShininess);
 	if (material->pTexture)
