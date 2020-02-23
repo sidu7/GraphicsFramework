@@ -6,6 +6,7 @@
 #include "core/Object.h"
 #include "core/ObjectManager.h"
 #include "core/Components/Transform.h"
+#include "core/Components/Material.h"
 #include "opengl/Shader.h"
 #include "utils/Random.h"
 #include "utils/JSONHelper.h"
@@ -45,7 +46,7 @@ void Flocking::Init()
 	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 0.0f, 1.0f), 5.0f));
 
 	//PARSE_JSON_FILE("res/data/FlockingSettings.json");
-	mFishViewAngle = 45.0f * PI / 180.0f;
+	mFishViewAngle = 60.0f * PI / 180.0f;
 	mFishViewDistance = 10.0f;
 	mBoidTightness = 2.5f;
 	mMaxAcceleration = 10.3f;
@@ -54,14 +55,16 @@ void Flocking::Init()
 	auto rand = Random::Range(-1.0f, 1.0f);
 	auto rand2 = Random::Range();
 	glm::vec3 Y(0.0f, 1.0f, 0.0f);
-	for(int i = 0; i < 50; ++i)
+	for(int i = 0; i < 20; ++i)
 	{
 		Object* fish = ObjectManager::Instance().AddObject("res/data/Fish.json");
 		Flock* flock = fish->GetComponent<Flock>();
 		Transform* transform = fish->GetComponent<Transform>();
+		Material* material = fish->GetComponent<Material>();
 		flock->mNormal = glm::normalize(glm::vec3(rand(),rand(),rand()));
 		transform->mPosition = glm::vec3(rand(), rand(), rand()) * scale;
 		flock->mVelocity = glm::cross(flock->mNormal, Y);
+		material->mDiffuse = glm::vec3(rand2(), rand2(), rand2());
 		mFishes.push_back(fish);
 	}
 	
@@ -116,11 +119,12 @@ std::vector<Object*> Flocking::FindNeighbours(Object* fish)
 		{
 			glm::vec3 posB = obj->GetComponent<Transform>()->mPosition;
 
-			float dot = glm::dot(posB - posA, velA);
-			float angle = acos(dot);
+			glm::vec3 P = glm::normalize(posB - posA);
+			glm::vec3 V = glm::normalize(velA);
+			float dot = glm::dot(P,V);
+			float angle = glm::acos(dot);
 			float dist = glm::length(posB - posA);
-			//if (angle <= mFishViewAngle && dist <= mFishViewDistance)
-			if (dist <= mFishViewDistance)
+			if (angle <= mFishViewAngle && dist <= mFishViewDistance)
 			{
 				list.push_back(obj);
 			}
