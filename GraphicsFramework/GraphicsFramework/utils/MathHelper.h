@@ -17,4 +17,9 @@ public:
 		glm::mat4 glmrotZ = glm::rotate(angleZ, glm::vec3(0.0f, 1.0f, 0.0f));
 		return glmrotXY * glmrotZ;
 	}
+
+	static glm::mat4 RotationFromCrossDirection(const glm::vec3& direction)
+	{
+		
+	}
 };

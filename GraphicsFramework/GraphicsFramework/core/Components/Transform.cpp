@@ -7,20 +7,17 @@
 
 void Transform::Update(Shader* shader)
 {
-	glm::mat4 model = glm::mat4(1.0f);
-	model = glm::translate(model, mPosition);
-	model = glm::rotate(model, glm::radians(mRotation.z), glm::vec3(0.0, 0.0, 1.0));
-	model = glm::rotate(model, glm::radians(mRotation.y), glm::vec3(0.0, 1.0, 0.0));
-	model = glm::rotate(model, glm::radians(mRotation.x), glm::vec3(1.0, 0.0, 0.0));
-	model = glm::scale(model, mScale);
+	mTranslationMatrix = glm::translate(glm::mat4(1.0f), mPosition);
+	mRotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(mRotation.z), glm::vec3(0.0, 0.0, 1.0));
+	mRotationMatrix = glm::rotate(mRotationMatrix, glm::radians(mRotation.y), glm::vec3(0.0, 1.0, 0.0));
+	mRotationMatrix = glm::rotate(mRotationMatrix, glm::radians(mRotation.x), glm::vec3(1.0, 0.0, 0.0));
+	mScaleMatrix = glm::scale(glm::mat4(1.0f), mScale);
 	if (!Engine::Instance().stopMoving)
 	{
 		mPrevModelTransformation = mModelTransformation;
 	}
-	mModelTransformation = model;
-	shader->SetUniformMat4f("model", mModelTransformation);
+	SetModelTransformation(shader);
 	shader->SetUniformMat4f("prevmodel", mPrevModelTransformation);
-	shader->SetUniformMat4f("normaltr", glm::inverse(mModelTransformation));
 }
 
 void Transform::Serialize(rapidjson::Value::Object data)
@@ -33,4 +30,11 @@ void Transform::Serialize(rapidjson::Value::Object data)
 	{
 		mFront = JSONHelper::GetVec3F(data["Front"].GetArray());
 	}
+}
+
+void Transform::SetModelTransformation(Shader* shader)
+{
+	mModelTransformation = mTranslationMatrix * mRotationMatrix * mScaleMatrix;
+	shader->SetUniformMat4f("model", mModelTransformation);
+	shader->SetUniformMat4f("normaltr", glm::inverse(mModelTransformation));
 }

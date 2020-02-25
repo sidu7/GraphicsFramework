@@ -36,20 +36,21 @@ void Flocking::Init()
 	mShader = new Shader("res/shaders/Drawing.vert", "res/shaders/Drawing.frag");
 
 	Boundary = ObjectManager::Instance().AddObject("res/data/Boundary.json");
+	
 	float scale = 30.0f/2;
 
-	mObstacles.push_back(new Wall(glm::vec3(15.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(-15.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, 15.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, -15.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, 15.0f), glm::vec3(0.0f, 0.0f, -1.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 0.0f, 1.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(15.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(-15.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, 15.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, -15.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, 15.0f), glm::vec3(0.0f, 0.0f, 1.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 0.0f, -1.0f), 5.0f));
 
 	//PARSE_JSON_FILE("res/data/FlockingSettings.json");
 	mFishViewAngle = 60.0f * PI / 180.0f;
 	mFishViewDistance = 10.0f;
 	mBoidTightness = 2.5f;
-	mMaxAcceleration = 10.3f;
+	mMaxAcceleration = 5.3f;
 	mVelocityAttainTime = 1.0f;
 	
 	auto rand = Random::Range(-1.0f, 1.0f);
@@ -125,6 +126,7 @@ std::vector<Object*> Flocking::FindNeighbours(Object* fish)
 			float angle = glm::acos(dot);
 			float dist = glm::length(posB - posA);
 			if (angle <= mFishViewAngle && dist <= mFishViewDistance)
+			//if(dist <= mFishViewDistance)
 			{
 				list.push_back(obj);
 			}
