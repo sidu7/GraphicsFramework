@@ -36,26 +36,32 @@ void Flocking::Init()
 	mShader = new Shader("res/shaders/Drawing.vert", "res/shaders/Drawing.frag");
 
 	Boundary = ObjectManager::Instance().AddObject("res/data/Boundary.json");
-	
+	Object* fish = ObjectManager::Instance().AddObject("res/data/Fish.json");
+	Flock* flock = fish->GetComponent<Flock>();
+	flock->mVelocity = glm::normalize(glm::vec3(2.0f, 1.0f, 0.0f));
+	glm::vec3 Y(0.0f, 1.0f, 0.0f);
+	flock->mNormal = glm::normalize(glm::cross(flock->mVelocity,Y));
+	mFishes.push_back(fish);
+		
 	float scale = 30.0f/2;
 
-	mObstacles.push_back(new Wall(glm::vec3(15.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(-15.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, 15.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, -15.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, 15.0f), glm::vec3(0.0f, 0.0f, 1.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 0.0f, -1.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(15.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(-15.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, 15.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, -15.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, 15.0f), glm::vec3(0.0f, 0.0f, -1.0f), 5.0f));
+	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 0.0f, 1.0f), 5.0f));
 
 	//PARSE_JSON_FILE("res/data/FlockingSettings.json");
 	mFishViewAngle = 60.0f * PI / 180.0f;
 	mFishViewDistance = 10.0f;
 	mBoidTightness = 2.5f;
-	mMaxAcceleration = 5.3f;
+	mMaxAcceleration = 15.3f;
 	mVelocityAttainTime = 1.0f;
-	
+	return;
 	auto rand = Random::Range(-1.0f, 1.0f);
 	auto rand2 = Random::Range();
-	glm::vec3 Y(0.0f, 1.0f, 0.0f);
+	//glm::vec3 Y(0.0f, 1.0f, 0.0f);
 	for(int i = 0; i < 20; ++i)
 	{
 		Object* fish = ObjectManager::Instance().AddObject("res/data/Fish.json");
@@ -89,12 +95,12 @@ void Flocking::Update()
 	{
 		Flock* flock = fish->GetComponent<Flock>();
 		glm::vec3 accels[3] = { glm::vec3(0.0f),glm::vec3(0.0f) ,glm::vec3(0.0f) };
-		std::vector<Object*> neighbours = FindNeighbours(fish);
-		if (neighbours.size() > 0)
+		//std::vector<Object*> neighbours = FindNeighbours(fish);
+		//if (neighbours.size() > 0)
 		{
-			FirstandThirdAcceleration(neighbours, fish->GetComponent<Transform>()->mPosition, accels[0], accels[2]);
+			//FirstandThirdAcceleration(neighbours, fish->GetComponent<Transform>()->mPosition, accels[0], accels[2]);
 			AvoidObstacles(accels[0],fish);
-			accels[1] = SecondAcceleration(neighbours, flock->mVelocity);
+			//accels[1] = SecondAcceleration(neighbours, flock->mVelocity);
 			flock->mAcceleration = PrioritizedAcceleration(accels);
 		}
 	}

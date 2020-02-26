@@ -20,7 +20,7 @@ glm::vec3 Wall::AvoidanceDirection(const glm::vec3& P, const glm::vec3& v, const
 	glm::vec3 na = glm::normalize(m);
 	glm::vec3 n_cross_na = glm::cross(mWallNormal, na);
 	float value = glm::dot(v, n_cross_na);
-	float sign = value / glm::abs(value);
+	float sign = std::signbit(value) ? -1.0f : 1.0f;
 	glm::vec3 u = sign * glm::normalize(n_cross_na);
 
 	return u;
