@@ -23,11 +23,11 @@ Object::~Object()
 	}
 }
 
-void Object::Update(Shader* shader)
+void Object::Update()
 {
 	for(auto index : mIndices)
 	{
-		mComponents[index]->Update(shader);
+		mComponents[index]->Update();
 	}
 }
 

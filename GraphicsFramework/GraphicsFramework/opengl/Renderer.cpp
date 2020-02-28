@@ -14,6 +14,7 @@ Author: Sidhant Tumma
 #include "Shader.h"
 #include "../core/ObjectManager.h"
 #include "../core/ShapeManager.h"
+#include "../core/Components/Transform.h"
 #include "../core/Components/Shape.h"
 #include "../core/Components/Material.h"
 #include "../core/Object.h"
@@ -49,18 +50,17 @@ void Renderer::Init(SDL_Window * window)
 
 	GLCall(glEnable(GL_DEPTH_TEST));
 	GLCall(glBlendFunc(GL_ONE, GL_ONE));
-
-	InitPrimitiveModels();
 }
 
 void Renderer::Clear() const
 {
 	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(mClearColor.x, mClearColor.y, mClearColor.z, 1.0f);
 }
 
-void Renderer::SwapBuffers() const
+void Renderer::SwapBuffers()
 {
+	mRenderData.clear();
 	SDL_GL_SwapWindow(pWindow);
 }
 
@@ -72,48 +72,6 @@ void Renderer::Draw(const VertexArray& va, const ElementArrayBuffer& ib, const S
 	GLCall(glDrawElements(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
 	va.Unbind();
 	ib.Unbind();
-}
-
-void Renderer::DrawObject(Shader* shader, Object* obj)
-{	
-	Shape* shape = obj->GetComponent<Shape>();
-	Material* material = obj->GetComponent<Material>();
-	if (shape && glIsEnabled(GL_CULL_FACE))
-	{
-		if (shape->mShape == Shapes::QUAD)
-		{
-			glCullFace(GL_BACK);
-		}
-		else
-		{
-			glCullFace(GL_FRONT);
-		}
-	}
-	shader->SetUniform3f("diffuse", material->mDiffuse);
-	shader->SetUniform1i("lighting", material->mLighting);		
-	shader->SetUniform3f("specular", material->mSpecular);
-	shader->SetUniform1f("shininess", material->mShininess);
-	if (material->pTexture)
-	{
-		material->pTexture->Bind(8);
-		shader->SetUniform1i("texDiff", 8);
-	}
-	if(material->mWireMesh)
-	{
-		DebugDrawLines(*shape->mShapeData.first, *shape->mShapeData.second, *shader);
-	}
-	else if(material->mDebugMesh)
-	{
-		DebugDraw(*shape->mShapeData.first, *shape->mShapeData.second, *shader);
-	}
-	else
-	{
-		Draw(*shape->mShapeData.first, *shape->mShapeData.second, *shader);
-	}
-	if (material && material->pTexture)
-	{
-		material->pTexture->Unbind(8);
-	}	
 }
 
 void Renderer::DebugDraw(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const
@@ -185,6 +143,87 @@ void Renderer::DrawQuad()
 	VAO_quad.Unbind();
 }
 
-void Renderer::InitPrimitiveModels()
+void Renderer::DrawDebugObjects(Shader* shader)
 {
+	shader->Bind();
+	float width;
+	glGetFloatv(GL_LINE_WIDTH,&width);
+	for(auto data : mDebugRenderData)
+	{
+		shader->SetUniform3f("diffuse", data.mColor);
+		shader->SetUniform1i("lighting", false);
+		shader->SetUniformMat4f("model", data.mModelMatrix);
+		glLineWidth(5.0f);
+		data.mVAO->Bind();
+		data.mEBO->Bind();
+		GLCall(glDrawElements(data.mDrawCommand, data.mEBO->GetCount(), GL_UNSIGNED_INT, nullptr));
+		data.mVAO->Unbind();
+		data.mEBO->Unbind();
+	}
+	mDebugRenderData.clear();
+	glLineWidth(width);
+	shader->Unbind();
+}
+
+void Renderer::DrawAllObjects(Shader* shader)
+{
+	shader->Bind();	
+	for (auto data : mRenderData)
+	{
+		shader->SetUniformMat4f("model", data.mTransform->mModelTransformation);
+		shader->SetUniformMat4f("normaltr", glm::inverse(data.mTransform->mModelTransformation));
+		shader->SetUniformMat4f("prevmodel", data.mTransform->mPrevModelTransformation);
+		Shape* shape = data.mShape;
+		Material* material = data.mMaterial;
+		if (shape && glIsEnabled(GL_CULL_FACE))
+		{
+			if (shape->mShape == Shapes::QUAD)
+			{
+				glCullFace(GL_BACK);
+			}
+			else
+			{
+				glCullFace(GL_FRONT);
+			}
+		}
+		shader->SetUniform3f("diffuse", material->mDiffuse);
+		shader->SetUniform1i("lighting", material->mLighting);
+		shader->SetUniform3f("specular", material->mSpecular);
+		shader->SetUniform1f("shininess", material->mShininess);
+		if (material->pTexture)
+		{
+			material->pTexture->Bind(8);
+			shader->SetUniform1i("texDiff", 8);
+		}
+		if (material->mMesh)
+		{
+			Draw(*shape->mShapeData.first, *shape->mShapeData.second, *shader);
+		}
+		if (material->mWireMesh)
+		{
+			shader->SetUniform3f("diffuse", material->mDebugColor);
+			DebugDrawLines(*shape->mShapeData.first, *shape->mShapeData.second, *shader);
+		}
+		if (material->mDebugMesh)
+		{
+			shader->SetUniform3f("diffuse", material->mDebugColor);
+			DebugDraw(*shape->mShapeData.first, *shape->mShapeData.second, *shader);
+		}
+		if (material && material->pTexture)
+		{
+			material->pTexture->Unbind(8);
+		}
+	}
+	shader->Unbind();
+}
+
+void Renderer::AddDebugRenderData(DebugData data)
+{
+	mDebugRenderData.push_back(data);
+	mCurrentRenderData.Clear();
+}
+
+void Renderer::AddRenderData()
+{
+	mRenderData.push_back(mCurrentRenderData);
 }

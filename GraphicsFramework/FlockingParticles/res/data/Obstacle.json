@@ -1,0 +1,22 @@
+{
+  "Components": [
+    {
+      "Type": "Transform",
+      "Position": [ 0.0, 0.0, 0.0 ],
+      "Rotation": [ 0.0, 0.0, 0.0 ],
+      "Scale": [ 4.0, 4.0, 4.0 ]
+    },
+    {
+      "Type": "Material",
+      "Diffuse": [ 0.5, 0.5, 0.5 ],
+      "Specular": [ 0.1, 0.1, 0.1 ],
+      "Shininess": 1,
+      "Lighting":  true,
+      "Mesh": true
+    },
+    {
+      "Type": "Shape",
+      "Shape": 1
+    }
+  ]
+}

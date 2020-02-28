@@ -20,6 +20,7 @@ public:
 
 	bool appIsRunning;
 	bool stopMoving;
+	bool mPause;
 
 	SDL_Window* pWindow;
 	SDL_GLContext glContext;

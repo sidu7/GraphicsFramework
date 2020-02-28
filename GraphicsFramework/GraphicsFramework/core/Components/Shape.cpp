@@ -1,8 +1,10 @@
 #include "Shape.h"
 #include "../ShapeManager.h"
+#include "../../opengl/Renderer.h"
 
-void Shape::Update(Shader* shader)
+void Shape::Update()
 {
+	Renderer::Instance().GetRenderData().mShape = this;
 }
 
 void Shape::Serialize(rapidjson::Value::Object data)

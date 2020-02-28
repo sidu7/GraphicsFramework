@@ -9,9 +9,12 @@
     {
       "Type": "Material",
       "Diffuse": [ 1.0, 0.0, 0.0 ],
+      "DebugColor": [0.0,0.0,0.0],
       "Specular": [ 0.03,0.03,0.0 ],
       "Shininess": 50.0,
-      "Lighting": false
+      "Lighting": false,
+      "DebugMesh": true,
+      "Mesh":  true
     },
     {
       "Type": "Shape",

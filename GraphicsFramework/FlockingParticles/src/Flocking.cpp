@@ -8,6 +8,7 @@
 #include "core/Components/Transform.h"
 #include "core/Components/Material.h"
 #include "opengl/Shader.h"
+#include "opengl/Renderer.h"
 #include "utils/Random.h"
 #include "utils/JSONHelper.h"
 
@@ -27,6 +28,8 @@ void Flocking::Init()
 {
 	mLight = new Light(glm::vec3(10.0, 100.0, 40.0));
 
+	Renderer::Instance().SetClearColor(glm::vec3(0.461305, 0.627375, 0.627375));
+	
 	Engine::Instance().pCamera->mCameraPos = glm::vec3(-34.0f, 20.0f, 60.0f);
 	Engine::Instance().pCamera->pitch = -19.0f;
 	Engine::Instance().pCamera->yaw = -58.4f;	
@@ -36,51 +39,98 @@ void Flocking::Init()
 	mShader = new Shader("res/shaders/Drawing.vert", "res/shaders/Drawing.frag");
 
 	Boundary = ObjectManager::Instance().AddObject("res/data/Boundary.json");
-	Object* fish = ObjectManager::Instance().AddObject("res/data/Fish.json");
-	Flock* flock = fish->GetComponent<Flock>();
-	flock->mVelocity = glm::normalize(glm::vec3(2.0f, 1.0f, 0.0f));
-	glm::vec3 Y(0.0f, 1.0f, 0.0f);
-	flock->mNormal = glm::normalize(glm::cross(flock->mVelocity,Y));
-	mFishes.push_back(fish);
+	AddBoxObstacle(Boundary->GetComponent<Transform>(), 2.0f, false);
 		
-	float scale = 30.0f/2;
+	/*Object* box = ObjectManager::Instance().AddObject("res/data/Box.json");	
+	Transform* btrans = box->GetComponent<Transform>();
+	btrans->mPosition = glm::vec3(10.0f, 0.0f, 0.0f);
+	AddBoxObstacle(btrans, 0.5f);
+	box = ObjectManager::Instance().AddObject("res/data/Box.json");
+	btrans = box->GetComponent<Transform>();
+	btrans->mPosition = glm::vec3(-10.0f, 0.0f, 0.0f);
+	AddBoxObstacle(btrans, 0.5f);*/
+	
+	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	Transform* trans = SphereObstacle->GetComponent<Transform>();
+	trans->mPosition = glm::vec3(10.0f, 10.0f, 10.0f);
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
 
-	mObstacles.push_back(new Wall(glm::vec3(15.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(-15.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, 15.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, -15.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, 15.0f), glm::vec3(0.0f, 0.0f, -1.0f), 5.0f));
-	mObstacles.push_back(new Wall(glm::vec3(0.0f, 0.0f, -15.0f), glm::vec3(0.0f, 0.0f, 1.0f), 5.0f));
+	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	trans = SphereObstacle->GetComponent<Transform>();
+	trans->mPosition = glm::vec3(-10.0f, -10.0f, -10.0f);
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+
+	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	trans = SphereObstacle->GetComponent<Transform>();
+	trans->mPosition = glm::vec3(10.0f, 10.0f, -10.0f);
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+
+	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	trans = SphereObstacle->GetComponent<Transform>();
+	trans->mPosition = glm::vec3(-10.0f, -10.0f, 10.0f);
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+
+	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	trans = SphereObstacle->GetComponent<Transform>();
+	trans->mPosition = glm::vec3(-10.0f, 10.0f, -10.0f);
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+	
+	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	trans = SphereObstacle->GetComponent<Transform>();
+	trans->mPosition = glm::vec3(10.0f, -10.0f, 10.0f);
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+
+	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	trans = SphereObstacle->GetComponent<Transform>();
+	trans->mPosition = glm::vec3(10.0f, -10.0f, -10.0f);
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+
+	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	trans = SphereObstacle->GetComponent<Transform>();
+	trans->mPosition = glm::vec3(-10.0f, 10.0f, 10.0f);
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
 
 	//PARSE_JSON_FILE("res/data/FlockingSettings.json");
-	mFishViewAngle = 60.0f * PI / 180.0f;
+	mFishViewAngle = 45.0f * PI / 180.0f;
 	mFishViewDistance = 10.0f;
 	mBoidTightness = 2.5f;
-	mMaxAcceleration = 15.3f;
-	mVelocityAttainTime = 1.0f;
-	return;
+	mMaxForce = 1.0f;
+	mMaxAcceleration = 8.0f;
+	mVelocityAttainTime = 0.75f;
+	mMaxSpeed = 7.0f;
+	mMinSpeed = 4.0f;
+
+	mAvoidObstacleWeight = 20;
+	mAlignWeight = 2;
+	mCohesionWeight = 1;
+	mSeparateWeight = 5.5f;
+	
 	auto rand = Random::Range(-1.0f, 1.0f);
 	auto rand2 = Random::Range();
-	//glm::vec3 Y(0.0f, 1.0f, 0.0f);
-	for(int i = 0; i < 20; ++i)
+	glm::vec3 Y(0.0f, 1.0f, 0.0f);
+	for(int i = 0; i < 250; ++i)
 	{
 		Object* fish = ObjectManager::Instance().AddObject("res/data/Fish.json");
 		Flock* flock = fish->GetComponent<Flock>();
 		Transform* transform = fish->GetComponent<Transform>();
 		Material* material = fish->GetComponent<Material>();
-		flock->mNormal = glm::normalize(glm::vec3(rand(),rand(),rand()));
-		transform->mPosition = glm::vec3(rand(), rand(), rand()) * scale;
-		flock->mVelocity = glm::cross(flock->mNormal, Y);
+		flock->mFront = glm::normalize(glm::vec3(rand(), rand(), rand()));
+		transform->mPosition = glm::vec3(rand(), rand(), rand()) * 15.0f;
+		glm::vec3 Y(0.0f, 1.0f, 0.0f);
+		flock->mNormal = glm::normalize(glm::cross(Y, flock->mFront));
+		flock->mMaxSpeed = mMaxSpeed;
+		flock->mMinSpeed = mMinSpeed;
+		flock->mVelocity = flock->mFront * (mMinSpeed + mMaxSpeed) / 2.0f;
 		material->mDiffuse = glm::vec3(rand2(), rand2(), rand2());
 		mFishes.push_back(fish);
 	}
 	
-	//ObjectManager::Instance().AddObject("res/data/Floor.json");
+	ObjectManager::Instance().AddObject("res/data/Floor.json");
+	Engine::Instance().mPause = true;
 }
 
 void Flocking::Update()
-{
-	
+{	
 	mShader->Bind();
 	mShader->SetUniformMat4f("view", Engine::Instance().pCamera->mView);
 	mShader->SetUniformMat4f("prevview", Engine::Instance().pCamera->mPrevView);
@@ -89,25 +139,40 @@ void Flocking::Update()
 	mShader->SetUniform3f("lightPos", mLight->position);
 	mShader->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
 	
-	ObjectManager::Instance().ObjectsDraw(mShader);
-
-	for (auto fish : mFishes)
+	ObjectManager::Instance().UpdateObjects();
+	Renderer::Instance().DrawAllObjects(mShader);
+	if (!Engine::Instance().mPause)
 	{
-		Flock* flock = fish->GetComponent<Flock>();
-		glm::vec3 accels[3] = { glm::vec3(0.0f),glm::vec3(0.0f) ,glm::vec3(0.0f) };
-		//std::vector<Object*> neighbours = FindNeighbours(fish);
-		//if (neighbours.size() > 0)
+#pragma omp parallel for schedule(dynamic, 1) // Magic: Multi-thread y loop
+		for (auto fish : mFishes)
 		{
-			//FirstandThirdAcceleration(neighbours, fish->GetComponent<Transform>()->mPosition, accels[0], accels[2]);
-			AvoidObstacles(accels[0],fish);
-			//accels[1] = SecondAcceleration(neighbours, flock->mVelocity);
-			flock->mAcceleration = PrioritizedAcceleration(accels);
+			Flock* flock = fish->GetComponent<Flock>();
+			glm::vec3 accels[4] = { glm::vec3(0.0f),glm::vec3(0.0f) ,glm::vec3(0.0f), glm::vec3(0.0f) };
+
+			std::vector<Object*> neighbours = FindNeighbours(fish);
+			AvoidObstacles(accels[0], fish);
+			flock->mAcceleration += accels[0];
+			if (neighbours.size() > 0)
+			{
+				NeighboursData& data = flock->mNeighboursData;
+				data.mFlockCenter /= neighbours.size();
+				accels[1] = SteerTowards(data.mFlockHeading,fish) * mAlignWeight;
+				glm::vec3 offsetToCenter = data.mFlockCenter - fish->GetComponent<Transform>()->mPosition;
+				accels[2] = SteerTowards(offsetToCenter, fish) * mCohesionWeight;
+
+				accels[3] = SteerTowards(data.mAvoidanceDirection, fish) * mSeparateWeight;
+
+				flock->mAcceleration += accels[1];
+				flock->mAcceleration += accels[2];
+				flock->mAcceleration += accels[3];
+			}
 		}
 	}
 }
 
 void Flocking::DebugDisplay()
 {
+	ImGui::Checkbox("Start Simulation", &Engine::Instance().mPause);
 	ImGui::InputFloat("Max Acceleration", &mMaxAcceleration, 0.01f, 0.1f);
 	ImGui::InputFloat("Fish View Angle", &mFishViewAngle, 0.01f, 0.1f);
 	ImGui::InputFloat("Fish View Distance", &mFishViewDistance, 0.01f, 0.1f);
@@ -120,6 +185,8 @@ std::vector<Object*> Flocking::FindNeighbours(Object* fish)
 	std::vector<Object*> list;
 	glm::vec3 posA = fish->GetComponent<Transform>()->mPosition;
 	glm::vec3 velA = fish->GetComponent<Flock>()->mVelocity;
+	NeighboursData& data = fish->GetComponent<Flock>()->mNeighboursData;
+	data.Clear();
 	for(auto obj : mFishes)
 	{
 		if(obj != fish)
@@ -129,16 +196,16 @@ std::vector<Object*> Flocking::FindNeighbours(Object* fish)
 			glm::vec3 P = glm::normalize(posB - posA);
 			glm::vec3 V = glm::normalize(velA);
 			float dot = glm::dot(P,V);
-			float angle = glm::acos(dot);
+			float angle = glm::acos(fabs(dot));
 			float dist = glm::length(posB - posA);
 			if (angle <= mFishViewAngle && dist <= mFishViewDistance)
-			//if(dist <= mFishViewDistance)
+			//if(dist < mFishViewDistance)
 			{
-				list.push_back(obj);
+				list.push_back(obj);			
 			}
 		}
 	}
-	if(list.size() > 5)
+	if(list.size() > 8)
 	{
 		std::sort(list.begin(), list.end(), [posA](Object* a, Object* b)
 			{
@@ -149,30 +216,23 @@ std::vector<Object*> Flocking::FindNeighbours(Object* fish)
 			});
 		list.erase(list.begin() + 5, list.end());
 	}
+
+	for(auto n : list)
+	{
+		Flock* fo = n->GetComponent<Flock>();
+		glm::vec3 posB = n->GetComponent<Transform>()->mPosition;
+		float dist = glm::length(posB - posA);
+		data.mFlockHeading += fo->mFront;
+		data.mFlockCenter += posB;
+
+		if (dist < mBoidTightness)
+		{
+			data.mAvoidanceDirection += glm::normalize(posA - posB);
+		}
+	}
 	return list;
 }
 
-void Flocking::FirstandThirdAcceleration(std::vector<Object*>& neighbours, glm::vec3& posA, 
-	glm::vec3& a_first, glm::vec3& a_third)
-{
-	for (auto n : neighbours)
-	{
-		glm::vec3 posB = n->GetComponent<Transform>()->mPosition;
-		glm::vec3 vec = posB - posA;
-		float gamma_b = (mBoidTightness * mBoidTightness / glm::length2(vec)) - 1;
-
-		if (gamma_b < 0.0f) // attractive force
-		{
-			a_first += glm::vec3(0.0f);
-			a_third += -mMaxAcceleration * gamma_b * (vec) / glm::length(vec);
-		}
-		else // replusive force
-		{
-			a_third += glm::vec3(0.0f);
-			a_first += -mMaxAcceleration * gamma_b * (vec) / glm::length(vec);
-		}
-	}
-}
 
 void Flocking::AvoidObstacles(glm::vec3& a_first, Object* fish)
 {
@@ -184,44 +244,56 @@ void Flocking::AvoidObstacles(glm::vec3& a_first, Object* fish)
 		if(obstacle->WillCollide(P,V))
 		{
 			glm::vec3 u = obstacle->AvoidanceDirection(P, V, M);
-			a_first += (glm::length(V) * u - V) / mVelocityAttainTime;
+			//a_first += (glm::length(V) * u - V) / mVelocityAttainTime;
+			a_first += SteerTowards(u,fish) * mAvoidObstacleWeight;
 		}
 	}
 }
 
-glm::vec3 Flocking::SecondAcceleration(std::vector<Object*>& neighbours, glm::vec3 velA)
+glm::vec3 Flocking::SteerTowards(glm::vec3& vector, Object* fish)
 {
-	glm::vec3 velAvg(0.0f);
-
-	for(auto n : neighbours)
+	float len = glm::length(vector);
+	if(len == 0.0f)
 	{
-		velAvg += n->GetComponent<Flock>()->mVelocity;
+		return vector;
 	}
-	velAvg /= neighbours.size();
-
-	return (velAvg - velA) / mVelocityAttainTime;
+	glm::vec3 v = vector/len * mMaxSpeed - fish->GetComponent<Flock>()->mVelocity;
+	float vlen = glm::length(v);
+	if(vlen > mMaxForce)
+	{
+		v = v/vlen * mMaxForce;
+	}
+	return v;
 }
 
-glm::vec3 Flocking::PrioritizedAcceleration(const glm::vec3* accels)
+void Flocking::AddBoxObstacle(Transform* transform,float avoidDistance, bool outwardNormals)
 {
-	glm::vec3 netAccel = glm::vec3(0.0f);
-	int i = 0;
-	while (i < 3 && glm::length(netAccel) < mMaxAcceleration)
-	{
-		netAccel = netAccel + accels[i];
-		++i;
-	}
+	glm::vec3 scale = transform->mScale / 2.0f;
 
-	if (glm::length(netAccel) > mMaxAcceleration)
-	{
-		float l_Anet = glm::length(netAccel);
-		float l_Ai_1 = glm::length(accels[i - 1]);
-		float dot_product = glm::dot(netAccel, accels[i - 1]);
-		float x = (dot_product - glm::sqrt(l_Ai_1 * l_Ai_1 * mMaxAcceleration * mMaxAcceleration -
-			l_Anet * l_Anet * l_Ai_1 * l_Ai_1 +
-			dot_product * dot_product)) / (l_Ai_1 * l_Ai_1);
-		netAccel = netAccel - x * accels[i - 1];
-	}
+	float sign = outwardNormals ? -1.0f : 1.0f;
+	
+	mObstacles.push_back(new Wall(transform->mPosition + glm::vec3(scale.x, 0.0f, 0.0f), 
+		sign * glm::vec3(-1.0f, 0.0f, 0.0f), 	avoidDistance,!outwardNormals,
+		outwardNormals? glm::vec3(0.0f,scale.y,scale.z): glm::vec3(std::numeric_limits<float>::max())));
+	
+	mObstacles.push_back(new Wall(transform->mPosition + glm::vec3(-scale.x, 0.0f, 0.0f), 
+		sign * glm::vec3(1.0f, 0.0f, 0.0f), avoidDistance, !outwardNormals,
+		outwardNormals ? glm::vec3(0.0f, scale.y, scale.z) : glm::vec3(std::numeric_limits<float>::max())));
+	
+	mObstacles.push_back(new Wall(transform->mPosition + glm::vec3(0.0f, scale.y, 0.0f),
+		sign * glm::vec3(0.0f, -1.0f, 0.0f), avoidDistance, !outwardNormals,
+		outwardNormals ? glm::vec3(scale.x, 0.0f, scale.z) : glm::vec3(std::numeric_limits<float>::max())));
+	
+	mObstacles.push_back(new Wall(transform->mPosition + glm::vec3(0.0f, -scale.y, 0.0f), 
+		sign * glm::vec3(0.0f, 1.0f, 0.0f), avoidDistance, !outwardNormals,
+		outwardNormals ? glm::vec3(scale.x, 0.0f, scale.z) : glm::vec3(std::numeric_limits<float>::max())));
+	
+	mObstacles.push_back(new Wall(transform->mPosition + glm::vec3(0.0f, 0.0f, scale.z), 
+		sign * glm::vec3(0.0f, 0.0f, -1.0f), avoidDistance, !outwardNormals,
+		outwardNormals ? glm::vec3(scale.x, scale.y, 0.0f) : glm::vec3(std::numeric_limits<float>::max())));
+	
+	mObstacles.push_back(new Wall(transform->mPosition + glm::vec3(0.0f, 0.0f, -scale.z), 
+		sign * glm::vec3(0.0f, 0.0f, 1.0f), avoidDistance, !outwardNormals,
+		outwardNormals ? glm::vec3(scale.x, scale.y, 0.0f) : glm::vec3(0.0f)));
 
-	return netAccel;
 }

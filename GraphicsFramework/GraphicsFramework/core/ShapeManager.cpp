@@ -14,6 +14,27 @@ void ShapeManager::Init()
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 
+	{
+		std::vector<glm::vec3> verts;
+		verts.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
+		verts.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+
+		unsigned int ind[] = {
+			0, 1
+		};
+
+		VertexBuffer* vbo = new VertexBuffer();
+		VertexArray* vao = new VertexArray();
+		ElementArrayBuffer* ebo = new ElementArrayBuffer();
+		ebo->AddData(&ind[0], 2, sizeof(unsigned int));
+		vao->AddBuffer(*vbo);
+		vbo->AddData(&verts[0], 2 * sizeof(glm::vec3));
+		vao->Push(3, GL_FLOAT, sizeof(float));
+		vao->AddLayout();
+		vao->Unbind();
+		mShapes[LINE] = std::make_pair(vao,ebo);
+	}
+
 	//WireCube
 	{
 		std::vector<glm::vec3> verts;

@@ -21,6 +21,7 @@ enum Shapes
 	TEAPOT,
 	WIRECUBE,
 	PYRAMID,
+	LINE,
 	SHAPES_NUM
 };
 

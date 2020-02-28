@@ -24,13 +24,12 @@ Object* ObjectManager::ReadObject(std::string path)
 	return object;
 }
 
-void ObjectManager::ObjectsDraw(Shader* shader)
+void ObjectManager::UpdateObjects()
 {
-	shader->Bind();
 	for (auto object : mObjects)
 	{
-		object->Update(shader);
-		Renderer::Instance().DrawObject(shader,object);
+		object->Update();
+		Renderer::Instance().AddRenderData();
 	}
 }
 

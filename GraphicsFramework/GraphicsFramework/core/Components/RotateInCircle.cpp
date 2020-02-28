@@ -4,7 +4,7 @@
 #include "../Object.h"
 #include "Transform.h"
 
-void RotateInCircle::Update(Shader* shader)
+void RotateInCircle::Update()
 {
 	if (Engine::Instance().stopMoving)
 	{

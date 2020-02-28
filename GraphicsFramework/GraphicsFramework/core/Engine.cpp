@@ -79,6 +79,8 @@ void Engine::Start(Scene* scene)
 	pCamera = new Camera();
 	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
 
+	mPause = false;
+
 	pScene = scene;
 	pScene->Init();
 }

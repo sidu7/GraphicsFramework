@@ -4,7 +4,7 @@
 #include "../Object.h"
 #include "Transform.h"
 
-void Move::Update(Shader* shader)
+void Move::Update()
 {
 	if (Engine::Instance().stopMoving)
 	{

@@ -4,8 +4,9 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "../opengl/Shader.h"
+#include "../opengl/Renderer.h"
 
-void Transform::Update(Shader* shader)
+void Transform::Update()
 {
 	mTranslationMatrix = glm::translate(glm::mat4(1.0f), mPosition);
 	mRotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(mRotation.z), glm::vec3(0.0, 0.0, 1.0));
@@ -16,8 +17,9 @@ void Transform::Update(Shader* shader)
 	{
 		mPrevModelTransformation = mModelTransformation;
 	}
-	SetModelTransformation(shader);
-	shader->SetUniformMat4f("prevmodel", mPrevModelTransformation);
+
+	Renderer::Instance().GetRenderData().mTransform = this;
+	SetModelTransformation();	
 }
 
 void Transform::Serialize(rapidjson::Value::Object data)
@@ -32,9 +34,7 @@ void Transform::Serialize(rapidjson::Value::Object data)
 	}
 }
 
-void Transform::SetModelTransformation(Shader* shader)
+void Transform::SetModelTransformation()
 {
-	mModelTransformation = mTranslationMatrix * mRotationMatrix * mScaleMatrix;
-	shader->SetUniformMat4f("model", mModelTransformation);
-	shader->SetUniformMat4f("normaltr", glm::inverse(mModelTransformation));
+	mModelTransformation = mTranslationMatrix * mRotationMatrix * mScaleMatrix;	
 }

@@ -40,7 +40,7 @@ public:
 	Component() = default;
 	Component(std::string name);
 	
-	virtual void Update(Shader* shader) = 0;
+	virtual void Update() = 0;
 	virtual void Serialize(rapidjson::Value::Object data) = 0;
 	virtual Component* New() = 0;
 	virtual std::type_index GetIndex() = 0;

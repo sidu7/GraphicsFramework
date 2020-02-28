@@ -3,8 +3,9 @@
 #include "../opengl/Texture.h"
 #include "../../utils/JSONHelper.h"
 
-void Material::Update(Shader* shader)
+void Material::Update()
 {
+	Renderer::Instance().GetRenderData().mMaterial = this;
 }
 
 void Material::Serialize(rapidjson::Value::Object data)
@@ -14,13 +15,19 @@ void Material::Serialize(rapidjson::Value::Object data)
 		mDiffuse = JSONHelper::GetVec3F(data["Diffuse"].GetArray());
 		pTexture = nullptr;
 	}
-	else
+	if(data.HasMember("Texture"))
 	{
 		pTexture = new Texture(data["Texture"].GetString());
 		mDiffuse = glm::vec3(0.0f);
 	}
-	mSpecular = JSONHelper::GetVec3F(data["Specular"].GetArray());
-	mShininess = data["Shininess"].GetFloat();
+	if (data.HasMember("Specular"))
+	{
+		mSpecular = JSONHelper::GetVec3F(data["Specular"].GetArray());
+	}
+	if (data.HasMember("Shininess"))
+	{
+		mShininess = data["Shininess"].GetFloat();
+	}
 	if(data.HasMember("WireMesh"))
 	{
 		mWireMesh = data["WireMesh"].GetBool();
@@ -32,5 +39,13 @@ void Material::Serialize(rapidjson::Value::Object data)
 	if (data.HasMember("Lighting"))
 	{
 		mLighting = data["Lighting"].GetBool();
+	}
+	if(data.HasMember("Mesh"))
+	{
+		mMesh = data["Mesh"].GetBool();
+	}
+	if(data.HasMember("DebugColor"))
+	{
+		mDebugColor = JSONHelper::GetVec3F(data["DebugColor"].GetArray());
 	}
 }

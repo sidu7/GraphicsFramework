@@ -15,7 +15,7 @@ class Object
 public:
 	Object();
 	~Object();
-	void Update(Shader* shader);
+	void Update();
 	void Serialize(const rapidjson::Value::Object& data);
 
 	void AddComponent(Component* component);

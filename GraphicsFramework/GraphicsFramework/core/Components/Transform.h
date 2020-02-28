@@ -17,9 +17,9 @@ public:
 	glm::mat4 mModelTransformation;
 	glm::mat4 mPrevModelTransformation;
 
-	void Update(Shader* shader) override;
+	void Update() override;
 
 	void  Serialize(rapidjson::Value::Object data) override;
 
-	void SetModelTransformation(Shader* shader);
+	void SetModelTransformation();
 };

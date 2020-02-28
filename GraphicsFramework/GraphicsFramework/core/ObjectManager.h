@@ -12,7 +12,7 @@ class ObjectManager
 public:
 	Object* AddObject(std::string path);
 	static Object* ReadObject(std::string path);
-	void ObjectsDraw(Shader* shader);
+	void UpdateObjects();
 	void Close();
 
 	friend class Renderer;

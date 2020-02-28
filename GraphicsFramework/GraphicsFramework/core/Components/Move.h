@@ -15,7 +15,7 @@ public:
 	bool mWaiting;
 	float mWaitTime;
 
-	void Update(Shader* shader) override;
+	void Update() override;
 
 	void Serialize(rapidjson::Value::Object data) override;
 };

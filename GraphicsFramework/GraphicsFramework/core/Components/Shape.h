@@ -12,7 +12,7 @@ public:
 	std::pair<VertexArray*, ElementArrayBuffer*> mShapeData;
 	Shapes mShape;
 
-	void Update(Shader* shader) override;
+	void Update() override;
 
 	void Serialize(rapidjson::Value::Object data) override;
 };
