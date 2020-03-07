@@ -153,7 +153,7 @@ void AllProjects::Update()
 	shader->SetUniformMat4f("view", Engine::Instance().pCamera->mView);
 	shader->SetUniformMat4f("projection", Engine::Instance().pCamera->mProjection);
 
-	ObjectManager::Instance().UpdateObjects(shader);
+	ObjectManager::Instance().UpdateObjects();
 
 	shader->Unbind();
 	G_Buffer->Unbind();

@@ -46,6 +46,7 @@ private:
 	float mVelocityAttainTime;
 	float mMaxSpeed;
 	float mMinSpeed;
+	float mAvoidDistance;
 
 	// Weights
 	float mAvoidObstacleWeight;
@@ -54,4 +55,5 @@ private:
 	float mSeparateWeight;
 
 	bool mStart;
+	int mFPS;
 };

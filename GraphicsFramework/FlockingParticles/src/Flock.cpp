@@ -31,12 +31,13 @@ void Flock::Update()
 	glm::vec3 Y(0.0f, 1.0f, 0.0f);
 	if(!Engine::Instance().mPause)
 	{
+		mPreviousVelocity = mVelocity;
 		mVelocity += mAcceleration * Time::Instance().deltaTime;
 		float speed = glm::length(mVelocity);
 		glm::vec3 dir = mVelocity / speed;
 		speed = glm::clamp(speed, mMinSpeed, mMaxSpeed);
 		mVelocity = dir * speed;
-		trans->mPosition += mVelocity * Time::Instance().deltaTime;
+		trans->mPosition += 0.5f * Time::Instance().deltaTime * (mVelocity + mPreviousVelocity);
 		mFront = dir;
 		mNormal = glm::normalize(glm::cross(Y, mFront));
 		mAcceleration = glm::vec3(0.0f);

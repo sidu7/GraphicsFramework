@@ -4,6 +4,7 @@
 #include "core/Camera.h"
 #include "core/Light.h"
 #include "core/Object.h"
+#include "core/Time.h"
 #include "core/ObjectManager.h"
 #include "core/Components/Transform.h"
 #include "core/Components/Material.h"
@@ -38,8 +39,10 @@ void Flocking::Init()
 
 	mShader = new Shader("res/shaders/Drawing.vert", "res/shaders/Drawing.frag");
 
+	mAvoidDistance = 2.0f;
+	
 	Boundary = ObjectManager::Instance().AddObject("res/data/Boundary.json");
-	AddBoxObstacle(Boundary->GetComponent<Transform>(), 2.0f, false);
+	AddBoxObstacle(Boundary->GetComponent<Transform>(), mAvoidDistance, false);
 		
 	/*Object* box = ObjectManager::Instance().AddObject("res/data/Box.json");	
 	Transform* btrans = box->GetComponent<Transform>();
@@ -53,42 +56,42 @@ void Flocking::Init()
 	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
 	Transform* trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(10.0f, 10.0f, 10.0f);
-	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
 	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(-10.0f, -10.0f, -10.0f);
-	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
 	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(10.0f, 10.0f, -10.0f);
-	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
 	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(-10.0f, -10.0f, 10.0f);
-	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
 	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(-10.0f, 10.0f, -10.0f);
-	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 	
 	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(10.0f, -10.0f, 10.0f);
-	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
 	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(10.0f, -10.0f, -10.0f);
-	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
 	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(-10.0f, 10.0f, 10.0f);
-	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, 2.0f));
+	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
 	//PARSE_JSON_FILE("res/data/FlockingSettings.json");
 	mFishViewAngle = 45.0f * PI / 180.0f;
@@ -104,6 +107,7 @@ void Flocking::Init()
 	mAlignWeight = 2;
 	mCohesionWeight = 1;
 	mSeparateWeight = 5.5f;
+	mFPS = 60;
 	
 	auto rand = Random::Range(-1.0f, 1.0f);
 	auto rand2 = Random::Range();
@@ -126,7 +130,7 @@ void Flocking::Init()
 	}
 	
 	ObjectManager::Instance().AddObject("res/data/Floor.json");
-	Engine::Instance().mPause = true;
+	Engine::Instance().mPause = false;
 }
 
 void Flocking::Update()
@@ -172,12 +176,37 @@ void Flocking::Update()
 
 void Flocking::DebugDisplay()
 {
-	ImGui::Checkbox("Start Simulation", &Engine::Instance().mPause);
+	ImGui::Checkbox("Pause Simulation", &Engine::Instance().mPause);
+	ImGui::InputInt("FrameRate", &mFPS);
+	if(ImGui::Button("Set FrameRate"))
+	{
+		Time::Instance().SetFrameRate(mFPS);
+	}
+	if(ImGui::Button("Reset FrameRate"))
+	{
+		Time::Instance().SetFrameRate(60);
+	}
 	ImGui::InputFloat("Max Acceleration", &mMaxAcceleration, 0.01f, 0.1f);
+	if(ImGui::InputFloat("Minimum Velocity", &mMinSpeed, 0.2f, 1.0f)
+		|| ImGui::InputFloat("Maximum Velocity", &mMaxSpeed, 0.2f, 1.0f))
+	{
+		for(auto fish : mFishes)
+		{
+			Flock* f = fish->GetComponent<Flock>();
+			f->mMinSpeed = mMinSpeed;
+			f->mMaxSpeed = mMaxSpeed;
+		}
+	}
 	ImGui::InputFloat("Fish View Angle", &mFishViewAngle, 0.01f, 0.1f);
 	ImGui::InputFloat("Fish View Distance", &mFishViewDistance, 0.01f, 0.1f);
 	ImGui::InputFloat("Boid Tightness", &mBoidTightness, 0.01f, 0.1f);
-	ImGui::InputFloat("Velocity Attain Time", &mVelocityAttainTime, 0.01f,0.1f);
+	if(ImGui::InputFloat("Obstacle Avoidance Distance",&mAvoidDistance,0.5f,1.0f))
+	{
+		for(auto obs : mObstacles)
+		{
+			obs->mDistanceThreshold = mAvoidDistance;
+		}
+	}
 }
 
 std::vector<Object*> Flocking::FindNeighbours(Object* fish)

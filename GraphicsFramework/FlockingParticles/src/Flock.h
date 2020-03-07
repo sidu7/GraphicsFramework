@@ -20,6 +20,7 @@ public:
 
 	glm::vec3 mNormal;
 	glm::vec3 mVelocity;
+	glm::vec3 mPreviousVelocity;
 	glm::vec3 mFront;
 	float mMinSpeed, mMaxSpeed;
 	glm::vec3 mAcceleration;

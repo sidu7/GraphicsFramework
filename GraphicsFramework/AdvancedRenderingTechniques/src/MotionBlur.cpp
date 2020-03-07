@@ -94,7 +94,7 @@ void MotionBlur::Update()
 	shader->SetUniform1f("deltaTime", Time::Instance().deltaTime);
 	shader->SetUniform1i("k", k);
 
-	ObjectManager::Instance().UpdateObjects(shader);
+	ObjectManager::Instance().UpdateObjects();
 
 	shader->Unbind();
 	G_Buffer->Unbind();
