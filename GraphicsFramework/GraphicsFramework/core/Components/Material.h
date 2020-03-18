@@ -14,8 +14,8 @@ public:
 	Texture* pTexture;
 	bool mWireMesh = false;
 	bool mDebugMesh = false;
-	bool mMesh = false;
-	bool mLighting = false;
+	bool mMesh = true;
+	bool mLighting = true;
 
 	void Update() override;	
 

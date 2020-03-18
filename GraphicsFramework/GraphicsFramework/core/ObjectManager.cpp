@@ -7,8 +7,7 @@
 
 Object* ObjectManager::AddObject(std::string path)
 {
-	PARSE_JSON_FILE(path);
-
+	auto root = JSONHelper::ParseFile(path);
 	Object* object = new Object();
 	object->Serialize(root.GetObject());
 	mObjects.emplace_back(object);
@@ -17,8 +16,7 @@ Object* ObjectManager::AddObject(std::string path)
 
 Object* ObjectManager::ReadObject(std::string path)
 {
-	PARSE_JSON_FILE(path);
-
+	auto root = JSONHelper::ParseFile(path);
 	Object* object = new Object();
 	object->Serialize(root.GetObject());
 	return object;

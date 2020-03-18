@@ -143,8 +143,8 @@ void AllProjects::Update()
 {
 	light->HandleInputs();
 
+	ObjectManager::Instance().UpdateObjects();
 	
-
 	//G-Buffer pass
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
@@ -153,7 +153,7 @@ void AllProjects::Update()
 	shader->SetUniformMat4f("view", Engine::Instance().pCamera->mView);
 	shader->SetUniformMat4f("projection", Engine::Instance().pCamera->mProjection);
 
-	ObjectManager::Instance().UpdateObjects();
+	Renderer::Instance().DrawAllObjects(shader);
 
 	shader->Unbind();
 	G_Buffer->Unbind();
@@ -171,7 +171,7 @@ void AllProjects::Update()
 
 	shadowMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)) * LightProj * LightLookAt;
 
-	ObjectManager::Instance().UpdateObjects(shadow);
+	Renderer::Instance().DrawAllObjects(shadow);
 
 	shadow->Unbind();
 	ShadowMap->Unbind();

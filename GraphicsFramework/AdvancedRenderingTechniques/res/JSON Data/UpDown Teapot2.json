@@ -1,23 +1,23 @@
 {
   "Components": [
     {
-      "Type": 0,
+      "Type": "Transform",
       "Position": [ 0.0, 4.0, 80.0 ],
       "Rotation": [ -90.0, 0.0, 0.0 ],
       "Scale": [ 3.0, 3.0, 3.0 ]
     },
     {
-      "Type": 1,
+      "Type": "Material",
       "Diffuse": [ 1.0, 0.2, 0.0 ],
-      "Specular": [ 0.1,0.1,0.1 ],
+      "Specular": [ 0.1, 0.1, 0.1 ],
       "Shininess": 5.0
     },
     {
-      "Type": 2,
+      "Type": "Shape",
       "Shape": 3
     },
     {
-      "Type": 4,
+      "Type": "Move",
       "Speed": 250.0,
       "Time": 0.3,
       "Wait": 0.1,

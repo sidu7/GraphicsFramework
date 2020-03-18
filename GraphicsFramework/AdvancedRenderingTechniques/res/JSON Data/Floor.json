@@ -1,19 +1,19 @@
 {
   "Components": [
     {
-      "Type": 0,
+      "Type": "Transform",
       "Position": [ 0.0, 0.0, 0.0 ],
       "Rotation": [ -90.0, 0.0, 0.0 ],
       "Scale": [ 500.0, 500.0, 500.0 ]
     },
     {
-      "Type": 1,
+      "Type": "Material",
       "Diffuse": [ 0.4, 0.4, 0.4 ],
       "Specular": [ 0.2, 0.2, 0.2 ],
       "Shininess": 1.0
     },
     {
-      "Type": 2,
+      "Type": "Shape",
       "Shape": 0
     }
   ]

@@ -16,13 +16,17 @@ class JSONHelper
 {
 public:
 
-#define PARSE_JSON_FILE(x) std::ifstream file(x);\
-	std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());\
-	file.close(); \
-	rapidjson::Document root;\
-	root.Parse(contents.c_str());\
-	if(!root.IsObject()) { std::cout << "Error reading JSON file" << x << std::endl; }
-
+	static auto ParseFile(std::string& path)
+	{
+		std::ifstream file(path); 
+		std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>()); 
+		file.close(); 
+		rapidjson::Document root; 
+		root.Parse(contents.c_str()); 
+		if (!root.IsObject()) { std::cout << "Error reading JSON file" << path << std::endl; }
+		return root;
+	}
+	
 	//JSON parsing
 	 static glm::vec3 GetVec3F(const rapidjson::Value::Array& arr)
 	{
