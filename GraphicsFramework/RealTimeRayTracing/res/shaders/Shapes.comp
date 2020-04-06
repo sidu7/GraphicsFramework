@@ -1,0 +1,35 @@
+for (int pass = 1; pass <= max_passes; ++pass)
+	{	
+		//float dx = 2 * (x + randoms[x+pass]) / width - 1;
+		//float dy = 2 * (y + randoms[y+pass]) / height - 1;
+		float dx = 2 * (x + 0.5f) / width - 1;
+		float dy = 2 * (y + 0.5f) / height - 1;
+
+		vec3 dir = normalize(dx * X + dy * Y + Z);
+		Ray ray;
+		ray.Init(E, dir);
+		Intersection data;
+		data.Init();
+		for(int i = 0; i < Shapes_num; ++i)
+		{
+			data = AllShapes[i].Intersect(ray,data);
+		}
+
+		if(data.object.isActive)
+		{
+			out_Image[y * width + x] = data.object.Kd;
+		}
+		else
+		{
+			out_Image[y*width + x] = vec3(0,1,0);
+		}
+		out_Image[y * width + x] = vec3(0,1,0);
+		//vec3 test = imagePointer[y * width + x];
+		//test += TraceRay(ray);
+		//if (!(isnan(test.x) || isinf(test.x) ||
+		//	isnan(test.y) || isinf(test.y) || 
+		//	isnan(test.z) || isinf(test.z)))
+		//{
+		//	imagePointer[y * width + x] = test;
+		//}
+	}

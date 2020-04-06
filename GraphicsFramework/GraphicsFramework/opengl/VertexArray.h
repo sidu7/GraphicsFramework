@@ -38,6 +38,7 @@ public:
 	void AddLayout();
 	void AddBuffer(const VertexBuffer& vb) const;
 	void Push(unsigned int count, unsigned int type, unsigned int size);
+	void AddLayoutAtLocation(unsigned location, unsigned int type, unsigned int each_size, unsigned count, unsigned offset = 0);
 	void Bind() const;
 	void Unbind() const;
 	void Delete() const;

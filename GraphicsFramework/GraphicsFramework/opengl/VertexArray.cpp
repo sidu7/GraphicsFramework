@@ -37,6 +37,9 @@ void VertexArray::AddLayout()
 		m_Offset += c.m_Size * c.m_Count;
 		m_Index++;
 	}
+	m_Elements.clear();
+	m_Offset = 0;
+	m_Stride = 0;
 }
 
 void VertexArray::Push(unsigned int count, unsigned int type, unsigned int size)
@@ -44,6 +47,12 @@ void VertexArray::Push(unsigned int count, unsigned int type, unsigned int size)
 	VertexElements element(count, type, size);
 	m_Elements.push_back(element);
 	m_Stride += count * size;
+}
+
+void VertexArray::AddLayoutAtLocation(unsigned location, unsigned type, unsigned each_size, unsigned count, unsigned offset)
+{
+	glVertexAttribPointer(location, count, type, GL_FALSE, each_size * count, (const void *)offset);
+	glEnableVertexAttribArray(location);
 }
 
 void VertexArray::AddBuffer(const VertexBuffer& vb) const

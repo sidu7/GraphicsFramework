@@ -1,17 +1,14 @@
 #include <iostream>
 #include <core/Engine.h>
-#include "AnimationScene.h"
-#include "Mechanics.h"
-		
+#include "RayTracing.h"
 
 int main(int argc, char* args[])
 {
 	std::cout << "Graphics Framework" << std::endl;
 
-	AnimationScene proj;
-	//Mechanics proj;
-	
-	Engine::Instance().Start(&proj,1280,720);
+	RayTracing proj;
+
+	Engine::Instance().Start(&proj,400,300);
 	Engine::Instance().Run();
 	Engine::Instance().Stop();
 

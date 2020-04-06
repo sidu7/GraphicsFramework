@@ -10,7 +10,7 @@ int main(int argc, char* args[])
 	AllProjects proj;
 	//MotionBlur proj;
 	
-	Engine::Instance().Start(&proj);
+	Engine::Instance().Start(&proj,1280,720);
 	Engine::Instance().Run();
 	Engine::Instance().Stop();
 

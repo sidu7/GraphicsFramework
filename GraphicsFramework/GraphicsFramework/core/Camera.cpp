@@ -13,6 +13,8 @@ void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 	mCameraPos = glm::vec3(0.0f, 10.0f, 20.0f);
 	mCameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 	mCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	mCameraSide = glm::vec3(0.0f);
+	mCameraRealUp = glm::vec3(0.0f);
 	glm::vec2 wSize = Engine::Instance().GetWindowSize();
 	mProjection = glm::perspective(FOVangle, wSize.x/wSize.y, nearPlane, farPlane);
 	pitch = 0.0f;
@@ -56,6 +58,9 @@ void Camera::Update()
 
 	mPrevView = mView;
 	mView = glm::lookAt(mCameraPos, mCameraPos + mCameraFront, mCameraUp);
+
+	mCameraSide = glm::cross(mCameraUp, mCameraFront);
+	mCameraRealUp = glm::cross(mCameraSide, mCameraFront);
 }
 
 void Camera::MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent)

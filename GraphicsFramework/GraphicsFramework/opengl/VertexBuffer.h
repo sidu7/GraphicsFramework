@@ -17,6 +17,8 @@ public:
 	~VertexBuffer();
 	 
 	void AddData(const void* data,unsigned int size) const;
+	void AddSubData(const void* data, unsigned int size, unsigned offset = 0) const;
+	void AddDynamicData(const void* data, unsigned int size) const;
 	void Bind() const;
 	void Unbind() const;
 };

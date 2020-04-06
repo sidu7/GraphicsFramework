@@ -12,7 +12,7 @@ class Engine
 	SINGLETON(Engine);
 public:
 	
-	void Start(Scene* scene);
+	void Start(Scene* scene,int width, int height);
 	void Run();
 	void Stop();
 

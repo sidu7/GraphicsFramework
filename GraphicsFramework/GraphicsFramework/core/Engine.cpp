@@ -20,7 +20,7 @@
 #include "ComponentManager.h"
 
 
-void Engine::Start(Scene* scene)
+void Engine::Start(Scene* scene,int width, int height)
 {
 	int error = 0;
 
@@ -41,8 +41,8 @@ void Engine::Start(Scene* scene)
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-	scrWidth = 1280;
-	scrHeight = 720;
+	scrWidth = width;
+	scrHeight = height;
 
 	pWindow = SDL_CreateWindow("Graphics Framework",
 		SDL_WINDOWPOS_CENTERED,

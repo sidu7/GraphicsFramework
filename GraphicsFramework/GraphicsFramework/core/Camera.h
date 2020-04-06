@@ -19,9 +19,11 @@ public:
 	float pitch;
 	float yaw;
 
-private:
 	glm::vec3 mCameraFront;
 	glm::vec3 mCameraUp;
+	glm::vec3 mCameraSide;
+	glm::vec3 mCameraRealUp;
+private:
 
 	float lastMouseX;
 	float lastMouseY;
