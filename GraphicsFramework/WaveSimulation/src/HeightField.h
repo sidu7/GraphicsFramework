@@ -17,7 +17,7 @@ struct HeightField {
   void update(double dt);
   void handle_input(glm::vec2 position);
 
-  Grid<float> grid0,
+  Grid<std::complex<float>> grid0,
               grid;
   float max_height;
   double time;

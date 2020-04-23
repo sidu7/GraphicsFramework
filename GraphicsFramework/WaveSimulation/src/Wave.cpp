@@ -25,11 +25,11 @@ Wave::~Wave()
 
 void Wave::Init()
 {
-	mLight = new Light(glm::vec3(1.0, -1.2, -0.1));
+	mLight = new Light(glm::vec3(1.0, -0.3, -0.1));
 
-	Engine::Instance().pCamera->mCameraPos = glm::vec3(0.1f, 1.1f, 3.1f);
-	Engine::Instance().pCamera->pitch = -17.6f;
-	Engine::Instance().pCamera->yaw = -91.3f;
+	Engine::Instance().pCamera->mCameraPos = glm::vec3(0.1f, 2.0f, 2.2f);
+	Engine::Instance().pCamera->pitch = -39.0f;
+	Engine::Instance().pCamera->yaw = -95.0f;
 	Engine::Instance().pCamera->mSpeed /= 4.0f;
 	Engine::Instance().pCamera->CalculateFront();
 
@@ -107,21 +107,21 @@ void Wave::Update()
 	for (int j = 0; j < mHeightMap.grid.height(); ++j)
 		for (int i = 0; i < mHeightMap.grid.width(); ++i) {
 			int index = mHeightMap.grid.width() * j + i;
-			mMeshPositions[index] = glm::vec3(i, j, mHeightMap.grid(i, j));
+			mMeshPositions[index] = glm::vec3(i, j, mHeightMap.grid(i, j).real());
 			float dx = 0,
 				dy = 0;
 			if (i > 0 && i + 1 < mHeightMap.grid.width())
-				dx = 0.5f * (mHeightMap.grid(i + 1, j) - mHeightMap.grid(i - 1, j));
+				dx = 0.5f * (mHeightMap.grid(i + 1, j).real() - mHeightMap.grid(i - 1, j)).real();
 			else if (i > 0)
-				dx = mHeightMap.grid(i, j) - mHeightMap.grid(i - 1, j);
+				dx = mHeightMap.grid(i, j).real() - mHeightMap.grid(i - 1, j).real();
 			else
-				dx = mHeightMap.grid(i + 1, j) - mHeightMap.grid(i, j);
+				dx = mHeightMap.grid(i + 1, j).real() - mHeightMap.grid(i, j).real();
 			if (j > 0 && j + 1 < mHeightMap.grid.height())
-				dy = 0.5f * (mHeightMap.grid(i, j + 1) - mHeightMap.grid(i, j - 1));
+				dy = 0.5f * (mHeightMap.grid(i, j + 1).real() - mHeightMap.grid(i, j - 1)).real();
 			else if (j > 0)
-				dy = mHeightMap.grid(i, j) - mHeightMap.grid(i, j - 1);
+				dy = mHeightMap.grid(i, j).real() - mHeightMap.grid(i, j - 1).real();
 			else
-				dy = mHeightMap.grid(i, j + 1) - mHeightMap.grid(i, j);
+				dy = mHeightMap.grid(i, j + 1).real() - mHeightMap.grid(i, j).real();
 			mMeshNormals[index] = glm::vec3(-dx, -dy, 1);
 		}
 
@@ -144,11 +144,8 @@ void Wave::Update()
 
 void Wave::DebugDisplay()
 {
-	ImGui::SliderFloat3("Light", &mLight->position[0],-5.0f,5.0f);
 	if(ImGui::Button("Reset"))
 	{
 		mHeightMap.initialize();
 	}
-	ImGui::InputFloat("Speed", &mHeightMap.wave_speed, 0.01);
-	ImGui::InputFloat("Dampness", &mHeightMap.wave_dampness, 0.1);
 }
