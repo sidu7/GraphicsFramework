@@ -3,6 +3,7 @@
 #include "../ComponentManager.h"
 #include <glm/glm.hpp>
 #include <typeindex>
+#include <string>
 
 class Object;
 class Shader;
