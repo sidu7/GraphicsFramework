@@ -11,7 +11,7 @@ public:
 	glm::vec3 mDebugColor;
 	glm::vec3 mSpecular;
 	float mShininess;
-	Texture* pTexture;
+	Texture* pTexture = nullptr;
 	bool mWireMesh = false;
 	bool mDebugMesh = false;
 	bool mMesh = true;
