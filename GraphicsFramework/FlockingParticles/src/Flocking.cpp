@@ -107,7 +107,8 @@ void Flocking::Init()
 	mAlignWeight = 2;
 	mCohesionWeight = 1;
 	mSeparateWeight = 5.5f;
-	mFPS = 60;
+	mFPS = 0;
+	Time::Instance().SetFrameRate(mFPS);
 	
 	auto rand = Random::Range(-1.0f, 1.0f);
 	auto rand2 = Random::Range();

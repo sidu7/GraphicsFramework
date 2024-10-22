@@ -86,12 +86,14 @@ void Renderer::DebugDraw(const VertexArray& va, const ElementArrayBuffer& ib, co
 
 void Renderer::DebugDrawLines(const VertexArray& va, const ElementArrayBuffer& ib, const Shader& shader) const
 {
+	GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 	shader.Bind();
 	va.Bind();
 	ib.Bind();
 	GLCall(glDrawElements(GL_LINES, ib.GetCount(), GL_UNSIGNED_INT, nullptr));
 	va.Unbind();
 	ib.Unbind();
+	GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
 }
 
 void Renderer::DrawDebugCircle(const VertexArray& va, const Shader& shader) const
@@ -164,7 +166,7 @@ void Renderer::DrawDebugObjects(Shader* shader)
 	glLineWidth(width);
 	shader->Unbind();
 }
-
+#pragma optimize("", off)
 void Renderer::DrawAllObjects(Shader* shader)
 {
 	shader->Bind();	
@@ -216,7 +218,7 @@ void Renderer::DrawAllObjects(Shader* shader)
 	}
 	shader->Unbind();
 }
-
+#pragma optimize("", on)
 void Renderer::AddDebugRenderData(DebugData data)
 {
 	mDebugRenderData.push_back(data);

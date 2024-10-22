@@ -8,7 +8,7 @@ public:
 	void Init(unsigned int requiredFrameRate);
 	void FrameStart();
 	void FrameEnd();
-	void SetFrameRate(int frameRate)  { neededTime = 1000 / frameRate; }
+	void SetFrameRate(int frameRate);
 private:
 	unsigned int startTime;
 	unsigned int endTime;

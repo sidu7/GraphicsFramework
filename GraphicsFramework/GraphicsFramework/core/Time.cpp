@@ -23,3 +23,15 @@ void Time::FrameEnd()
 	}
 	deltaTime = (endTime - startTime) / 1000.0f;
 }
+
+void Time::SetFrameRate(int frameRate)
+{
+	if (frameRate > 0)
+	{
+		neededTime = 1000 / frameRate;
+	}
+	else
+	{
+		neededTime = 0;
+	}
+}
