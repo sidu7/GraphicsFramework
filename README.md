@@ -1,2 +1,2 @@
-# GraphicsFramework
-Custom Graphics Framework
+# Rendering Framework
+OpenGL-based Rendering Framework
