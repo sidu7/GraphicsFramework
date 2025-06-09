@@ -65,7 +65,7 @@ void HeightField::update(double dt)
 			std::complex<float> u_jnext = j == grid.height() - 1 ? 0.0f : grid(i,j+1);
 			std::complex<float> u_jprev = j == 0 ? 0.0f : grid(i,j-1);
 #endif				
-			std::complex<float> inside = (u_inext - std::complex<float>(2.0f,0.0f) * grid(i,j) + u_iprev) / pow(grid.cellWidth(),2) + (u_jnext - std::complex<float>(2.0f, 0.0f) * grid(i,j) + u_jprev) / pow(grid.cellHeight(),2);
+			std::complex<float> inside = (u_inext - std::complex<float>(2.0f,0.0f) * grid(i,j) + u_iprev) / std::complex<float>(pow(grid.cellWidth(),2)) + (u_jnext - std::complex<float>(2.0f, 0.0f) * grid(i,j) + u_jprev) / std::complex<float>(pow(grid.cellHeight(),2));
 			std::complex<float> temp = grid(i,j);
 			grid(i,j) = c1 * (c2*grid(i,j) + c3*grid0(i,j) + wave_speed * wave_speed * inside);
 			grid0(i,j) = temp;

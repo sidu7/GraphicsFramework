@@ -1,462 +1,1126 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{36447285-4fee-4efa-a769-0ce2ebafdb11}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="Source">
+      <UniqueIdentifier>{7f124dba-bf9e-4dd7-ad5d-f50a88d49904}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="Source\Core">
+      <UniqueIdentifier>{42cbefb7-1dd6-47b7-a04b-591609cee9a1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Core\Component">
+      <UniqueIdentifier>{74a2a638-a73b-46c1-ae2c-bbed5c6e2fb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Rendering">
+      <UniqueIdentifier>{c6fc4a01-6d2b-429f-a2a3-6497b21dfaa1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Rendering\OpenGL">
+      <UniqueIdentifier>{57a8c430-a326-4fce-a269-c16e8a31032a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty">
+      <UniqueIdentifier>{1009f56c-4826-4d60-9eea-b352c1da9502}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Utils">
+      <UniqueIdentifier>{eb798963-6b8e-41d6-9ebc-757114ad7369}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\assimp">
+      <UniqueIdentifier>{97bf75c5-b497-45a3-b8cc-5e1515c106c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\GLEW">
+      <UniqueIdentifier>{97267b6a-f1ea-45c0-8381-ef13a8181ce6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\glm">
+      <UniqueIdentifier>{f432d670-44af-4ca9-afe8-1267c286c36d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\rapidjson">
+      <UniqueIdentifier>{7e589380-3154-4121-a837-bad4a9705132}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\stb_image">
+      <UniqueIdentifier>{db8ed0bd-01e5-426b-8402-ca08a6353aaf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\vulkan">
+      <UniqueIdentifier>{ee928e19-7d84-439b-a8b5-f5b0f7c61792}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\SDL">
+      <UniqueIdentifier>{8be4d6aa-6a92-42e5-8a32-b5e64e2955cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ThirdParty\imgui">
+      <UniqueIdentifier>{f73bd4f9-4b1b-407e-b6de-ec5d4a2b0d04}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="opengl\FrameBuffer.cpp">
-      <Filter>Source Files</Filter>
+    <None Include="res\JSON Data\ControlPoints.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\Floor.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\gh_sample_animation.fbx">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\crysis-nano-suit-2\scene.fbx">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\SkyDome.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot1.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot2.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot3.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot4.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot5.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot6.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot7.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot8.json">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\.editorconfig">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\SmoothingGroups.inl">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\assimp\color4.inl">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\assimp\config.h.in">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\assimp\material.inl">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\assimp\matrix3x3.inl">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\assimp\matrix4x4.inl">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\assimp\quaternion.inl">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\assimp\vector2.inl">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+    <None Include="ThirdParty\assimp\include\assimp\vector3.inl">
+      <Filter>ThirdParty\assimp</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Core\Camera.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\Renderer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\ComponentManager.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\Shader.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Engine.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\Texture.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\ImguiManager.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\VertexArray.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Inputs.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\VertexBuffer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Light.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\Imgui\imgui.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Object.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\Imgui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\ObjectManager.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\Imgui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\ShapeManager.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\Imgui\imgui_impl_opengl3.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Time.cpp">
+      <Filter>Source\Core</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\Imgui\imgui_impl_sdl.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Components\Material.cpp">
+      <Filter>Source\Core\Component</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\Imgui\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Components\Move.cpp">
+      <Filter>Source\Core\Component</Filter>
     </ClCompile>
-    <ClCompile Include="vendor\stbi_image\stbi_image.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Components\RotateInCircle.cpp">
+      <Filter>Source\Core\Component</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\Mesh.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Components\Shape.cpp">
+      <Filter>Source\Core\Component</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\ElementArrayBuffer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\Core\Components\Transform.cpp">
+      <Filter>Source\Core\Component</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\Model.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ThirdParty\stbi_image\stbi_image.cpp">
+      <Filter>ThirdParty\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\Quaternion.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\ComputeShader.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\ComputeShader.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\ElementArrayBuffer.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\UniformBuffer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\FrameBuffer.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="opengl\ShaderStorageBuffer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\Mesh.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\Camera.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\Model.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\Engine.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\Quaternion.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\ImguiManager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\Renderer.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\Inputs.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\Shader.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\Light.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\ShaderStorageBuffer.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\Object.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\Texture.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\ShapeManager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\UniformBuffer.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\Time.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\VertexArray.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\ObjectManager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="Source\OpenGL\VertexBuffer.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="core\Components\Transform.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ThirdParty\vulkan\include\Volk\volk.c">
+      <Filter>ThirdParty\vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="core\Components\Material.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ThirdParty\Imgui\imgui.cpp">
+      <Filter>ThirdParty\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="core\Components\Shape.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ThirdParty\Imgui\imgui_demo.cpp">
+      <Filter>ThirdParty\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="core\Components\RotateInCircle.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ThirdParty\Imgui\imgui_draw.cpp">
+      <Filter>ThirdParty\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="core\Components\Move.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ThirdParty\Imgui\imgui_impl_opengl3.cpp">
+      <Filter>ThirdParty\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="core\ComponentManager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="ThirdParty\Imgui\imgui_impl_sdl.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\Imgui\imgui_impl_vulkan.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\Imgui\imgui_widgets.cpp">
+      <Filter>ThirdParty\imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="opengl\FrameBuffer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Camera.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\Renderer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\ComponentManager.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\Shader.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Core.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\Texture.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Engine.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\VertexArray.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\GlobalDefines.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\VertexBuffer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\ImguiManager.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\Imgui\imconfig.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Inputs.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\Imgui\imgui.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Light.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\Imgui\imgui_impl_opengl3.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Object.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\Imgui\imgui_impl_sdl.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\ObjectManager.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\Imgui\imgui_internal.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Scene.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\Imgui\imstb_rectpack.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\ShapeManager.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\Imgui\imstb_textedit.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Singleton.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\Imgui\imstb_truetype.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Time.h">
+      <Filter>Source\Core</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\begin_code.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Components\Components.h">
+      <Filter>Source\Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\close_code.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Components\Material.h">
+      <Filter>Source\Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Components\Move.h">
+      <Filter>Source\Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_assert.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Components\RotateInCircle.h">
+      <Filter>Source\Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_atomic.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Components\Shape.h">
+      <Filter>Source\Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_audio.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Core\Components\Transform.h">
+      <Filter>Source\Core\Component</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_bits.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Utils\JSONHelper.h">
+      <Filter>Source\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_blendmode.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Utils\MathHelper.h">
+      <Filter>Source\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_clipboard.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Source\Utils\Random.h">
+      <Filter>Source\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_config.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\BaseImporter.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_cpuinfo.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Bitmap.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_endian.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\BlobIOSystem.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_error.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\ByteSwapper.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_events.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\CreateAnimMesh.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_filesystem.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\DefaultIOStream.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_gamecontroller.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\DefaultIOSystem.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_gesture.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\DefaultLogger.hpp">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_haptic.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Defines.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_hints.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Exceptional.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_joystick.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Exporter.hpp">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_keyboard.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\GenericProperty.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_keycode.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Hash.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_loadso.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Importer.hpp">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_log.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\IOStream.hpp">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_main.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\IOStreamBuffer.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_messagebox.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\IOSystem.hpp">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_mouse.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\LineSplitter.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_mutex.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\LogAux.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_name.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Logger.hpp">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_opengl.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\LogStream.hpp">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_opengles.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Macros.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_opengles2.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\MathFunctions.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_pixels.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\MemoryIOWrapper.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_platform.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\NullLogger.hpp">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_power.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\ParsingUtils.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_quit.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Profiler.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_rect.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\ProgressHandler.hpp">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_render.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\RemoveComments.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_revision.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\SceneCombiner.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_rwops.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\SGSpatialSort.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_scancode.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\SkeletonMeshBuilder.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_shape.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\SmoothingGroups.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_stdinc.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\SpatialSort.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_surface.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\StandardShapes.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_system.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\StreamReader.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_syswm.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\StreamWriter.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\StringComparison.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_assert.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\StringUtils.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_common.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Subdivision.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_compare.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\TinyFormatter.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_crc32.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\Vertex.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_font.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\XMLTools.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_fuzzer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\assimp\include\ZipArchiveIOSystem.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_harness.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\GLEW\include\GL\eglew.h">
+      <Filter>ThirdParty\GLEW</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_images.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\GLEW\include\GL\glew.h">
+      <Filter>ThirdParty\GLEW</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_log.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\GLEW\include\GL\glxew.h">
+      <Filter>ThirdParty\GLEW</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_md5.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\GLEW\include\GL\wglew.h">
+      <Filter>ThirdParty\GLEW</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_test_random.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\common.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_thread.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\exponential.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_timer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\ext.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_touch.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\fwd.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_types.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\geometric.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_version.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\glm.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\SDL\include\SDL_video.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\integer.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="vendor\stbi_image\stbi_image.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\mat2x2.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\Mesh.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\mat2x3.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\ElementArrayBuffer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\mat2x4.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\Model.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\mat3x2.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\Quaternion.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\mat3x3.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\ComputeShader.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\mat3x4.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\UniformBuffer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\mat4x2.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="opengl\ShaderStorageBuffer.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\mat4x3.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="core\Camera.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\mat4x4.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="core\Engine.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\matrix.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="core\ImguiManager.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\packing.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="core\Inputs.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\trigonometric.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="core\Light.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\vec2.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="core\Object.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\vec3.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="core\ObjectManager.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\vec4.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="core\Scene.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\glm\vector_relational.hpp">
+      <Filter>ThirdParty\glm</Filter>
     </ClInclude>
-    <ClInclude Include="core\ShapeManager.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\stbi_image\stbi_image.h">
+      <Filter>ThirdParty\stb_image</Filter>
     </ClInclude>
-    <ClInclude Include="core\Singleton.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\allocators.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="core\Time.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\cursorstreamwrapper.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="core\Components\Components.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\document.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="core\Components\Transform.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\encodedstream.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="core\Components\Material.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\encodings.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="core\Components\Shape.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\filereadstream.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="core\Components\RotateInCircle.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\filewritestream.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="core\Components\Move.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\fwd.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="core\ComponentManager.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\istreamwrapper.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="utils\Random.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\memorybuffer.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="utils\JSONHelper.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\memorystream.h">
+      <Filter>ThirdParty\rapidjson</Filter>
     </ClInclude>
-    <ClInclude Include="utils\MathHelper.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="ThirdParty\rapidjson\ostreamwrapper.h">
+      <Filter>ThirdParty\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\rapidjson\pointer.h">
+      <Filter>ThirdParty\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\rapidjson\prettywriter.h">
+      <Filter>ThirdParty\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\rapidjson\rapidjson.h">
+      <Filter>ThirdParty\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\rapidjson\reader.h">
+      <Filter>ThirdParty\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\rapidjson\schema.h">
+      <Filter>ThirdParty\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\rapidjson\stream.h">
+      <Filter>ThirdParty\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\rapidjson\stringbuffer.h">
+      <Filter>ThirdParty\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\rapidjson\writer.h">
+      <Filter>ThirdParty\rapidjson</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\ComputeShader.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\ElementArrayBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\FrameBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\Mesh.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\Model.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\Quaternion.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\Renderer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\Shader.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\ShaderStorageBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\Texture.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\UniformBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\VertexArray.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\OpenGL\VertexBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\Volk\volk.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vk_video\vulkan_video_codec_h264std.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vk_video\vulkan_video_codec_h264std_decode.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vk_video\vulkan_video_codec_h264std_encode.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vk_video\vulkan_video_codec_h265std.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vk_video\vulkan_video_codec_h265std_decode.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vk_video\vulkan_video_codec_h265std_encode.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vk_video\vulkan_video_codecs_common.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vma\vk_mem_alloc.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vk_enum_string_helper.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vk_icd.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vk_layer.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vk_platform.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_android.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_beta.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_core.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_directfb.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_enums.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_extension_inspection.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_format_traits.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_fuchsia.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_funcs.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_ggp.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_handles.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_hash.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_hpp_macros.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_ios.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_macos.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_metal.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_profiles.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_raii.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_screen.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_shared.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_static_assertions.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_structs.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_to_string.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_vi.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_video.hpp">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_wayland.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_win32.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_xcb.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_xlib.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\vulkan\vulkan_xlib_xrandr.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\begin_code.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\close_code.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_assert.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_atomic.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_audio.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_bits.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_blendmode.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_clipboard.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_config.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_copying.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_cpuinfo.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_egl.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_endian.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_error.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_events.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_filesystem.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_gamecontroller.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_gesture.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_guid.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_haptic.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_hidapi.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_hints.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_joystick.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_keyboard.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_keycode.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_loadso.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_locale.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_log.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_main.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_messagebox.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_metal.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_misc.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_mouse.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_mutex.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_name.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_opengl.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_opengl_glext.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_opengles.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_opengles2.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_opengles2_gl2.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_opengles2_gl2ext.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_opengles2_gl2platform.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_opengles2_khrplatform.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_pixels.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_platform.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_power.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_quit.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_rect.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_render.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_revision.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_rwops.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_scancode.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_sensor.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_shape.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_stdinc.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_surface.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_system.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_syswm.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_assert.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_common.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_compare.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_crc32.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_font.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_fuzzer.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_harness.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_images.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_log.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_md5.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_memory.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_test_random.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_thread.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_timer.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_touch.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_types.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_version.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_video.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\SDL\include\SDL_vulkan.h">
+      <Filter>ThirdParty\SDL</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imconfig.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imgui.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imgui_impl_opengl3.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imgui_impl_sdl.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imgui_impl_vulkan.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imgui_internal.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imstb_rectpack.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imstb_textedit.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imstb_truetype.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\aabb.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\ai_assert.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\anim.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\camera.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\cexport.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\cfileio.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\cimport.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\color4.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\config.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\defs.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\fast_atof.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\importerdesc.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\irrXMLWrapper.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\light.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\material.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\matrix3x3.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\matrix4x4.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\mesh.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\metadata.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\pbrmaterial.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\postprocess.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\qnan.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\quaternion.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\scene.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\texture.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\types.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\vector2.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\vector3.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\assimp\version.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\Compiler\poppack1.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\Compiler\pstdint.h">
+      <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\assimp\include\Compiler\pushpack1.h">
+      <Filter>ThirdParty\assimp</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\gh_sample_animation.fbx" />
-    <None Include="res\crysis-nano-suit-2\scene.fbx" />
-    <None Include="res\JSON Data\ControlPoints.json" />
-    <None Include="res\JSON Data\Floor.json" />
-    <None Include="res\JSON Data\Teapot1.json" />
-    <None Include="res\JSON Data\Teapot2.json" />
-    <None Include="res\JSON Data\Teapot3.json" />
-    <None Include="res\JSON Data\SkyDome.json" />
-    <None Include="res\JSON Data\Teapot5.json" />
-    <None Include="res\JSON Data\Teapot6.json" />
-    <None Include="res\JSON Data\Teapot4.json" />
-    <None Include="res\JSON Data\Teapot7.json" />
-    <None Include="res\JSON Data\Teapot8.json" />
+    <Text Include="ThirdParty\glm\CMakeLists.txt">
+      <Filter>ThirdParty\glm</Filter>
+    </Text>
+    <Text Include="ThirdParty\Imgui\LICENSE.txt">
+      <Filter>ThirdParty\imgui</Filter>
+    </Text>
   </ItemGroup>
 </Project>

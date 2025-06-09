@@ -1,4 +1,4 @@
-#include <core/Scene.h>
+#include <Core/Scene.h>
 #include <vector>
 #include <glm/glm.hpp>
 

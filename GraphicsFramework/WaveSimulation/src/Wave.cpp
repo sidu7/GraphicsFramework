@@ -1,17 +1,17 @@
 #include "Wave.h"
 
-#include <core/Engine.h>
-#include <core/Camera.h>
-#include <core/Light.h>
-#include <core/Time.h>
-#include <core/Inputs.h>
-#include <opengl/Renderer.h>
-#include <opengl/Shader.h>
-#include <opengl/VertexArray.h>
-#include <opengl/VertexBuffer.h>
-#include <opengl/ElementArrayBuffer.h>
-#include <glm/gtc/matrix_transform.hpp>
-#include <Imgui/imgui.h>
+#include "core/Engine.h"
+#include "core/Camera.h"
+#include "core/Light.h"
+#include "core/Time.h"
+#include "core/Inputs.h"
+#include "opengl/Renderer.h"
+#include "opengl/Shader.h"
+#include "opengl/VertexArray.h"
+#include "opengl/VertexBuffer.h"
+#include "opengl/ElementArrayBuffer.h"
+#include "glm/gtc/matrix_transform.hpp"
+#include "Imgui/imgui.h"
 #include <iostream>
 
 Wave::~Wave()

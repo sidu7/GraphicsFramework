@@ -1,5 +1,5 @@
 #pragma once
-#include "core/Scene.h"
+#include "Core/Scene.h"
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
@@ -39,6 +39,8 @@ private:
 				return i;
 			}
 		}
+
+		return 0;
 	}
 	inline glm::vec4 GetPointOnCurve(float t, glm::mat4& controlPointMatrix);
 	VertexArray* CreateVec4VAO(std::vector<glm::vec4>& pointList);

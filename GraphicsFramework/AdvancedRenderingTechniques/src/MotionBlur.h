@@ -1,5 +1,5 @@
 #pragma once
-#include "core/Scene.h"
+#include "Core/Scene.h"
 
 class Shader;
 class Light;

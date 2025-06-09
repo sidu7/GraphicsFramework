@@ -1,27 +1,15 @@
+#pragma once
 #include "AnimationScene.h"
 
-#include "core/Engine.h"
-#include "core/Camera.h"
-#include "core/Light.h"
-#include "core/ImguiManager.h"
-#include "core/ShapeManager.h"
-#include "core/Time.h"
-#include "opengl/Model.h"
-#include "opengl/Shader.h"
+#include "Core/Engine.h"
+#include "Core/Camera.h"
+#include "Core/Light.h"
+#include "Core/ImguiManager.h"
+#include "Core/ShapeManager.h"
+#include "Core/Time.h"
+#include "Opengl/Model.h"
+#include "Opengl/Shader.h"
 
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-#include <glm/gtc/matrix_transform.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/ext.hpp>
-#include <glm/gtx/compatibility.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtc/quaternion.hpp>
-
-#include <iostream>
-#include <fstream>
-#include <stack>
 
 AnimationScene::~AnimationScene()
 {

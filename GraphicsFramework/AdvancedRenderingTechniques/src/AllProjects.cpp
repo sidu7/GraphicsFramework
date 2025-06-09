@@ -15,7 +15,6 @@
 #include <core/Components/Shape.h>
 
 #include <iostream>
-#include <ctime>
 #include <Imgui/imgui.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLEW/include/GL/glew.h>
@@ -430,7 +429,7 @@ void AllProjects::DebugDisplay()
 	ImGui::Checkbox("Lighting", &lighton);
 	ImGui::Checkbox("Local Lights", &showLocalLights);
 	bool selected = true;
-	if (ImGui::BeginCombo("", "Select G-Buffer"))
+	if (ImGui::BeginCombo("##", "Select G-Buffer"))
 	{
 		lighton = true;
 		if (ImGui::Selectable("Lighting", selected))

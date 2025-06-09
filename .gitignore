@@ -1,7 +1,14 @@
 #Directories
 .vs/
 Debug/
+Debug_OpenGL/
+Debug_Vulkan/
+Debug_DX12/
 Release/
+Release_OpenGL/
+Release_Vulkan/
+Release_DX12/
+Intermediate/
 
 #files
 *.user
