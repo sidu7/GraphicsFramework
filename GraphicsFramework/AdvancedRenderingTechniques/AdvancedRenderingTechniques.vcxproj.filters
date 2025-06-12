@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Resource Files\Shaders">
+      <UniqueIdentifier>{7fa201ea-b737-46cb-989a-5560e84b1511}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\JsonData">
+      <UniqueIdentifier>{76e8a3f2-5f43-427c-8162-4db308e0d7e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\MotionBlur">
+      <UniqueIdentifier>{164e4a7b-6b21-4da7-a649-540ef68f2a30}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AllProjects.cpp">
@@ -32,5 +41,166 @@
     <ClInclude Include="src\MotionBlur.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="res\shaders\Imgui.h">
+      <Filter>Resource Files\Shaders</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shaders\Ambient.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Ambient.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\AO.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\AO.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Blur.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Blur.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Drawing.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Drawing.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Lighting.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Lighting.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\LocalLight.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\LocalLight.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Shadow.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Shadow.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\SkyDome.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\SkyDome.vert">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\JSON Data\Circle Teapot1.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Circle Teapot2.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\ControlPoints.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Floor.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\LeftRight Teapot1.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\LeftRight Teapot2.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\SkyDome.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot1.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot2.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot3.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot4.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot5.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot6.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot7.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\Teapot8.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\UpDown Teapot1.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\JSON Data\UpDown Teapot2.json">
+      <Filter>Resource Files\JsonData</Filter>
+    </None>
+    <None Include="res\shaders\BilateralHorizontal.compute">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\BilateralVertical.compute">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\BlurHorizontal.compute">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\BlurVertical.compute">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\Irradiance.compute">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\motionblur\Ambient.frag">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\Ambient.vert">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\GBuffer.frag">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\GBuffer.vert">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\Lighting.frag">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\Lighting.vert">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\MotionBlur.frag">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\MotionBlur.vert">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\NeighbourMax.frag">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\NeighbourMax.vert">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\Reconstruction.frag">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\Reconstruction.vert">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\TileMax.frag">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\motionblur\TileMax.vert">
+      <Filter>Resource Files\MotionBlur</Filter>
+    </None>
   </ItemGroup>
 </Project>

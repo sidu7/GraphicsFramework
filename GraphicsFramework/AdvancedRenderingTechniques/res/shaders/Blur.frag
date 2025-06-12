@@ -20,25 +20,23 @@ uniform int blurSize;
 uniform bool horizontal;
 
 void main()
-{          
-
-
+{   
      vec2 tex_offset = 1.0 / textureSize(scene, 0); // gets size of single texel
-     vec4 result = texture(scene, TexCoords) * weight[0];
+     vec4 result = texture(scene, TexCoords);// * weight[blurSize];
      if(horizontal)
      {
-         for(int i = 1; i < blurSize; ++i)
+         for(int i = blurSize - 1; i >= 0; --i)
          {
-            result += texture(scene, TexCoords + vec2(tex_offset.x * i, 0.0)) * weight[i];
-            result += texture(scene, TexCoords - vec2(tex_offset.x * i, 0.0)) * weight[i];
+            //result += texture(scene, TexCoords + vec2(tex_offset.x * i, 0.0)) * weight[i];
+           //result += texture(scene, TexCoords - vec2(tex_offset.x * i, 0.0)) * weight[i];
          }
      }
      else
      {
-         for(int i = 1; i < blurSize; ++i)
+         for(int i = blurSize - 1; i >= 0; --i)
          {
-             result += texture(scene, TexCoords + vec2(0.0, tex_offset.y * i)) * weight[i];
-             result += texture(scene, TexCoords - vec2(0.0, tex_offset.y * i)) * weight[i];
+             //result += texture(scene, TexCoords + vec2(0.0, tex_offset.y * i)) * weight[i];
+             //result += texture(scene, TexCoords - vec2(0.0, tex_offset.y * i)) * weight[i];
          }
      }
      FragColor = result;

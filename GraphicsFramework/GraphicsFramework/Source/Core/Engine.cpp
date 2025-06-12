@@ -3,22 +3,19 @@
 // External
 #include <iostream>
 #include "glm/gtc/matrix_transform.hpp"
+#ifdef RENDERER_VULKAN
+#include <SDL_vulkan.h>
+#endif
 
 // Internal
+#include "Window.h"
 #include "Inputs.h"
+#include "Rendering/Renderer.h"
 #include "Time.h"
 #include "Engine.h"
-#include "OpenGL/Renderer.h"
-#include "OpenGL/VertexArray.h"
-#include "OpenGL/VertexBuffer.h"
-#include "OpenGL/ElementArrayBuffer.h"
-#include "OpenGL/Shader.h"
-#include "Camera.h"
-#include "OpenGL/Model.h"
 #include "Camera.h"
 #include "Light.h"
 #include "ShapeManager.h"
-#include "OpenGL/FrameBuffer.h"
 #include "Scene.h"
 #include "ImguiManager.h"
 #include "ObjectManager.h"
@@ -27,62 +24,17 @@
 
 void Engine::Start(Scene* scene,int width, int height)
 {
-	int error = 0;
-
-	//Initialize SDL
-	if ((error = SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER)) < 0)//Init for video and joystick
-	{
-		printf("Couldn't initialize SDL, error %i\n", error);
-		return;
-	}
-	//SDL_Vulkan_LoadLibrary(nullptr);
-
-	//printf("%i joysticks were found.\n\n", SDL_NumJoysticks());//NUmber of joysticks
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-	// Enable AntiAliasiing
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
-	scrWidth = width;
-	scrHeight = height;
-
-	pWindow = SDL_CreateWindow("Graphics Framework",
-		SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED,
-		scrWidth,
-		scrHeight,
-		SDL_WINDOW_OPENGL);
-
-
-	//Check if window was made successfully
-	if (pWindow == NULL)
-	{
-		printf("Could not create window: %s\n", SDL_GetError());
-		return;
-	}
-
-
-	glContext = nullptr;
-	glContext = SDL_GL_CreateContext(pWindow);
-	if (glContext == NULL)
-	{
-		printf("OpenGL context could not be created. SDL Error: %s\n", SDL_GetError());
-	}
+	Window::Instance()->Init(width, height);
 
 	appIsRunning = true;
 
 	//Init Managers
-	Inputs::Instance().Init();
-	Renderer::Instance().Init(pWindow);
-	Time::Instance().Init(60);
-	ShapeManager::Instance().Init();
-	ImguiManager::Instance().Init();
-	ComponentManager::Instance().Init();
+	Inputs::Instance()->Init();
+	Renderer::Instance()->Init();
+	Time::Instance()->Init(60);
+	ShapeManager::Instance()->Init();
+	ImguiManager::Instance()->Init();
+	ComponentManager::Instance()->Init();
 
 	pCamera = new Camera();
 	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
@@ -97,37 +49,34 @@ void Engine::Run()
 {
 	while (appIsRunning)
 	{
-		Time::Instance().FrameStart();	
-		ImguiManager::Instance().StartFrame();
+		Time::Instance()->FrameStart();	
+		ImguiManager::Instance()->StartFrame();
 
-		Renderer::Instance().Clear();
-		Inputs::Instance().Update();
+		Renderer::Instance()->Clear();
+		Inputs::Instance()->Update();
 		pCamera->Update();
 
 		pScene->DebugDisplay();
 		pScene->Update();
 	
-		ImguiManager::Instance().Update();
-		Renderer::Instance().SwapBuffers();
-		Time::Instance().FrameEnd();
+		ImguiManager::Instance()->Update();
+		Renderer::Instance()->SwapBuffers();
+		Time::Instance()->FrameEnd();
 	}
 }
 
 void Engine::Stop()
 {
-	ImguiManager::Instance().Close();
-	ObjectManager::Instance().Close();
-	ShapeManager::Instance().Close();
-	ComponentManager::Instance().Close();
+	ImguiManager::Instance()->Close();
+	ObjectManager::Instance()->Close();
+	ShapeManager::Instance()->Close();
+	ComponentManager::Instance()->Close();
 	std::cout << "Window closed" << std::endl;
+	Window::Instance()->Close();
 	delete pCamera;
-	SDL_DestroyWindow(pWindow);
-	SDL_Quit();
 }
 
-glm::vec2 Engine::GetWindowSize()
+Camera* Engine::GetCamera()
 {
-	int x, y;
-	SDL_GetWindowSize(pWindow, &x, &y);
-	return glm::vec2(x, y);
+	return pCamera;
 }

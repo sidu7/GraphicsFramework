@@ -9,6 +9,7 @@ class Light;
 class Shader;
 class VertexArray;
 class ElementArrayBuffer;
+struct ShapeData;
 
 struct Mass
 {
@@ -24,7 +25,7 @@ struct RopeNode
 	glm::vec3 mRotation;
 	glm::vec3 mScale;
 	glm::mat4 mModel;
-	std::pair<VertexArray*, ElementArrayBuffer*> mRenderData;
+	ShapeData* mRenderData;
 };
 
 struct Spring

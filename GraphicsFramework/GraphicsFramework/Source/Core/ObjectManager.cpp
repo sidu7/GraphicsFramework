@@ -1,9 +1,11 @@
 #include "ObjectManager.h"
-#include <algorithm>
+
+#include "Core/Core.h"
 #include "Object.h"
-#include "../opengl/Renderer.h"
-#include "../opengl/Shader.h"
-#include "../utils/JSONHelper.h"
+#include "Core/Scene.h"
+#include "Rendering/Renderer.h"
+#include "Rendering/Shader.h"
+#include "Utils/JSONHelper.h"
 
 Object* ObjectManager::AddObject(std::string path)
 {
@@ -24,10 +26,17 @@ Object* ObjectManager::ReadObject(std::string path)
 
 void ObjectManager::UpdateObjects()
 {
-	for (auto object : mObjects)
+	for (Object* object : mObjects)
 	{
 		object->Update();
-		Renderer::Instance().AddRenderData();
+	}
+}
+
+void ObjectManager::RenderObjects(Shader* shader)
+{
+	for (Object* object : mObjects)
+	{
+		Engine::Instance()->GetScene()->RenderObject(object, shader);
 	}
 }
 

@@ -5,9 +5,8 @@
 
 class Component;
 
-class ComponentManager
+class ComponentManager : public Singleton<ComponentManager>
 {
-	SINGLETON(ComponentManager);
 public:
 	void Init();
 	void Close();

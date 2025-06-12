@@ -28,7 +28,7 @@ public:
 private:
 	void AnimatorUpdate(std::string animName);
 	inline glm::mat4 RotationFromDirection(const glm::vec3& direction);
-	VertexArray CreateBonesData();
+	void DrawBones();
 	template<typename T>
 	inline unsigned int FindLessThaninList(double time, std::vector<std::pair<double, T>> list)
 	{
@@ -43,7 +43,6 @@ private:
 		return 0;
 	}
 	inline glm::vec4 GetPointOnCurve(float t, glm::mat4& controlPointMatrix);
-	VertexArray* CreateVec4VAO(std::vector<glm::vec4>& pointList);
 	void RecalculateMatrices();
 	void CreateAxisLengthTable();
 	inline std::pair<float, int> SearchInTable(float distance);

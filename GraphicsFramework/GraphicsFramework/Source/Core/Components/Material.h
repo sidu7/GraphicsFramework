@@ -2,22 +2,31 @@
 #include "Components.h"
 
 class Texture;
+class UniformBuffer;
+
+struct MaterialDataUBO
+{
+	glm::vec4 mDiffuse;
+	glm::vec4 mSpecular;
+	float mShininess;
+	bool mLighting;
+};
 
 class Material : public Component
 {
-	GF_COMPONENT(Material);
+	COMPONENT(Material);
 public:
 	glm::vec3 mDiffuse;
 	glm::vec3 mDebugColor;
 	glm::vec3 mSpecular;
 	float mShininess;
-	Texture* pTexture = nullptr;
-	bool mWireMesh = false;
-	bool mDebugMesh = false;
-	bool mMesh = true;
-	bool mLighting = true;
+	Texture* pTexture;
+	bool mLighting;
+	UniformBuffer* mMaterialUBO;
 
-	void Update() override;	
+	Material();
 
-	void Serialize(rapidjson::Value::Object data) override;	
+	virtual void Update() override;
+
+	virtual void Serialize(rapidjson::Value::Object data) override;	
 };

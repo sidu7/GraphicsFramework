@@ -4,7 +4,7 @@
 #include "Inputs.h"
 #include "Time.h"
 #include "glm/gtc/matrix_transform.hpp"
-#include "Engine.h"
+#include "Window.h"
 #include "Imgui/imgui.h"
 
 
@@ -16,7 +16,7 @@ void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 	mCameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 	mCameraSide = glm::vec3(0.0f);
 	mCameraRealUp = glm::vec3(0.0f);
-	glm::vec2 wSize = Engine::Instance().GetWindowSize();
+	glm::vec2 wSize = Window::Instance()->GetWindowSize();
 	mProjection = glm::perspective(FOVangle, wSize.x/wSize.y, nearPlane, farPlane);
 	pitch = 0.0f;
 	yaw = -90.0f;
@@ -26,35 +26,35 @@ void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 
 void Camera::Update()
 {
-	if (Inputs::Instance().IsPressed(SDL_SCANCODE_W))
+	if (Inputs::Instance()->IsPressed(SDL_SCANCODE_W))
 	{
-		if (Inputs::Instance().IsMousePressed(SDL_BUTTON_RIGHT))
+		if (Inputs::Instance()->IsMousePressed(SDL_BUTTON_RIGHT))
 		{
-			mCameraPos += mSpeed * Time::Instance().deltaTime * mCameraUp;
+			mCameraPos += mSpeed * Time::Instance()->deltaTime * mCameraUp;
 		}
 		else
 		{
-			mCameraPos += mSpeed * Time::Instance().deltaTime * mCameraFront;
+			mCameraPos += mSpeed * Time::Instance()->deltaTime * mCameraFront;
 		}
 	}
-	if (Inputs::Instance().IsPressed(SDL_SCANCODE_A))
+	if (Inputs::Instance()->IsPressed(SDL_SCANCODE_A))
 	{
-		mCameraPos -= mSpeed * Time::Instance().deltaTime * glm::cross(mCameraFront, mCameraUp);
+		mCameraPos -= mSpeed * Time::Instance()->deltaTime * glm::cross(mCameraFront, mCameraUp);
 	}
-	if (Inputs::Instance().IsPressed(SDL_SCANCODE_S))
+	if (Inputs::Instance()->IsPressed(SDL_SCANCODE_S))
 	{
-		if (Inputs::Instance().IsMousePressed(SDL_BUTTON_RIGHT))
+		if (Inputs::Instance()->IsMousePressed(SDL_BUTTON_RIGHT))
 		{
-			mCameraPos -= mSpeed * Time::Instance().deltaTime * mCameraUp;
+			mCameraPos -= mSpeed * Time::Instance()->deltaTime * mCameraUp;
 		}
 		else
 		{
-			mCameraPos -= mSpeed * Time::Instance().deltaTime * mCameraFront;
+			mCameraPos -= mSpeed * Time::Instance()->deltaTime * mCameraFront;
 		}
 	}
-	if (Inputs::Instance().IsPressed(SDL_SCANCODE_D))
+	if (Inputs::Instance()->IsPressed(SDL_SCANCODE_D))
 	{
-		mCameraPos += mSpeed * Time::Instance().deltaTime * glm::cross(mCameraFront,mCameraUp);
+		mCameraPos += mSpeed * Time::Instance()->deltaTime * glm::cross(mCameraFront,mCameraUp);
 	}
 
 	mPrevView = mView;
@@ -73,8 +73,8 @@ void Camera::MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent)
 		return;
 	}
 
-	glm::vec2 wSize = Engine::Instance().GetWindowSize();
-	if (Inputs::Instance().IsMousePressed(SDL_BUTTON_LEFT))
+	glm::vec2 wSize = Window::Instance()->GetWindowSize();
+	if (Inputs::Instance()->IsMousePressed(SDL_BUTTON_LEFT))
 	{
 		float sensitivity = 0.05f;
 		pitch += (lastMouseY - mouseEvent.y) * sensitivity;

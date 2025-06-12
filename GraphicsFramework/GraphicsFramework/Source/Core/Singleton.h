@@ -1,12 +1,43 @@
 #pragma once
 
-#define SINGLETON(x) private: x() {}		\
-public: x(const x&) = delete;							\
-		x& operator= (const x&) = delete;				\
-		x(x &&) = delete;								\
-		x & operator=(x &&) = delete;					\
-		static x& Instance()				\
-		{												\
-			static x instance;							\
-			return instance;							\
+template<typename Class>
+class Singleton
+{
+public:
+	static Class* Instance()
+	{
+		static Class* instance = nullptr;
+		if (!instance)
+		{
+			instance = new Class();
 		}
+
+		return instance;
+	}
+
+	~Singleton()
+	{
+		delete Instance();
+	}
+};
+
+template<typename Class, typename Factory>
+class SingletonByFactory
+{
+public:
+	static Class* Instance()
+	{
+		static Class* instance = nullptr;
+		if (!instance)
+		{
+			instance = Factory::Create();
+		}
+
+		return instance;
+	}
+
+	~SingletonByFactory()
+	{
+		delete Instance();
+	}
+};

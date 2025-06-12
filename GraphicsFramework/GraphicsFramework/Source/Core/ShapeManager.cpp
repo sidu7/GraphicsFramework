@@ -1,14 +1,17 @@
 #include "ShapeManager.h"
-#include "../opengl/VertexArray.h"
-#include "../opengl/ElementArrayBuffer.h"
-#include "../opengl/VertexBuffer.h"
+
+#include "Core/Core.h"
+#include "Rendering/RenderingFactory.h"
+#include "Rendering/VertexArray.h"
+#include "Rendering/ElementArrayBuffer.h"
+#include "Rendering/VertexBuffer.h"
 #include <algorithm>
 
 void ShapeManager::Init()
 {
 	for(int i = 0; i < SHAPES_NUM; ++i)
 	{
-		mShapes.push_back(std::make_pair(nullptr, nullptr));
+		mShapes.push_back(ShapeData());
 	}
 
 	std::vector<Vertex> vertices;
@@ -23,16 +26,16 @@ void ShapeManager::Init()
 			0, 1
 		};
 
-		VertexBuffer* vbo = new VertexBuffer();
-		VertexArray* vao = new VertexArray();
-		ElementArrayBuffer* ebo = new ElementArrayBuffer();
-		ebo->AddData(&ind[0], 2, sizeof(unsigned int));
-		vao->AddBuffer(*vbo);
-		vbo->AddData(&verts[0], 2 * sizeof(glm::vec3));
-		vao->Push(3, GL_FLOAT, sizeof(float));
-		vao->AddLayout();
-		vao->Unbind();
-		mShapes[LINE] = std::make_pair(vao,ebo);
+		ShapeData& Data = mShapes[LINE];
+		Data.m_VBO = RenderingFactory::Instance()->CreateVertexBuffer();
+		Data.m_VAO = RenderingFactory::Instance()->CreateVertexArray();
+		Data.m_EBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
+		Data.m_EBO->AddData(&ind[0], 2, sizeof(unsigned int));
+		Data.m_VAO->AddBuffer(Data.m_VBO);
+		Data.m_VBO->AddData(&verts[0], 2 * sizeof(glm::vec3));
+		Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
+		Data.m_VAO->AddLayout();
+		Renderer::Instance()->UnbindVertexArray(Data.m_VAO);
 	}
 
 	//WireCube
@@ -57,17 +60,16 @@ void ShapeManager::Init()
 			0, 4, 1, 5, 2, 6, 3, 7
 		};
 
-		VertexBuffer* vbo = new VertexBuffer();
-		VertexArray* vao = new VertexArray();
-		ElementArrayBuffer* ebo = new ElementArrayBuffer();
-		ebo->AddData(&ind[0], 24, sizeof(unsigned int));
-		vao->AddBuffer(*vbo);
-		vbo->AddData(&verts[0], 8 * sizeof(glm::vec3));
-		vao->Push(3, GL_FLOAT, sizeof(float));
-		vao->AddLayout();
-		vao->Unbind();
-
-		mShapes[WIRECUBE] = std::make_pair(vao,ebo);
+		ShapeData& Data = mShapes[WIRECUBE];
+		Data.m_VBO = RenderingFactory::Instance()->CreateVertexBuffer();
+		Data.m_VAO = RenderingFactory::Instance()->CreateVertexArray();
+		Data.m_EBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
+		Data.m_EBO->AddData(&ind[0], 24, sizeof(unsigned int));
+		Data.m_VAO->AddBuffer(Data.m_VBO);
+		Data.m_VBO->AddData(&verts[0], 8 * sizeof(glm::vec3));
+		Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
+		Data.m_VAO->AddLayout();
+		Renderer::Instance()->UnbindVertexArray(Data.m_VAO);
 	}
 
 	//Pyramid
@@ -84,17 +86,16 @@ void ShapeManager::Init()
 			1, 0, 2, 2, 0, 3, 3, 0, 4, 4, 0, 1, 1, 2, 3, 3, 2, 4, 4, 3, 2, 2, 3, 1
 		};
 
-		VertexBuffer* vbo = new VertexBuffer();
-		VertexArray* vao = new VertexArray();
-		ElementArrayBuffer* ebo = new ElementArrayBuffer();
-		ebo->AddData(&ind[0], 24, sizeof(unsigned int));
-		vao->AddBuffer(*vbo);
-		vbo->AddData(&verts[0], 5 * sizeof(glm::vec3));
-		vao->Push(3, GL_FLOAT, sizeof(float));
-		vao->AddLayout();
-		vao->Unbind();
-
-		mShapes[PYRAMID] = std::make_pair(vao, ebo);
+		ShapeData& Data = mShapes[PYRAMID];
+		Data.m_VBO = RenderingFactory::Instance()->CreateVertexBuffer();
+		Data.m_VAO = RenderingFactory::Instance()->CreateVertexArray();
+		Data.m_EBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
+		Data.m_EBO->AddData(&ind[0], 24, sizeof(unsigned int));
+		Data.m_VAO->AddBuffer(Data.m_VBO);
+		Data.m_VBO->AddData(&verts[0], 5 * sizeof(glm::vec3));
+		Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
+		Data.m_VAO->AddLayout();
+		Renderer::Instance()->UnbindVertexArray(Data.m_VAO);
 	}
 	
 	//Quad
@@ -545,38 +546,38 @@ void ShapeManager::Init()
 void ShapeManager::Close()
 {
 	std::for_each(mShapes.begin(), mShapes.end(), 
-		[](std::pair<VertexArray*, ElementArrayBuffer*> x)
+		[](ShapeData& x)
 	{
-		delete x.first;
-		delete x.second;
+		delete x.m_VAO;
+		delete x.m_EBO;
+		delete x.m_VBO;
 	});
 }
 
 void ShapeManager::MakeVAO(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Shapes shape)
 {
-	VertexArray* mpVAO = new VertexArray();
-	ElementArrayBuffer* mpEBO = new ElementArrayBuffer();
-	VertexBuffer mpVBO;
+	ShapeData& Data = mShapes[shape];
+	Data.m_VAO = RenderingFactory::Instance()->CreateVertexArray();
+	Data.m_VBO = RenderingFactory::Instance()->CreateVertexBuffer();
+	Data.m_EBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
 
-	mpVAO->Bind();
+	Renderer::Instance()->BindVertexArray(Data.m_VAO);
 
 	// Send vertex information to VBO
-	mpVBO.AddData(&vertices[0], vertices.size() * sizeof(Vertex));
+	Data.m_VBO->AddData(&vertices[0], vertices.size() * sizeof(Vertex));
 
 	// Set up index buffer EBO
-	mpEBO->AddData(&indices[0], indices.size(),sizeof(unsigned int));
+	Data.m_EBO->AddData(&indices[0], indices.size(),sizeof(unsigned int));
 
 	// Position
-	mpVAO->Push(3, GL_FLOAT, sizeof(float));
+	Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
 	// Normal
-	mpVAO->Push(3, GL_FLOAT, sizeof(float));
+	Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
 	// Texture coordinates
-	mpVAO->Push(2, GL_FLOAT, sizeof(float));
+	Data.m_VAO->Push(2, GL_FLOAT, sizeof(float));
 	// Tangent
 	//mVAO.Push(3, GL_FLOAT, sizeof(float));
-	mpVAO->AddLayout();
+	Data.m_VAO->AddLayout();
 	// Unbind VAO
-	mpVAO->Unbind();
-
-	mShapes[shape] = std::make_pair(mpVAO, mpEBO);
+	Renderer::Instance()->UnbindVertexArray(Data.m_VAO);
 }

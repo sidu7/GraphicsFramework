@@ -5,26 +5,23 @@
 
 class Camera;
 class Scene;
+class Window;
 
-class Engine
+class Engine : public Singleton<Engine>
 {
-	SINGLETON(Engine);
 public:
 	
 	void Start(Scene* scene,int width, int height);
 	void Run();
 	void Stop();
 
-	glm::vec2 GetWindowSize();
-
 	bool appIsRunning;
 	bool stopMoving;
 	bool mPause;
 
-	SDL_Window* pWindow;
-	SDL_GLContext glContext;
-	int scrWidth, scrHeight;
-
+	Camera* GetCamera();
+	inline Scene* GetScene() { return pScene; }
+protected:
 	Camera* pCamera;
 	Scene* pScene;
 };

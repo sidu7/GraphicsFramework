@@ -17,7 +17,9 @@ HeightField::HeightField(int sz)
       grid(sz,sz),
       max_height(1),
       wave_speed(0.1f),
-      wave_dampness(1.7f) {
+      wave_dampness(1.7f),
+	  time(0)
+{
 };
 
 
@@ -28,6 +30,7 @@ void HeightField::initialize(void) {
       grid(i,j) = 0.0f;
     }
   time = 0;
+  max_height = 5;
 }
 
 
@@ -68,6 +71,7 @@ void HeightField::update(double dt)
 			std::complex<float> inside = (u_inext - std::complex<float>(2.0f,0.0f) * grid(i,j) + u_iprev) / std::complex<float>(pow(grid.cellWidth(),2)) + (u_jnext - std::complex<float>(2.0f, 0.0f) * grid(i,j) + u_jprev) / std::complex<float>(pow(grid.cellHeight(),2));
 			std::complex<float> temp = grid(i,j);
 			grid(i,j) = c1 * (c2*grid(i,j) + c3*grid0(i,j) + wave_speed * wave_speed * inside);
+			grid(i, j)._Val[0] = glm::clamp(grid(i, j)._Val[0], 0.0f, max_height);
 			grid0(i,j) = temp;
 		}
 	}

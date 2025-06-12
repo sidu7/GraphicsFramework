@@ -3,7 +3,7 @@
 
 class RotateInCircle : public Component
 {
-	GF_COMPONENT(RotateInCircle);
+	COMPONENT(RotateInCircle);
 public:
 	float mTParam; // Position on circumference of circle
 	float mAngle; // Angular rotation around itself

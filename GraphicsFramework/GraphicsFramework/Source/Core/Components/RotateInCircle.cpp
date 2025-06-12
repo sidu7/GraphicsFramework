@@ -6,12 +6,12 @@
 
 void RotateInCircle::Update()
 {
-	if (Engine::Instance().stopMoving)
+	if (Engine::Instance()->stopMoving)
 	{
 		return;
 	}
-	mAngle += Time::Instance().deltaTime * mRotationFactor;
-	mTParam += Time::Instance().deltaTime;
+	mAngle += Time::Instance()->deltaTime * mRotationFactor;
+	mTParam += Time::Instance()->deltaTime;
 	mOwner->GetComponent<Transform>()->mPosition.x = mRadius * glm::cos(mTParam * mSpeed);
 	mOwner->GetComponent<Transform>()->mPosition.z = mRadius * glm::sin(mTParam * mSpeed);
 	mOwner->GetComponent<Transform>()->mRotation.y = mAngle;

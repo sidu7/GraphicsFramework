@@ -1,11 +1,6 @@
 #pragma once
-#include "rapidjson/document.h"
-#include "glm/glm.hpp"
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-#include <vector>
-#include <fstream>
-#include <iostream>
+
+#include "Core/Core.h"
 
 #ifdef _MSC_VER   
 #undef GetObject

@@ -1,9 +1,8 @@
 #pragma once
 #include "Singleton.h"
 
-class ImguiManager
+class ImguiManager : public Singleton<ImguiManager>
 {
-	SINGLETON(ImguiManager)
 public:
 	void Init();
 	void StartFrame();

@@ -6,16 +6,16 @@
 
 void Move::Update()
 {
-	if (Engine::Instance().stopMoving)
+	if (Engine::Instance()->stopMoving)
 	{
 		return;
 	}
-	mWaitTime += Time::Instance().deltaTime;
+	mWaitTime += Time::Instance()->deltaTime;
 	if (mWaiting && mWaitTime < mWait)
 	{
 		return;
 	}
-	float deltaTime = Time::Instance().deltaTime;
+	float deltaTime = Time::Instance()->deltaTime;
 	mCurrentTime += deltaTime;
 	if (mHorizontal)
 	{

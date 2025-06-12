@@ -32,4 +32,5 @@ private:
 	int mTriCount;
 	std::vector<glm::vec3> mMeshPositions, mMeshNormals;
 	glm::vec3 mDiffuseColor;
+	float mWaveIntensity;
 };

@@ -1,5 +1,5 @@
 #include <iostream>
-#include <core/Engine.h>
+#include "Core/Engine.h"
 #include "Flocking.h"
 
 int main(int argc, char* args[])
@@ -8,9 +8,9 @@ int main(int argc, char* args[])
 
 	Flocking proj;
 	
-	Engine::Instance().Start(&proj,1280,720);
-	Engine::Instance().Run();
-	Engine::Instance().Stop();
+	Engine::Instance()->Start(&proj,1280,720);
+	Engine::Instance()->Run();
+	Engine::Instance()->Stop();
 
 	//system("pause");
 	return 0;

@@ -11,9 +11,9 @@ int main(int argc, char* args[])
 	AnimationScene proj;
 	//Mechanics proj;
 	
-	Engine::Instance().Start(&proj,1280,720);
-	Engine::Instance().Run();
-	Engine::Instance().Stop();
+	Engine::Instance()->Start(&proj,1280,720);
+	Engine::Instance()->Run();
+	Engine::Instance()->Stop();
 
 	//system("pause");
 	return 0;

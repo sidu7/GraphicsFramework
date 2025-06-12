@@ -207,6 +207,7 @@
     <ClCompile Include="src\MotionBlur.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="res\shaders\Imgui.h" />
     <ClInclude Include="src\AllProjects.h" />
     <ClInclude Include="src\MotionBlur.h" />
   </ItemGroup>
@@ -214,6 +215,72 @@
     <ProjectReference Include="..\GraphicsFramework\GraphicsFramework.vcxproj">
       <Project>{dfd84cf5-8909-4fce-a28f-58f0a7e524f0}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\JSON Data\Circle Teapot1.json" />
+    <None Include="res\JSON Data\Circle Teapot2.json" />
+    <None Include="res\JSON Data\ControlPoints.json" />
+    <None Include="res\JSON Data\Floor.json" />
+    <None Include="res\JSON Data\LeftRight Teapot1.json" />
+    <None Include="res\JSON Data\LeftRight Teapot2.json" />
+    <None Include="res\JSON Data\SkyDome.json" />
+    <None Include="res\JSON Data\Teapot1.json" />
+    <None Include="res\JSON Data\Teapot2.json" />
+    <None Include="res\JSON Data\Teapot3.json" />
+    <None Include="res\JSON Data\Teapot4.json" />
+    <None Include="res\JSON Data\Teapot5.json" />
+    <None Include="res\JSON Data\Teapot6.json" />
+    <None Include="res\JSON Data\Teapot7.json" />
+    <None Include="res\JSON Data\Teapot8.json" />
+    <None Include="res\JSON Data\UpDown Teapot1.json" />
+    <None Include="res\JSON Data\UpDown Teapot2.json" />
+    <None Include="res\motionblur\Ambient.frag" />
+    <None Include="res\motionblur\Ambient.vert" />
+    <None Include="res\motionblur\GBuffer.frag" />
+    <None Include="res\motionblur\GBuffer.vert" />
+    <None Include="res\motionblur\Lighting.frag" />
+    <None Include="res\motionblur\Lighting.vert" />
+    <None Include="res\motionblur\MotionBlur.frag" />
+    <None Include="res\motionblur\MotionBlur.vert" />
+    <None Include="res\motionblur\NeighbourMax.frag" />
+    <None Include="res\motionblur\NeighbourMax.vert" />
+    <None Include="res\motionblur\Reconstruction.frag" />
+    <None Include="res\motionblur\Reconstruction.vert" />
+    <None Include="res\motionblur\TileMax.frag" />
+    <None Include="res\motionblur\TileMax.vert" />
+    <None Include="res\shaders\Ambient.frag" />
+    <None Include="res\shaders\Ambient.vert" />
+    <None Include="res\shaders\AO.frag" />
+    <None Include="res\shaders\AO.vert" />
+    <None Include="res\shaders\Blur.frag" />
+    <None Include="res\shaders\Blur.vert" />
+    <None Include="res\shaders\Drawing.frag" />
+    <None Include="res\shaders\Drawing.vert" />
+    <None Include="res\shaders\Lighting.frag" />
+    <None Include="res\shaders\Lighting.vert" />
+    <None Include="res\shaders\LocalLight.frag" />
+    <None Include="res\shaders\LocalLight.vert" />
+    <None Include="res\shaders\Shadow.frag" />
+    <None Include="res\shaders\Shadow.vert" />
+    <None Include="res\shaders\SkyDome.frag" />
+    <None Include="res\shaders\SkyDome.vert" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\shaders\BilateralHorizontal.compute">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="res\shaders\BilateralVertical.compute">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="res\shaders\BlurHorizontal.compute">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="res\shaders\BlurVertical.compute">
+      <FileType>Document</FileType>
+    </None>
+    <None Include="res\shaders\Irradiance.compute">
+      <FileType>Document</FileType>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

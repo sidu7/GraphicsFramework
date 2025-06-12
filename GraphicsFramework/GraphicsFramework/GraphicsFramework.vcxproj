@@ -96,7 +96,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\ThirdParty;$(SolutionDir)GraphicsFramework\Source;$(SolutionDir)GraphicsFramework\ThirdParty\Imgui;$(SolutionDir)GraphicsFramework\ThirdParty\SDL\include;$(SolutionDir)GraphicsFramework\ThirdParty\GLEW\include;$(SolutionDir)GraphicsFramework\ThirdParty\vulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;RENDERER_VULKAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
@@ -117,7 +117,7 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_OpenGL|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\ThirdParty;$(SolutionDir)GraphicsFramework\Source;$(SolutionDir)GraphicsFramework\ThirdParty\Imgui;$(SolutionDir)GraphicsFramework\ThirdParty\SDL\include;$(SolutionDir)GraphicsFramework\ThirdParty\GLEW\include;$(SolutionDir)GraphicsFramework\ThirdParty\vulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;RENDERER_OPENGL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
@@ -138,7 +138,7 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_DX12|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\ThirdParty;$(SolutionDir)GraphicsFramework\Source;$(SolutionDir)GraphicsFramework\ThirdParty\Imgui;$(SolutionDir)GraphicsFramework\ThirdParty\SDL\include;$(SolutionDir)GraphicsFramework\ThirdParty\GLEW\include;$(SolutionDir)GraphicsFramework\ThirdParty\vulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;RENDERER_DX12;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
@@ -164,7 +164,7 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;RENDERER_DX12;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -179,7 +179,7 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;RENDERER_VULKAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -194,7 +194,7 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\vendor;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>GLEW_STATIC;WINDOWS_IGNORE_PACKING_MISMATCH;IMGUI_IMPL_OPENGL_LOADER_GLEW;RENDERER_OPENGL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Lib>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;glew32s.lib;opengl32.lib;assimp-vc141-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -202,6 +202,7 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="res\crysis-nano-suit-2\scene.fbx" />
     <None Include="res\gh_sample_animation.fbx" />
     <None Include="res\JSON Data\ControlPoints.json" />
@@ -242,19 +243,25 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
     <ClCompile Include="Source\Core\ObjectManager.cpp" />
     <ClCompile Include="Source\Core\ShapeManager.cpp" />
     <ClCompile Include="Source\Core\Time.cpp" />
-    <ClCompile Include="Source\OpenGL\ComputeShader.cpp" />
-    <ClCompile Include="Source\OpenGL\ElementArrayBuffer.cpp" />
-    <ClCompile Include="Source\OpenGL\FrameBuffer.cpp" />
-    <ClCompile Include="Source\OpenGL\Mesh.cpp" />
-    <ClCompile Include="Source\OpenGL\Model.cpp" />
-    <ClCompile Include="Source\OpenGL\Quaternion.cpp" />
-    <ClCompile Include="Source\OpenGL\Renderer.cpp" />
-    <ClCompile Include="Source\OpenGL\Shader.cpp" />
-    <ClCompile Include="Source\OpenGL\ShaderStorageBuffer.cpp" />
-    <ClCompile Include="Source\OpenGL\Texture.cpp" />
-    <ClCompile Include="Source\OpenGL\UniformBuffer.cpp" />
-    <ClCompile Include="Source\OpenGL\VertexArray.cpp" />
-    <ClCompile Include="Source\OpenGL\VertexBuffer.cpp" />
+    <ClCompile Include="Source\Core\Window.cpp" />
+    <ClCompile Include="Source\Rendering\Mesh.cpp" />
+    <ClCompile Include="Source\Rendering\Model.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\ComputeShader_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\ElementArrayBuffer_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\FrameBuffer_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\Renderer_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\RenderingFactory_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\ShaderStorageBuffer_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\Shader_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\Texture_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\UniformBuffer_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\VertexArray_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\VertexBuffer_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\OpenGL\Window_OpenGL.cpp" />
+    <ClCompile Include="Source\Rendering\Quaternion.cpp" />
+    <ClCompile Include="Source\Rendering\Renderer.cpp" />
+    <ClCompile Include="Source\Rendering\RenderingFactorySelector.cpp" />
+    <ClCompile Include="Source\Rendering\Vulkan\Window_Vulkan.cpp" />
     <ClCompile Include="ThirdParty\Imgui\imgui.cpp" />
     <ClCompile Include="ThirdParty\Imgui\imgui_demo.cpp" />
     <ClCompile Include="ThirdParty\Imgui\imgui_draw.cpp" />
@@ -286,19 +293,35 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
     <ClInclude Include="Source\Core\ShapeManager.h" />
     <ClInclude Include="Source\Core\Singleton.h" />
     <ClInclude Include="Source\Core\Time.h" />
-    <ClInclude Include="Source\OpenGL\ComputeShader.h" />
-    <ClInclude Include="Source\OpenGL\ElementArrayBuffer.h" />
-    <ClInclude Include="Source\OpenGL\FrameBuffer.h" />
-    <ClInclude Include="Source\OpenGL\Mesh.h" />
-    <ClInclude Include="Source\OpenGL\Model.h" />
-    <ClInclude Include="Source\OpenGL\Quaternion.h" />
-    <ClInclude Include="Source\OpenGL\Renderer.h" />
-    <ClInclude Include="Source\OpenGL\Shader.h" />
-    <ClInclude Include="Source\OpenGL\ShaderStorageBuffer.h" />
-    <ClInclude Include="Source\OpenGL\Texture.h" />
-    <ClInclude Include="Source\OpenGL\UniformBuffer.h" />
-    <ClInclude Include="Source\OpenGL\VertexArray.h" />
-    <ClInclude Include="Source\OpenGL\VertexBuffer.h" />
+    <ClInclude Include="Source\Core\Window.h" />
+    <ClInclude Include="Source\Rendering\ComputeShader.h" />
+    <ClInclude Include="Source\Rendering\ElementArrayBuffer.h" />
+    <ClInclude Include="Source\Rendering\FrameBuffer.h" />
+    <ClInclude Include="Source\Rendering\Mesh.h" />
+    <ClInclude Include="Source\Rendering\Model.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\ComputeShader_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\ElementArrayBuffer_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\FrameBuffer_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\Renderer_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\RenderingFactory_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\ShaderStorageBuffer_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\Shader_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\Texture_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\UniformBuffer_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\VertexArray_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\VertexBuffer_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\OpenGL\Window_OpenGL.h" />
+    <ClInclude Include="Source\Rendering\Quaternion.h" />
+    <ClInclude Include="Source\Rendering\Renderer.h" />
+    <ClInclude Include="Source\Rendering\RenderingFactory.h" />
+    <ClInclude Include="Source\Rendering\Shader.h" />
+    <ClInclude Include="Source\Rendering\ShaderStorageBuffer.h" />
+    <ClInclude Include="Source\Rendering\Texture.h" />
+    <ClInclude Include="Source\Rendering\UniformBuffer.h" />
+    <ClInclude Include="Source\Rendering\VertexArray.h" />
+    <ClInclude Include="Source\Rendering\VertexBuffer.h" />
+    <ClInclude Include="Source\Rendering\Vulkan\Window_Vulkan.h" />
+    <ClInclude Include="Source\Utils\FileHelper.h" />
     <ClInclude Include="Source\Utils\JSONHelper.h" />
     <ClInclude Include="Source\Utils\MathHelper.h" />
     <ClInclude Include="Source\Utils\Random.h" />

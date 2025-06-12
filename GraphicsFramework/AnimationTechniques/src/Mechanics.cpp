@@ -6,8 +6,9 @@
 #include "core/Inputs.h"
 #include "core/Time.h"
 #include "core/ShapeManager.h"
-#include "opengl/Shader.h"
-#include "opengl/Renderer.h"
+#include "Rendering/Shader.h"
+#include "Rendering/Renderer.h"
+#include "Rendering/RenderingFactory.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <Imgui/imgui.h>
@@ -20,11 +21,12 @@ void Mechanics::Init()
 {
 	mLight = new Light(glm::vec3(10.0, 100.0, 40.0));
 
-	Engine::Instance().pCamera->mCameraPos = glm::vec3(20.0f, 23.0f, 60.0f);
-	Engine::Instance().pCamera->pitch = -20.0f;
-	Engine::Instance().pCamera->CalculateFront();
+	Engine::Instance()->GetCamera()->mCameraPos = glm::vec3(20.0f, 23.0f, 60.0f);
+	Engine::Instance()->GetCamera()->pitch = -20.0f;
+	Engine::Instance()->GetCamera()->CalculateFront();
 
-	Drawing = new Shader("src/animshaders/Drawing.vert", "src/animshaders/Drawing.frag");
+	Drawing = RenderingFactory::Instance()->CreateShader();
+	Drawing->Init("src/animshaders/Drawing.vert", "src/animshaders/Drawing.frag");
 
 	NodeCount = 80;
 	Time = 0.0f;
@@ -49,7 +51,7 @@ void Mechanics::Init()
 		node.mRotation = glm::vec3(0.0);
 		node.mScale = glm::vec3(0.5, 0.5, 0.5);
 		node.mModel = glm::mat4(1.0f);
-		node.mRenderData = ShapeManager::Instance().mShapes[Shapes::CUBE];
+		node.mRenderData = &ShapeManager::Instance()->mShapes[Shapes::CUBE];
 		mRopeNodes.emplace_back(node);
 	}
 
@@ -64,7 +66,7 @@ void Mechanics::Init()
 	node.mRotation = glm::vec3(0.0);
 	node.mScale = glm::vec3(0.6, 0.6, 0.6);
 	node.mModel = glm::mat4(1.0f);
-	node.mRenderData = ShapeManager::Instance().mShapes[Shapes::SPHERE];
+	node.mRenderData = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
 	mRopeNodes.emplace_back(node);
 
 	NodeCount = 6;
@@ -75,7 +77,7 @@ void Mechanics::Init()
 		node.mRotation = glm::vec3(0.0);
 		node.mScale = glm::vec3(2.0, 0.4, 0.4);
 		node.mModel = glm::mat4(1.0f);
-		node.mRenderData = ShapeManager::Instance().mShapes[Shapes::CUBE];
+		node.mRenderData = ShapeManager::Instance()->mShapes[Shapes::CUBE];
 		mRopeNodes.emplace_back(node);
 	}
 
@@ -83,13 +85,13 @@ void Mechanics::Init()
 	node.mRotation = glm::vec3(0.0);
 	node.mScale = glm::vec3(0.6, 0.6, 0.6);
 	node.mModel = glm::mat4(1.0f);
-	node.mRenderData = ShapeManager::Instance().mShapes[Shapes::SPHERE];
+	node.mRenderData = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
 	mRopeNodes.emplace_back(node);*/
 }
 
 void Mechanics::Update()
 {
-	float deltaTime = Time::Instance().deltaTime;
+	float deltaTime = Time::Instance()->deltaTime;
 
 	Time += deltaTime;
 
@@ -107,58 +109,58 @@ void Mechanics::Update()
 		Simulate(deltaTime);
 	}
 
-	deltaTime = Time::Instance().deltaTime;
+	deltaTime = Time::Instance()->deltaTime;
 
-	if (Inputs::Instance().IsPressed(SDL_SCANCODE_LSHIFT))
+	if (Inputs::Instance()->IsPressed(SDL_SCANCODE_LSHIFT))
 	{
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_Y))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_Y))
 		{
 			mRopeConnectionPosition1 += glm::vec3(0.0f, mRopeConnectionVelocity * deltaTime, 0.0f);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_H))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_H))
 		{
 			mRopeConnectionPosition1 -= glm::vec3(0.0f, mRopeConnectionVelocity * deltaTime, 0.0f);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_UP))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_UP))
 		{
 			mRopeConnectionPosition2 += glm::vec3(0.0f, mRopeConnectionVelocity * deltaTime, 0.0f);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_DOWN))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_DOWN))
 		{
 			mRopeConnectionPosition2 -= glm::vec3(0.0f, mRopeConnectionVelocity * deltaTime, 0.0f);
 		}
 	}
 	else
 	{
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_Y))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_Y))
 		{
 			mRopeConnectionPosition1 -= glm::vec3(0.0f, 0.0f, mRopeConnectionVelocity * deltaTime);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_H))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_H))
 		{
 			mRopeConnectionPosition1 += glm::vec3(0.0f, 0.0f, mRopeConnectionVelocity * deltaTime);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_G))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_G))
 		{
 			mRopeConnectionPosition1 -= glm::vec3(mRopeConnectionVelocity * deltaTime, 0.0f, 0.0f);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_J))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_J))
 		{
 			mRopeConnectionPosition1 += glm::vec3(mRopeConnectionVelocity * deltaTime, 0.0f, 0.0f);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_UP))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_UP))
 		{
 			mRopeConnectionPosition2 -= glm::vec3(0.0f, 0.0f, mRopeConnectionVelocity * deltaTime);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_DOWN))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_DOWN))
 		{
 			mRopeConnectionPosition2 += glm::vec3(0.0f, 0.0f, mRopeConnectionVelocity * deltaTime);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_RIGHT))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_RIGHT))
 		{
 			mRopeConnectionPosition2 += glm::vec3(mRopeConnectionVelocity * deltaTime, 0.0f, 0.0f);
 		}
-		if (Inputs::Instance().IsPressed(SDL_SCANCODE_LEFT))
+		if (Inputs::Instance()->IsPressed(SDL_SCANCODE_LEFT))
 		{
 			mRopeConnectionPosition2 -= glm::vec3(mRopeConnectionVelocity * deltaTime, 0.0f, 0.0f);
 		}
@@ -170,9 +172,9 @@ void Mechanics::Update()
 
 	Drawing->SetUniform3f("lightPos", mLight->position.x, mLight->position.y, mLight->position.z);
 	Drawing->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
-	Drawing->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance().pCamera->mView));
-	Drawing->SetUniformMat4f("projection", Engine::Instance().pCamera->mProjection);
-	Drawing->SetUniformMat4f("view", Engine::Instance().pCamera->mView);
+	Drawing->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
+	Drawing->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
+	Drawing->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
 
 	Drawing->SetUniform1i("lighting", 1);
 	//Draw Rope
@@ -191,7 +193,7 @@ void Mechanics::Update()
 		Drawing->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
 		Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
 		Drawing->SetUniform1f("shininess", 1.0f);
-		Renderer::Instance().Draw(*node.mRenderData.first, *node.mRenderData.second, *Drawing);
+		Renderer::Instance()->Draw(*node.mRenderData->m_VAO, *node.mRenderData->m_EBO, *Drawing);
 	}
 
 	//Floor
@@ -204,8 +206,8 @@ void Mechanics::Update()
 	Drawing->SetUniform3f("diffuse", 0.0f, 0.5f, 0.0f);
 	Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
 	Drawing->SetUniform1f("shininess", 1.0f);
-	std::pair<VertexArray*, ElementArrayBuffer*> shape = ShapeManager::Instance().mShapes[Shapes::QUAD];
-	Renderer::Instance().Draw(*shape.first, *shape.second, *Drawing);*/
+	std::pair<VertexArray*, ElementArrayBuffer*> shape = ShapeManager::Instance()->mShapes[Shapes::QUAD];
+	Renderer::Instance()->Draw(*shape.first, *shape.second, *Drawing);*/
 }
 
 void Mechanics::DebugDisplay()
@@ -264,7 +266,7 @@ void Mechanics::Solve()
 
 void Mechanics::Apply(float time)
 {
-	//float deltaTime = Time::Instance().deltaTime;
+	//float deltaTime = Time::Instance()->deltaTime;
 	float deltaTime = time;
 	for (int i = 0; i < mRopeNodes.size(); ++i)
 	{

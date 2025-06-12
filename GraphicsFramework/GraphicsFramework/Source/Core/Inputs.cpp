@@ -4,6 +4,7 @@
 #include "Inputs.h"
 #include "Engine.h"
 #include "Camera.h"
+#include "Window.h"
 
 void Inputs::Init()
 {
@@ -23,7 +24,7 @@ void Inputs::Update()
 	{
 		if (e.type == SDL_QUIT)
 		{
-			Engine::Instance().appIsRunning = false;
+			Engine::Instance()->appIsRunning = false;
 		}
 		if (e.type == SDL_MOUSEBUTTONDOWN)
 		{
@@ -35,7 +36,7 @@ void Inputs::Update()
 		}
 		if (e.type == SDL_MOUSEMOTION)
 		{
-			Engine::Instance().pCamera->MouseMotionCallBack(e.motion);
+			Engine::Instance()->GetCamera()->MouseMotionCallBack(e.motion);
 		}
 	}
 
@@ -126,7 +127,7 @@ glm::vec2 Inputs::GetMouseLocation()
 	int x, y;
 	SDL_GetMouseState(&x, &y);
 	int w, h;
-	SDL_GetWindowSize(Engine::Instance().pWindow, &w, &h);
+	SDL_GetWindowSize(Window::Instance()->GetWindow(), &w, &h);
 	return glm::vec2(x ,h - y);
 }
 

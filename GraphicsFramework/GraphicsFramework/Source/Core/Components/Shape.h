@@ -4,15 +4,20 @@
 class VertexArray;
 class ElementArrayBuffer;
 enum Shapes;
+struct ShapeData;
 
 class Shape : public Component
 {
-	GF_COMPONENT(Shape);
+	COMPONENT(Shape);
 public:
-	std::pair<VertexArray*, ElementArrayBuffer*> mShapeData;
+	Shape();
+
+	ShapeData* mShapeData;
 	Shapes mShape;
 
-	void Update() override;
+	bool mWireMesh;
+	bool mDebugMesh;
+	bool mMesh;
 
 	void Serialize(rapidjson::Value::Object data) override;
 };

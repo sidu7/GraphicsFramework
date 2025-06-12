@@ -1,7 +1,6 @@
 #pragma once
-#include <random>
-#include <chrono>
-#include <functional>
+
+#include "Core/Core.h"
 
 // Usage:
 // auto randomizer = Random::Range(1, 6); // call this once

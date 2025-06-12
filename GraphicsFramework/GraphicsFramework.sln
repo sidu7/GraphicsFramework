@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RealTimeRayTracing", "RealT
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WaveSimulation", "WaveSimulation\WaveSimulation.vcxproj", "{F428B73C-26CE-4A68-9A39-0BBB962CCFA5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanTest", "VulkanTest\VulkanTest.vcxproj", "{5D44F401-ACDF-414F-A504-AD518F8DA970}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug_DX12|x64 = Debug_DX12|x64
@@ -97,6 +99,18 @@ Global
 		{F428B73C-26CE-4A68-9A39-0BBB962CCFA5}.Release_OpenGL|x64.Build.0 = Release_OpenGL|x64
 		{F428B73C-26CE-4A68-9A39-0BBB962CCFA5}.Release_Vulkan|x64.ActiveCfg = Release_Vulkan|x64
 		{F428B73C-26CE-4A68-9A39-0BBB962CCFA5}.Release_Vulkan|x64.Build.0 = Release_Vulkan|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Debug_DX12|x64.ActiveCfg = Debug|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Debug_DX12|x64.Build.0 = Debug|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Debug_OpenGL|x64.ActiveCfg = Debug|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Debug_OpenGL|x64.Build.0 = Debug|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Debug_Vulkan|x64.ActiveCfg = Debug|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Debug_Vulkan|x64.Build.0 = Debug|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Release_DX12|x64.ActiveCfg = Release|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Release_DX12|x64.Build.0 = Release|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Release_OpenGL|x64.ActiveCfg = Release|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Release_OpenGL|x64.Build.0 = Release|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Release_Vulkan|x64.ActiveCfg = Release|x64
+		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Release_Vulkan|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

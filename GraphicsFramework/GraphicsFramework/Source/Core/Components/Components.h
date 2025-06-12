@@ -9,20 +9,6 @@ class Object;
 class Shader;
 
 #define COMPONENT(x) public:										\
-					x() : Component(#x) {}							\
-					std::type_index GetIndex()						\
-					{												\
-						return std::type_index(typeid(x));			\
-					}												\
-					private:										\
-					static x instance;								\
-					x* New()										\
-					{												\
-						return new x();								\
-					}
-
-#define GF_COMPONENT(x) public:										\
-					x() : Component() {}							\
 					std::type_index GetIndex()						\
 					{												\
 						return std::type_index(typeid(x));			\
@@ -38,10 +24,10 @@ class Component
 public:
 	Object* mOwner;
 
-	Component() = default;
+	Component() : mOwner(nullptr) {}
 	Component(std::string name);
 	
-	virtual void Update() = 0;
+	virtual void Update() {}
 	virtual void Serialize(rapidjson::Value::Object data) = 0;
 	virtual Component* New() = 0;
 	virtual std::type_index GetIndex() = 0;
@@ -49,5 +35,5 @@ public:
 
 inline Component::Component(std::string name)
 {
-	ComponentManager::Instance().mComponentsMap[name] = this;
+	ComponentManager::Instance()->mComponentsMap[name] = this;
 }

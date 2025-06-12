@@ -3,9 +3,8 @@
 #include "Singleton.h"
 #include <glm/glm.hpp>
 
-class Inputs
+class Inputs : public Singleton<Inputs>
 {
-	SINGLETON(Inputs)
 public:	
 	void Init();
 	void Update();

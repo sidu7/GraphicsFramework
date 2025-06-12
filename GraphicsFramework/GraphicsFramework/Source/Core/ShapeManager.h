@@ -5,6 +5,7 @@
 
 class VertexArray;
 class ElementArrayBuffer;
+class VertexBuffer;
 
 struct Vertex
 {
@@ -25,14 +26,19 @@ enum Shapes
 	SHAPES_NUM
 };
 
-
-class ShapeManager
+struct ShapeData
 {
-	SINGLETON(ShapeManager)
+	VertexArray* m_VAO = nullptr;
+	ElementArrayBuffer* m_EBO = nullptr;
+	VertexBuffer* m_VBO = nullptr;
+};
+
+class ShapeManager : public Singleton<ShapeManager>
+{
 public:	
 	void Init();
 	void Close();
-	std::vector<std::pair<VertexArray*, ElementArrayBuffer*>> mShapes;
+	std::vector<ShapeData> mShapes;
 
 private:
 	void MakeVAO(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Shapes shape);

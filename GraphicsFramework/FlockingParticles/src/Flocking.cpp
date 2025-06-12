@@ -1,20 +1,20 @@
 #include "Flocking.h"
 
-#include "core/Engine.h"
-#include "core/Camera.h"
-#include "core/Light.h"
-#include "core/Object.h"
-#include "core/Time.h"
-#include "core/ObjectManager.h"
-#include "core/Components/Transform.h"
-#include "core/Components/Material.h"
-#include "opengl/Shader.h"
-#include "opengl/Renderer.h"
-#include "utils/Random.h"
-#include "utils/JSONHelper.h"
+#include "Core/Engine.h"
+#include "Core/Camera.h"
+#include "Core/Light.h"
+#include "Core/Object.h"
+#include "Core/Time.h"
+#include "Core/ObjectManager.h"
+#include "Core/Components/Transform.h"
+#include "Core/Components/Material.h"
+#include "Rendering/Shader.h"
+#include "Rendering/Renderer.h"
+#include "Rendering/RenderingFactory.h"
+#include "Utils/Random.h"
+#include "Utils/JSONHelper.h"
 
 #include "Flock.h"
-#include <glm/gtx/norm.inl>
 #include <Imgui/imgui.h>
 #include "Obstacle.h"
 
@@ -29,66 +29,67 @@ void Flocking::Init()
 {
 	mLight = new Light(glm::vec3(10.0, 100.0, 40.0));
 
-	Renderer::Instance().SetClearColor(glm::vec3(0.461305, 0.627375, 0.627375));
+	Renderer::Instance()->SetClearColor(glm::vec3(0.461305, 0.627375, 0.627375));
 	
-	Engine::Instance().pCamera->mCameraPos = glm::vec3(-34.0f, 20.0f, 60.0f);
-	Engine::Instance().pCamera->pitch = -19.0f;
-	Engine::Instance().pCamera->yaw = -58.4f;	
-	Engine::Instance().pCamera->mSpeed *= 2;
-	Engine::Instance().pCamera->CalculateFront();
+	Engine::Instance()->GetCamera()->mCameraPos = glm::vec3(-34.0f, 20.0f, 60.0f);
+	Engine::Instance()->GetCamera()->pitch = -19.0f;
+	Engine::Instance()->GetCamera()->yaw = -58.4f;	
+	Engine::Instance()->GetCamera()->mSpeed *= 2;
+	Engine::Instance()->GetCamera()->CalculateFront();
 
-	mShader = new Shader("res/shaders/Drawing.vert", "res/shaders/Drawing.frag");
+	mShader = RenderingFactory::Instance()->CreateShader();
+	mShader->Init("res/shaders/Drawing.vert", "res/shaders/Drawing.frag");
 
 	mAvoidDistance = 2.0f;
 	
-	Boundary = ObjectManager::Instance().AddObject("res/data/Boundary.json");
+	Boundary = ObjectManager::Instance()->AddObject("res/data/Boundary.json");
 	AddBoxObstacle(Boundary->GetComponent<Transform>(), mAvoidDistance, false);
 		
-	/*Object* box = ObjectManager::Instance().AddObject("res/data/Box.json");	
+	/*Object* box = ObjectManager::Instance()->AddObject("res/data/Box.json");	
 	Transform* btrans = box->GetComponent<Transform>();
 	btrans->mPosition = glm::vec3(10.0f, 0.0f, 0.0f);
 	AddBoxObstacle(btrans, 0.5f);
-	box = ObjectManager::Instance().AddObject("res/data/Box.json");
+	box = ObjectManager::Instance()->AddObject("res/data/Box.json");
 	btrans = box->GetComponent<Transform>();
 	btrans->mPosition = glm::vec3(-10.0f, 0.0f, 0.0f);
 	AddBoxObstacle(btrans, 0.5f);*/
 	
-	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	SphereObstacle = ObjectManager::Instance()->AddObject("res/data/Obstacle.json");
 	Transform* trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(10.0f, 10.0f, 10.0f);
 	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
-	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	SphereObstacle = ObjectManager::Instance()->AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(-10.0f, -10.0f, -10.0f);
 	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
-	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	SphereObstacle = ObjectManager::Instance()->AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(10.0f, 10.0f, -10.0f);
 	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
-	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	SphereObstacle = ObjectManager::Instance()->AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(-10.0f, -10.0f, 10.0f);
 	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
-	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	SphereObstacle = ObjectManager::Instance()->AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(-10.0f, 10.0f, -10.0f);
 	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 	
-	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	SphereObstacle = ObjectManager::Instance()->AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(10.0f, -10.0f, 10.0f);
 	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
-	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	SphereObstacle = ObjectManager::Instance()->AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(10.0f, -10.0f, -10.0f);
 	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
 
-	SphereObstacle = ObjectManager::Instance().AddObject("res/data/Obstacle.json");
+	SphereObstacle = ObjectManager::Instance()->AddObject("res/data/Obstacle.json");
 	trans = SphereObstacle->GetComponent<Transform>();
 	trans->mPosition = glm::vec3(-10.0f, 10.0f, 10.0f);
 	mObstacles.push_back(new Sphere(trans->mPosition, trans->mScale.x, mAvoidDistance));
@@ -108,14 +109,14 @@ void Flocking::Init()
 	mCohesionWeight = 1;
 	mSeparateWeight = 5.5f;
 	mFPS = 0;
-	Time::Instance().SetFrameRate(mFPS);
+	Time::Instance()->SetFrameRate(mFPS);
 	
 	auto rand = Random::Range(-1.0f, 1.0f);
 	auto rand2 = Random::Range();
 	glm::vec3 Y(0.0f, 1.0f, 0.0f);
 	for(int i = 0; i < 250; ++i)
 	{
-		Object* fish = ObjectManager::Instance().AddObject("res/data/Fish.json");
+		Object* fish = ObjectManager::Instance()->AddObject("res/data/Fish.json");
 		Flock* flock = fish->GetComponent<Flock>();
 		Transform* transform = fish->GetComponent<Transform>();
 		Material* material = fish->GetComponent<Material>();
@@ -130,23 +131,23 @@ void Flocking::Init()
 		mFishes.push_back(fish);
 	}
 	
-	ObjectManager::Instance().AddObject("res/data/Floor.json");
-	Engine::Instance().mPause = false;
+	ObjectManager::Instance()->AddObject("res/data/Floor.json");
+	Engine::Instance()->mPause = false;
 }
 
 void Flocking::Update()
 {	
 	mShader->Bind();
-	mShader->SetUniformMat4f("view", Engine::Instance().pCamera->mView);
-	mShader->SetUniformMat4f("prevview", Engine::Instance().pCamera->mPrevView);
-	mShader->SetUniformMat4f("projection", Engine::Instance().pCamera->mProjection);
-	mShader->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance().pCamera->mView));
+	mShader->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
+	mShader->SetUniformMat4f("prevview", Engine::Instance()->GetCamera()->mPrevView);
+	mShader->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
+	mShader->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
 	mShader->SetUniform3f("lightPos", mLight->position);
 	mShader->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
 	
-	ObjectManager::Instance().UpdateObjects();
-	Renderer::Instance().DrawAllObjects(mShader);
-	if (!Engine::Instance().mPause)
+	ObjectManager::Instance()->UpdateObjects();
+	Renderer::Instance()->DrawAllObjects(mShader);
+	if (!Engine::Instance()->mPause)
 	{
 #pragma omp parallel for schedule(dynamic, 1) // Magic: Multi-thread y loop
 		for (auto fish : mFishes)
@@ -177,15 +178,15 @@ void Flocking::Update()
 
 void Flocking::DebugDisplay()
 {
-	ImGui::Checkbox("Pause Simulation", &Engine::Instance().mPause);
+	ImGui::Checkbox("Pause Simulation", &Engine::Instance()->mPause);
 	ImGui::InputInt("FrameRate", &mFPS);
 	if(ImGui::Button("Set FrameRate"))
 	{
-		Time::Instance().SetFrameRate(mFPS);
+		Time::Instance()->SetFrameRate(mFPS);
 	}
 	if(ImGui::Button("Reset FrameRate"))
 	{
-		Time::Instance().SetFrameRate(60);
+		Time::Instance()->SetFrameRate(60);
 	}
 	ImGui::InputFloat("Max Acceleration", &mMaxAcceleration, 0.01f, 0.1f);
 	if(ImGui::InputFloat("Minimum Velocity", &mMinSpeed, 0.2f, 1.0f)

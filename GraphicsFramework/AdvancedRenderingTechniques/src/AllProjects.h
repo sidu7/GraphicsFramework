@@ -16,19 +16,25 @@ class AllProjects : public Scene
 {
 public:
 	~AllProjects();
-	void Init() override;
-	void Update() override;
-	void DebugDisplay() override;
+	virtual void Init() override;
+	virtual void Update() override;
+	virtual void DebugDisplay() override;
+	virtual void RenderObject(class Object* object, Shader* shader) override;
 
 private:
 	void HammersleyRandomPoints();
 
 private:
-	Shader* shader;
+	Shader* baseShader;
 	Shader* lighting;
-	Shader* ambient;
-	Shader* shadow;
 	Shader* locallight;
+	Shader* shadow;
+	UniformBuffer* globalMatrices;
+
+	// AO
+	Shader* ambient;
+	Shader* ambientNoAO;
+	bool showAO;
 
 	//Blur Compute Shader
 	ComputeShader* blurHorizontal;
@@ -40,7 +46,7 @@ private:
 
 	//Blur NormalShader
 	Shader* blurShader;
-	FrameBuffer* BlurFBO[2];
+	bool softShadows;
 
 	Light* light;
 	bool lighton;

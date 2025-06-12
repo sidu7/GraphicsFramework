@@ -1,9 +1,8 @@
 #pragma once
 #include "Singleton.h"
 
-class Time
+class Time : public Singleton<Time>
 {
-	SINGLETON(Time);
 public:
 	void Init(unsigned int requiredFrameRate);
 	void FrameStart();

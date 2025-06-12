@@ -16,9 +16,6 @@
     <Filter Include="Source\Rendering">
       <UniqueIdentifier>{c6fc4a01-6d2b-429f-a2a3-6497b21dfaa1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source\Rendering\OpenGL">
-      <UniqueIdentifier>{57a8c430-a326-4fce-a269-c16e8a31032a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ThirdParty">
       <UniqueIdentifier>{1009f56c-4826-4d60-9eea-b352c1da9502}</UniqueIdentifier>
     </Filter>
@@ -48,6 +45,12 @@
     </Filter>
     <Filter Include="ThirdParty\imgui">
       <UniqueIdentifier>{f73bd4f9-4b1b-407e-b6de-ec5d4a2b0d04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Rendering\Vulkan">
+      <UniqueIdentifier>{394c0d53-12e5-459d-8764-04d6bb217826}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Rendering\OpenGL">
+      <UniqueIdentifier>{f979dd64-99cc-4d27-bb6c-4fd4112e2fb9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -120,6 +123,7 @@
     <None Include="ThirdParty\assimp\include\assimp\vector3.inl">
       <Filter>ThirdParty\assimp</Filter>
     </None>
+    <None Include="cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Camera.cpp">
@@ -170,45 +174,6 @@
     <ClCompile Include="ThirdParty\stbi_image\stbi_image.cpp">
       <Filter>ThirdParty\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="Source\OpenGL\ComputeShader.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\ElementArrayBuffer.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\FrameBuffer.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\Mesh.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\Model.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\Quaternion.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\Renderer.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\Shader.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\ShaderStorageBuffer.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\Texture.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\UniformBuffer.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\VertexArray.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\OpenGL\VertexBuffer.cpp">
-      <Filter>Source\Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="ThirdParty\vulkan\include\Volk\volk.c">
       <Filter>ThirdParty\vulkan</Filter>
     </ClCompile>
@@ -232,6 +197,63 @@
     </ClCompile>
     <ClCompile Include="ThirdParty\Imgui\imgui_widgets.cpp">
       <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Window.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Window_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\Renderer_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\Window_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Renderer.cpp">
+      <Filter>Source\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Mesh.cpp">
+      <Filter>Source\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Model.cpp">
+      <Filter>Source\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Quaternion.cpp">
+      <Filter>Source\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\RenderingFactory_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\ComputeShader_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\ElementArrayBuffer_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\FrameBuffer_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\Shader_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\ShaderStorageBuffer_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\Texture_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\UniformBuffer_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\VertexArray_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\OpenGL\VertexBuffer_OpenGL.cpp">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\RenderingFactorySelector.cpp">
+      <Filter>Source\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -579,45 +601,6 @@
     </ClInclude>
     <ClInclude Include="ThirdParty\rapidjson\writer.h">
       <Filter>ThirdParty\rapidjson</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\ComputeShader.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\ElementArrayBuffer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\FrameBuffer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\Mesh.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\Model.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\Quaternion.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\Renderer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\Shader.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\ShaderStorageBuffer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\Texture.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\UniformBuffer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\VertexArray.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\OpenGL\VertexBuffer.h">
-      <Filter>Source\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="ThirdParty\vulkan\include\Volk\volk.h">
       <Filter>ThirdParty\vulkan</Filter>
@@ -1113,6 +1096,93 @@
     </ClInclude>
     <ClInclude Include="ThirdParty\assimp\include\Compiler\pushpack1.h">
       <Filter>ThirdParty\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Window_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Window.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\Renderer_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\Window_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Renderer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\ComputeShader.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\ElementArrayBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\FrameBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Mesh.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Model.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Quaternion.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Shader.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\ShaderStorageBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Texture.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\UniformBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\VertexArray.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\VertexBuffer.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\RenderingFactory.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\RenderingFactory_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\ComputeShader_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\ElementArrayBuffer_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\FrameBuffer_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\Shader_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\ShaderStorageBuffer_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\Texture_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\UniformBuffer_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\VertexArray_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\OpenGL\VertexBuffer_OpenGL.h">
+      <Filter>Source\Rendering\OpenGL</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Utils\FileHelper.h">
+      <Filter>Source\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

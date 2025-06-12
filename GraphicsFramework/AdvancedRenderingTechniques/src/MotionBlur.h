@@ -11,12 +11,13 @@ class MotionBlur : public Scene
 {
 public:
 	~MotionBlur();
-	void Init() override;
-	void Update() override;
-	void DebugDisplay() override;
+	virtual void Init() override;
+	virtual void Update() override;
+	virtual void DebugDisplay() override;
+	virtual void RenderObject(Object* object, Shader* shader) override;
 
 private:
-	Shader* shader;
+	Shader* baseShader;
 	Shader* lighting;
 	Shader* ambient;
 

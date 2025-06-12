@@ -4,7 +4,7 @@ out vec4 FragColor;
 
 const float pi = 22.0f/7.0f;
 
-uniform HBlock
+layout (binding = 5) uniform HBlock
 { 
 	float Num;
 	float Numbers[2 * 100];

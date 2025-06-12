@@ -1,7 +1,6 @@
 #pragma once
-#include <glm/mat4x2.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/transform.hpp>
+
+#include "Core/Core.h"
 
 class MathHelper
 {

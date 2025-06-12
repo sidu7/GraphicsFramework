@@ -1,9 +1,17 @@
-#version 330 core
+#version 420
 layout (location = 0) in vec3 aPos;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+layout (binding = 0) uniform Matrices
+{
+	mat4 view;
+	mat4 projection;
+};
+
+layout (binding = 1) uniform ObjectMatrices
+{
+	mat4 model;
+	mat4 normaltr;
+};
 
 out vec4 position;
 

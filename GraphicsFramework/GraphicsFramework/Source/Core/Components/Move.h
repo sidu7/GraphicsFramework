@@ -4,7 +4,7 @@
 
 class Move : public Component
 {
-	GF_COMPONENT(Move);
+	COMPONENT(Move);
 public:
 	float mTime;
 	float mSpeed;
