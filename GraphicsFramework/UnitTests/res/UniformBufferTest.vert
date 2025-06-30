@@ -1,6 +1,6 @@
 #version 450
 
-layout (binding = 0) uniform Matrices
+layout (binding = 2) uniform Matrices
 {
 	mat4 Perspective;
 	mat4 View;

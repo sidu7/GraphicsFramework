@@ -21,7 +21,7 @@ protected:
 	VertexBuffer* VBuffer;
 	IndexBuffer* IBuffer;
 	UniformBuffer* UBuffer;
-	uint32_t UboBinding = 0;
+	uint32_t UboBinding = 2;
 
 	float RunTime;
 	bool RotateX;
