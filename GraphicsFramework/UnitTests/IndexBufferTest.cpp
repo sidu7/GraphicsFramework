@@ -37,7 +37,7 @@ void IndexBufferTest::Init()
 	BasicShader = RenderingFactory::Instance()->CreateShader();
 	BasicShader->Uses(VBuffer);
 	BasicShader->Uses(IBuffer);
-	BasicShader->Init("INDEXBUFFER_TEST_VERT", "INDEXBUFFER_TEST_FRAG");
+	BasicShader->Init("INDEXBUFFER_TEST");
 }
 
 void IndexBufferTest::Close()

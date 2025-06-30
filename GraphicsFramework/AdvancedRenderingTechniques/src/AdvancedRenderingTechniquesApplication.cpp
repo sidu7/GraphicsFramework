@@ -11,12 +11,9 @@ Application* CreateApplication()
 	return new AdvancedRenderingTechniquesApplication();
 }
 
-Settings AdvancedRenderingTechniquesApplication::GetSettings()
+std::string AdvancedRenderingTechniquesApplication::GetSettingsFilePath()
 {
-	Settings settings;
-	settings.mWindowSize = { 1280, 720 };
-	settings.mShadersListPath = "res/Shaders/ShadersList.ini";
-	return settings;
+	return "res/Settings.json";
 }
 
 void AdvancedRenderingTechniquesApplication::Init()

@@ -30,7 +30,7 @@ void VertexBufferTest::Init()
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
 	BasicShader->Uses(VBuffer);
-	BasicShader->Init("VERTEXBUFFER_TEST_VERT", "VERTEXBUFFER_TEST_FRAG");
+	BasicShader->Init("VERTEXBUFFER_TEST");
 
 	TestTime = 0.0f;
 }

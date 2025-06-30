@@ -4,7 +4,8 @@
 
 UniformBuffer_Vulkan::UniformBuffer_Vulkan() :
 	UboDescSet(nullptr),
-	PipelineLayout(nullptr)
+	PipelineLayout(nullptr),
+	mBinding(0)
 {
 }
 
@@ -22,6 +23,8 @@ void UniformBuffer_Vulkan::Init(uint32_t size, uint32_t binding, const void* dat
 	RenderingFactory_Vulkan* VkFactory = static_cast<RenderingFactory_Vulkan*>(RenderingFactory::Instance());
 	if (VkFactory)
 	{
+		mBinding = binding;
+
 		UboInfo = VkFactory->CreateBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 		VKCall(vkMapMemory(Renderer_Vulkan::Get()->GetDevice(), UboInfo.BufferMemory, 0, UboInfo.Size, 0, &UboInfo.MappedMemory), "Uniform Buffer memory mapping Failed.");

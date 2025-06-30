@@ -17,12 +17,34 @@ Shader_OpenGL::Shader_OpenGL()
 	GLCall(m_RendererID = glCreateProgram());
 }
 
-void Shader_OpenGL::Init(std::string vertexShaderId, std::string fragmentShaderId)
+void Shader_OpenGL::Init(std::string shaderId)
 {
-	ShaderSource shaders;
-	shaders.vertexSource = ShaderManager::Instance()->GetShaderContents(vertexShaderId);
-	shaders.fragmentSource = ShaderManager::Instance()->GetShaderContents(fragmentShaderId);
-	m_RendererID = CreateProgram(shaders);
+	ShaderSource shaders = ShaderManager::Instance()->GetShaderSource(shaderId);
+
+	unsigned int vs = CompileShader(GL_VERTEX_SHADER, shaders.vertexSource);
+	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, shaders.fragmentSource);
+
+	GLCall(glAttachShader(m_RendererID, vs));
+	GLCall(glAttachShader(m_RendererID, fs));
+	GLCall(glLinkProgram(m_RendererID));
+
+	int result;
+	GLCall(glGetProgramiv(m_RendererID, GL_LINK_STATUS, &result));
+	if (result == GL_FALSE)
+	{
+		int length;
+		GLCall(glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &length));
+		char* message = (char*)alloca(length * sizeof(char));
+		GLCall(glGetProgramInfoLog(m_RendererID, length, &length, message));
+		std::cout << "Failed to link " << std::endl;
+		std::cout << message << std::endl;
+		return;
+	}
+
+	GLCall(glValidateProgram(m_RendererID));
+
+	GLCall(glDeleteShader(vs));
+	GLCall(glDeleteShader(fs));
 }
 
 void Shader_OpenGL::Uses(const FrameBuffer* framebuffer)
@@ -71,37 +93,6 @@ unsigned int Shader_OpenGL::CompileShader(unsigned int type, const std::vector<c
 	}
 
 	return id;
-}
-
-unsigned int Shader_OpenGL::CreateProgram(const ShaderSource& shaderSource)
-{
-	GLCall(unsigned int program = glCreateProgram());
-	unsigned int vs = CompileShader(GL_VERTEX_SHADER, shaderSource.vertexSource);
-	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, shaderSource.fragmentSource);
-
-	GLCall(glAttachShader(program, vs));
-	GLCall(glAttachShader(program, fs));
-	GLCall(glLinkProgram(program));
-
-	int result;
-	GLCall(glGetProgramiv(program, GL_LINK_STATUS, &result));
-	if (result == GL_FALSE)
-	{
-		int length;
-		GLCall(glGetProgramiv(program, GL_INFO_LOG_LENGTH, &length));
-		char* message = (char*)alloca(length * sizeof(char));
-		GLCall(glGetProgramInfoLog(program, length, &length, message));
-		std::cout << "Failed to link " << std::endl;
-		std::cout << message << std::endl;
-		return 0;
-	}
-
-	GLCall(glValidateProgram(program));
-
-	GLCall(glDeleteShader(vs));
-	GLCall(glDeleteShader(fs));
-
-	return program;
 }
 
 void Shader_OpenGL::SetUniform3f(const std::string& name, float v1, float v2, float v3)

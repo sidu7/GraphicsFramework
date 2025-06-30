@@ -6,7 +6,7 @@ class AdvancedRenderingTechniquesApplication : public Application
 {
 public:
 
-	virtual Settings GetSettings() override;
+	virtual std::string GetSettingsFilePath() override;
 
 	virtual void Init() override;
 	virtual void Close() override;

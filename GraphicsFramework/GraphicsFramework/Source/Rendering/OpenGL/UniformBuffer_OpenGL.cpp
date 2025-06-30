@@ -3,7 +3,8 @@
 #include "Rendering/OpenGL/Renderer_OpenGL.h"
 
 UniformBuffer_OpenGL::UniformBuffer_OpenGL() :
-	m_RendererId(0)
+	m_RendererId(0),
+	mBinding(0)
 {
 	GLCall(glGenBuffers(1, &m_RendererId));
 }
@@ -15,6 +16,8 @@ UniformBuffer_OpenGL::~UniformBuffer_OpenGL()
 
 void UniformBuffer_OpenGL::Init(uint32_t size, uint32_t binding, const void* data)
 {
+	mBinding = binding;
+
 	GLCall(glBindBuffer(GL_UNIFORM_BUFFER, m_RendererId));
 	GLCall(glBufferData(GL_UNIFORM_BUFFER, size, data? data : NULL, GL_STATIC_DRAW));
 	GLCall(glBindBuffer(GL_UNIFORM_BUFFER, 0));

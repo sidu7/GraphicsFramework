@@ -73,6 +73,7 @@ class Renderer_Vulkan : public Renderer
 {
 	friend class VulkanHelper;
 	friend class RenderingFactory_Vulkan;
+	friend class SwapChain_Vulkan;
 
 public:
 	static Renderer_Vulkan* Get() { return static_cast<Renderer_Vulkan*>(Renderer::Instance()); }
@@ -133,7 +134,7 @@ public:
 	inline const VkPhysicalDevice& GetPhysicalDevice() { return PhysicalDevice; }
 	inline const VkDevice& GetDevice() { return Device; }
 
-	inline const CommandBuffer_Vulkan* GetRenderCommandBuffer() { return RenderCommandBuffers[FrameIdx]; }
+	inline const CommandBuffer_Vulkan* GetCommandBuffer() { return RenderCommandBuffers[FrameIdx]; }
 	inline const VkClearValue& GetClearValue() { return ClearValue; }
 	inline const uint32_t GetQueueFamilyIndex(CommandQueueType type) { return QueueFamilyData.QueueIndices[type]; }
 	inline const CommandQueue_Vulkan* GetQueue(CommandQueueType type) { return CommandQueues[type]; }

@@ -7,7 +7,17 @@
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
 
-Transform::Transform()
+Transform::Transform() :
+	mPosition(0.f),
+	mScale(0.f),
+	mRotation(0.f),
+	mFront(0.f),
+	mTranslationMatrix(1.f),
+	mRotationMatrix(1.f),
+	mScaleMatrix(1.f),
+	mModelTransformation(1.f),
+	mPrevModelTransformation(1.f),
+	mMatricesUBO(nullptr)
 {
 	mMatricesUBO = RenderingFactory::Instance()->CreateUniformBuffer();
 	mMatricesUBO->Init(sizeof(ObjectMatricesUBO), Engine::Instance()->GetSettings().mTransformBindingPoint);
@@ -32,8 +42,11 @@ void Transform::Update()
 
 	SetModelTransformation();
 
-	ObjectMatricesUBO UboData{ mModelTransformation, glm::inverse(mModelTransformation), mPrevModelTransformation };
-	mMatricesUBO->AddData(sizeof(UboData), &UboData);
+	if (mMatricesUBO)
+	{
+		ObjectMatricesUBO UboData{ mModelTransformation, glm::inverse(mModelTransformation), mPrevModelTransformation };
+		mMatricesUBO->AddData(sizeof(UboData), &UboData);
+	}
 }
 
 void Transform::Serialize(rapidjson::Value::Object data)

@@ -15,7 +15,7 @@ public:
 	Shader_OpenGL();
 	virtual ~Shader_OpenGL();
 
-	virtual void Init(std::string vertexShaderId, std::string fragmentShaderId) override;
+	virtual void Init(std::string shaderId) override;
 	
 	virtual void Uses(const FrameBuffer* framebuffer) override;
 	virtual void Uses(const Texture* texture, unsigned int slot = 0) override;
@@ -42,6 +42,5 @@ protected:
 	void SetUniform4fvLoc(int location, glm::vec4 vector);
 	void SetUniformBlock(const std::string& name, unsigned int bindPoint);
 
-	unsigned int CreateProgram(const ShaderSource& shaderSource);
 	unsigned int CompileShader(unsigned int type, const std::vector<char>& Source);
 };

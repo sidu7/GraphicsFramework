@@ -108,9 +108,9 @@ void ImguiManager::Render()
 	if (VkRenderer)
 	{
 		const FrameBuffer_Vulkan* VkFrameBuffer = static_cast<const FrameBuffer_Vulkan*>(VkRenderer->GetBackBuffer());
-		VkRenderer->GetImGuiRenderPass()->BeginPass(VkRenderer->GetRenderCommandBuffer(), VkFrameBuffer);
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), VkRenderer->GetRenderCommandBuffer()->mCommandBuffer);
-		VkRenderer->GetImGuiRenderPass()->EndPass(VkRenderer->GetRenderCommandBuffer());
+		VkRenderer->GetImGuiRenderPass()->BeginPass(VkRenderer->GetCommandBuffer(), VkFrameBuffer);
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), VkRenderer->GetCommandBuffer()->mCommandBuffer);
+		VkRenderer->GetImGuiRenderPass()->EndPass(VkRenderer->GetCommandBuffer());
 	}
 #elif defined(RENDERER_DX12)
 #endif

@@ -1,45 +1,33 @@
 {
   "Shaders": [
     {
-      "Id": "SHADER_TEST_VERT",
-      "Path": "res/ShaderTest.vert",
-      "Api": "OPENGL"
+      "Id": "SHADER_TEST",
+      "VertexShader": [
+        {
+          "Api": "OPENGL",
+          "Variant": "res/ShaderTest.vert"
+        },
+        {
+          "Api": "VULKAN",
+          "Variant": "res/Vulkan/ShaderTest.vert"
+        }
+      ],
+      "FragmentShader": "res/ShaderTest.frag"
     },
     {
-      "Id": "SHADER_TEST_VERT",
-      "Path": "res/Vulkan/ShaderTest.vert",
-      "Api": "VULKAN"
+      "Id": "VERTEXBUFFER_TEST",
+      "VertexShader": "res/VertexBufferTest.vert",
+      "FragmentShader": "res/VertexBufferTest.frag"
     },
     {
-      "Id": "SHADER_TEST_FRAG",
-      "Path": "res/ShaderTest.frag"
-    },
-
-    {
-      "Id": "VERTEXBUFFER_TEST_VERT",
-      "Path": "res/VertexBufferTest.vert"
+      "Id": "INDEXBUFFER_TEST",
+      "VertexShader": "res/IndexBufferTest.vert",
+      "FragmentShader": "res/IndexBufferTest.frag"
     },
     {
-      "Id": "VERTEXBUFFER_TEST_FRAG",
-      "Path": "res/VertexBufferTest.frag"
-    },
-
-    {
-      "Id": "INDEXBUFFER_TEST_VERT",
-      "Path": "res/IndexBufferTest.vert"
-    },
-    {
-      "Id": "INDEXBUFFER_TEST_FRAG",
-      "Path": "res/IndexBufferTest.frag"
-    },
-
-    {
-      "Id": "UNIFORMBUFFER_TEST_VERT",
-      "Path": "res/UniformBufferTest.vert"
-    },
-    {
-      "Id": "UNIFORMBUFFER_TEST_FRAG",
-      "Path": "res/UniformBufferTest.frag"
+      "Id": "UNIFORMBUFFER_TEST",
+      "VertexShader": "res/UniformBufferTest.vert",
+      "FragmentShader": "res/UniformBufferTest.frag"
     }
   ]
 }

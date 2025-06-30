@@ -30,11 +30,9 @@ Shader_Vulkan::~Shader_Vulkan()
 	vkDestroyPipeline(Renderer_Vulkan::Get()->GetDevice(), mPipeline, nullptr);
 }
 
-void Shader_Vulkan::Init(std::string vertexShaderId, std::string fragmentShaderId)
+void Shader_Vulkan::Init(std::string shaderId)
 {
-	ShaderSource shaders;
-	shaders.vertexSource = ShaderManager::Instance()->GetShaderContents(vertexShaderId);
-	shaders.fragmentSource = ShaderManager::Instance()->GetShaderContents(fragmentShaderId);
+	ShaderSource shaders = ShaderManager::Instance()->GetShaderSource(shaderId);
 
 	std::vector<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfos;
 	VkShaderModule VertexShaderModule = VK_NULL_HANDLE;

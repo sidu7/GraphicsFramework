@@ -1,0 +1,84 @@
+{
+  "Shaders": [
+    {
+      "Id": "AMBIENT",
+      "VertexShader": "res/Shaders/Ambient.vert",
+      "FragmentShader": "res/Shaders/Ambient.frag"
+    },
+    {
+      "Id": "AMBIENT_NO_AO",
+      "VertexShader": "res/Shaders/Ambient.vert",
+      "FragmentShader": "res/Shaders/AmbientNoAO.frag"
+    },
+    {
+      "Id": "AMBIENT_OCCLUSION",
+      "VertexShader": "res/Shaders/AO.vert",
+      "FragmentShader": "res/Shaders/AO.frag"
+    },
+    {
+      "Id": "BLUR",
+      "VertexShader": "res/Shaders/Blur.vert",
+      "FragmentShader": "res/Shaders/Blur.frag"
+    },
+    {
+      "Id": "DRAWING",
+      "VertexShader": "res/Shaders/Drawing.vert",
+      "FragmentShader": "res/Shaders/Drawing.frag"
+    },
+    {
+      "Id": "LIGHTING",
+      "VertexShader": "res/Shaders/Lighting.vert",
+      "FragmentShader": "res/Shaders/Lighting.frag"
+    },
+    {
+      "Id": "LOCAL_LIGHT",
+      "VertexShader": "res/Shaders/LocalLight.vert",
+      "FragmentShader": "res/Shaders/LocalLight.frag"
+    },
+    {
+      "Id": "SHADOW",
+      "VertexShader": "res/Shaders/Shadow.vert",
+      "FragmentShader": "res/Shaders/Shadow.frag"
+    },
+    {
+      "Id": "SKYDOME",
+      "VertexShader": "res/Shaders/SkyDome.vert",
+      "FragmentShader": "res/Shaders/SkyDome.frag"
+    },
+    {
+      "Id": "MOTIONBLUR_AMBIENT",
+      "VertexShader": "res/motionblur/Ambient.vert",
+      "FragmentShader": "res/motionblur/Ambient.frag"
+    },
+    {
+      "Id": "GBUFFER",
+      "VertexShader": "res/motionblur/GBuffer.vert",
+      "FragmentShader": "res/motionblur/GBuffer.frag"
+    },
+    {
+      "Id": "MOTIONBLUR_LIGHTING",
+      "VertexShader": "res/motionblur/Lighting.vert",
+      "FragmentShader": "res/motionblur/Lighting.frag"
+    },
+    {
+      "Id": "MOTIONBLUR",
+      "VertexShader": "res/motionblur/MotionBlur.vert",
+      "FragmentShader": "res/motionblur/MotionBlur.frag"
+    },
+    {
+      "Id": "NEIGHBOUR_MAX",
+      "VertexShader": "res/motionblur/NeighbourMax.vert",
+      "FragmentShader": "res/motionblur/NeighbourMax.frag"
+    },
+    {
+      "Id": "RECONSTRUCTION",
+      "VertexShader": "res/motionblur/Reconstruction.vert",
+      "FragmentShader": "res/motionblur/Reconstruction.frag"
+    },
+    {
+      "Id": "TILE_MAX",
+      "VertexShader": "res/motionblur/TileMax.vert",
+      "FragmentShader": "res/motionblur/TileMax.frag"
+    }
+  ]
+}

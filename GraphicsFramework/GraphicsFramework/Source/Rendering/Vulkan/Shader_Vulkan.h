@@ -23,7 +23,7 @@ public:
 	virtual void Uses(const VertexBuffer* vertexBuffer) override;
 	virtual void Uses(const IndexBuffer* indexBuffer) override;
 
-	virtual void Init(std::string vertexShaderId, std::string fragmentShaderId) override;
+	virtual void Init(std::string shaderId) override;
 
 	VkPipeline mPipeline;
 	VkPipelineLayout mPipelineLayout;

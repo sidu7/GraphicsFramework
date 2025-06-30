@@ -205,7 +205,13 @@
     <None Include="res\motionblur\TileMax.vert">
       <Filter>Resource Files\MotionBlur</Filter>
     </None>
-    <None Include="res\shaders\ShadersList.ini">
+    <None Include="res\Settings.json">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="res\shaders\ShadersList.json">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="res\shaders\AmbientNoAO.frag">
       <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>

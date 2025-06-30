@@ -212,20 +212,20 @@ void Renderer_Vulkan::StartFrame()
 
 	VKCall(vkResetFences(Device, 1, &InFlightFences[FrameIdx]->mFence), "Fence Reset Failed.");
 
-	GetRenderCommandBuffer()->Reset();
+	GetCommandBuffer()->Reset();
 
 	// Record Command Buffer
-	GetRenderCommandBuffer()->Begin();
+	GetCommandBuffer()->Begin();
 }
 
 void Renderer_Vulkan::SwapBuffers()
 {
 	//vkCmdEndRenderPass(GetRenderCommandBuffer());
 
-	GetRenderCommandBuffer()->End();
+	GetCommandBuffer()->End();
 
 	// Submit Command Buffer
-	GetQueue(CommandQueueType::Graphics)->SubmitCommandBuffer(GetRenderCommandBuffer(), ImageAvailableSemaphores[FrameIdx], RenderingFinishedSemaphores[FrameIdx], InFlightFences[FrameIdx]);
+	GetQueue(CommandQueueType::Graphics)->SubmitCommandBuffer(GetCommandBuffer(), ImageAvailableSemaphores[FrameIdx], RenderingFinishedSemaphores[FrameIdx], InFlightFences[FrameIdx]);
 
 	// Present to Screen
 	GetQueue(CommandQueueType::Present)->PresentToScreen(RenderingFinishedSemaphores[FrameIdx], SwapChain, SwapChainImageIdx);
@@ -238,7 +238,7 @@ void Renderer_Vulkan::BindShader(const Shader* shader)
 	const Shader_Vulkan* VkShader = static_cast<const Shader_Vulkan*>(shader);
 	if (VkShader)
 	{
-		vkCmdBindPipeline(GetRenderCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, VkShader->mPipeline);
+		vkCmdBindPipeline(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, VkShader->mPipeline);
 	}
 }
 
@@ -256,7 +256,7 @@ void Renderer_Vulkan::BindVertexBuffer(const VertexBuffer* vertexBuffer)
 	{
 		VkBuffer Buffers[] = { static_cast<const VertexBuffer_Vulkan*>(vertexBuffer)->MainBufferInfo.Buffer };
 		VkDeviceSize Offsets[] = { 0 };
-		vkCmdBindVertexBuffers(GetRenderCommandBuffer()->mCommandBuffer, 0, ARRAY_SIZE(Buffers), Buffers, Offsets);
+		vkCmdBindVertexBuffers(GetCommandBuffer()->mCommandBuffer, 0, ARRAY_SIZE(Buffers), Buffers, Offsets);
 	}
 }
 
@@ -265,7 +265,7 @@ void Renderer_Vulkan::BindIndexBuffer(const IndexBuffer* indexBuffer)
 	if (indexBuffer)
 	{
 		const IndexBuffer_Vulkan* VkIndexBuffer = static_cast<const IndexBuffer_Vulkan*>(indexBuffer);
-		vkCmdBindIndexBuffer(GetRenderCommandBuffer()->mCommandBuffer, VkIndexBuffer->MainBufferInfo.Buffer, 0, VkIndexBuffer->GetVkIndexType());;
+		vkCmdBindIndexBuffer(GetCommandBuffer()->mCommandBuffer, VkIndexBuffer->MainBufferInfo.Buffer, 0, VkIndexBuffer->GetVkIndexType());;
 	}
 }
 
@@ -274,7 +274,7 @@ void Renderer_Vulkan::BindUniformBuffer(const UniformBuffer* uniformBuffer, unsi
 	const UniformBuffer_Vulkan* VkUbo = static_cast<const UniformBuffer_Vulkan*>(uniformBuffer);
 	if (VkUbo)
 	{
-		vkCmdBindDescriptorSets(GetRenderCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *VkUbo->PipelineLayout, 0, 1, &VkUbo->UboDescSet->DescSet, 0, nullptr);
+		vkCmdBindDescriptorSets(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *VkUbo->PipelineLayout, 0, 1, &VkUbo->UboDescSet->DescSet, 0, nullptr);
 	}
 }
 
@@ -312,43 +312,43 @@ void Renderer_Vulkan::UnbindTexture(const Texture* texture, unsigned int slot)
 
 void Renderer_Vulkan::Draw(const Shader* Shader, const VertexBuffer* vertexBuffer, int32_t VertexCount, int32_t VertexStart, int32_t InstanceCount, int32_t InstanceStart)
 {
-	ScreenRenderPass->BeginPass(GetRenderCommandBuffer(), static_cast<const FrameBuffer_Vulkan*>(GetBackBuffer()));
+	ScreenRenderPass->BeginPass(GetCommandBuffer(), static_cast<const FrameBuffer_Vulkan*>(GetBackBuffer()));
 
-	vkCmdSetViewport(GetRenderCommandBuffer()->mCommandBuffer, 0, 1, &Viewport);
-	vkCmdSetScissor(GetRenderCommandBuffer()->mCommandBuffer, 0, 1, &ScissorRect);
-	vkCmdSetPrimitiveTopology(GetRenderCommandBuffer()->mCommandBuffer, Topology);
-	vkCmdSetCullMode(GetRenderCommandBuffer()->mCommandBuffer, CullMode);
-	vkCmdSetFrontFace(GetRenderCommandBuffer()->mCommandBuffer, FrontFace);
-	vkCmdSetDepthTestEnable(GetRenderCommandBuffer()->mCommandBuffer, DepthTestEnable);
+	vkCmdSetViewport(GetCommandBuffer()->mCommandBuffer, 0, 1, &Viewport);
+	vkCmdSetScissor(GetCommandBuffer()->mCommandBuffer, 0, 1, &ScissorRect);
+	vkCmdSetPrimitiveTopology(GetCommandBuffer()->mCommandBuffer, Topology);
+	vkCmdSetCullMode(GetCommandBuffer()->mCommandBuffer, CullMode);
+	vkCmdSetFrontFace(GetCommandBuffer()->mCommandBuffer, FrontFace);
+	vkCmdSetDepthTestEnable(GetCommandBuffer()->mCommandBuffer, DepthTestEnable);
 
-	vkCmdBindPipeline(GetRenderCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<const Shader_Vulkan*>(Shader)->mPipeline);
+	vkCmdBindPipeline(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<const Shader_Vulkan*>(Shader)->mPipeline);
 
 	BindVertexBuffer(vertexBuffer);
 
-	vkCmdDraw(GetRenderCommandBuffer()->mCommandBuffer, VertexCount, InstanceCount, VertexStart, InstanceStart);
+	vkCmdDraw(GetCommandBuffer()->mCommandBuffer, VertexCount, InstanceCount, VertexStart, InstanceStart);
 
-	ScreenRenderPass->EndPass(GetRenderCommandBuffer());
+	ScreenRenderPass->EndPass(GetCommandBuffer());
 }
 
 void Renderer_Vulkan::Draw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)
 {
-	ScreenRenderPass->BeginPass(GetRenderCommandBuffer(), static_cast<const FrameBuffer_Vulkan*>(GetBackBuffer()));
+	ScreenRenderPass->BeginPass(GetCommandBuffer(), static_cast<const FrameBuffer_Vulkan*>(GetBackBuffer()));
 
-	vkCmdSetViewport(GetRenderCommandBuffer()->mCommandBuffer, 0, 1, &Viewport);
-	vkCmdSetScissor(GetRenderCommandBuffer()->mCommandBuffer, 0, 1, &ScissorRect);
-	vkCmdSetPrimitiveTopology(GetRenderCommandBuffer()->mCommandBuffer, Topology);
-	vkCmdSetCullMode(GetRenderCommandBuffer()->mCommandBuffer, CullMode);
-	vkCmdSetFrontFace(GetRenderCommandBuffer()->mCommandBuffer, FrontFace);
-	vkCmdSetDepthTestEnable(GetRenderCommandBuffer()->mCommandBuffer, DepthTestEnable);
+	vkCmdSetViewport(GetCommandBuffer()->mCommandBuffer, 0, 1, &Viewport);
+	vkCmdSetScissor(GetCommandBuffer()->mCommandBuffer, 0, 1, &ScissorRect);
+	vkCmdSetPrimitiveTopology(GetCommandBuffer()->mCommandBuffer, Topology);
+	vkCmdSetCullMode(GetCommandBuffer()->mCommandBuffer, CullMode);
+	vkCmdSetFrontFace(GetCommandBuffer()->mCommandBuffer, FrontFace);
+	vkCmdSetDepthTestEnable(GetCommandBuffer()->mCommandBuffer, DepthTestEnable);
 
-	vkCmdBindPipeline(GetRenderCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<const Shader_Vulkan*>(shader)->mPipeline);
+	vkCmdBindPipeline(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<const Shader_Vulkan*>(shader)->mPipeline);
 
 	BindVertexBuffer(vertexBuffer);
 	BindIndexBuffer(indexBuffer);
 
-	vkCmdDrawIndexed(GetRenderCommandBuffer()->mCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
+	vkCmdDrawIndexed(GetCommandBuffer()->mCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
 
-	ScreenRenderPass->EndPass(GetRenderCommandBuffer());
+	ScreenRenderPass->EndPass(GetCommandBuffer());
 }
 
 void Renderer_Vulkan::DebugDraw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)

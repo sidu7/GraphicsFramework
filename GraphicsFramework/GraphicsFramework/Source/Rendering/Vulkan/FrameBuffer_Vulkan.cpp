@@ -42,6 +42,9 @@ void FrameBuffer_Vulkan::Init(int width, int height, ImageFormat format, int Tex
 	Renderer_Vulkan* VkRenderer = static_cast<Renderer_Vulkan*>(Renderer::Instance());
 	if (VkRenderer)
 	{
+		mRenderPass = new RenderPass_Vulkan();
+		mRenderPass->Init(Texture_Vulkan::GetVkFormat(format), true, false);
+
 		VkImageView ImageView;
 		VkFramebufferCreateInfo FrameBufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 		FrameBufferInfo.renderPass = mRenderPass->mRenderPass;
@@ -52,9 +55,6 @@ void FrameBuffer_Vulkan::Init(int width, int height, ImageFormat format, int Tex
 		FrameBufferInfo.layers = 1;
 
 		VKCall(vkCreateFramebuffer(VkRenderer->GetDevice(), &FrameBufferInfo, nullptr, &mFrameBuffer), "FrameBuffer creation Failed.");
-
-		mRenderPass = new RenderPass_Vulkan();
-		mRenderPass->Init(Texture_Vulkan::GetVkFormat(format), true, false);
 	}
 }
 

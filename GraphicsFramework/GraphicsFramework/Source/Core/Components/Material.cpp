@@ -38,8 +38,11 @@ void Material::Update()
 		}
 	}
 
-	MaterialDataUBO UboData{ glm::vec4(DiffuseColor, 1.0f), glm::vec4(mSpecular, 1.0f), mShininess, mLighting };
-	mMaterialUBO->AddData(sizeof(UboData), &UboData);
+	if (mMaterialUBO)
+	{
+		MaterialDataUBO UboData{ glm::vec4(DiffuseColor, 1.0f), glm::vec4(mSpecular, 1.0f), mShininess, mLighting };
+		mMaterialUBO->AddData(sizeof(UboData), &UboData);
+	}
 }
 
 void Material::Serialize(rapidjson::Value::Object data)

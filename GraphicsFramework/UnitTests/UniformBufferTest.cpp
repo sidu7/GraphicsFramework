@@ -56,7 +56,7 @@ void UniformBufferTest::Init()
 	BasicShader->Uses(VBuffer);
 	BasicShader->Uses(IBuffer);
 	BasicShader->Uses(UBuffer, UboBinding);
-	BasicShader->Init("UNIFORMBUFFER_TEST_VERT", "UNIFORMBUFFER_TEST_FRAG");
+	BasicShader->Init("UNIFORMBUFFER_TEST");
 
 	RunTime = 0.f;
 	RotateX = false;

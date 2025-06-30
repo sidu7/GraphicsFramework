@@ -261,8 +261,10 @@
     <None Include="res\motionblur\Reconstruction.vert" />
     <None Include="res\motionblur\TileMax.frag" />
     <None Include="res\motionblur\TileMax.vert" />
+    <None Include="res\Settings.json" />
     <None Include="res\shaders\Ambient.frag" />
     <None Include="res\shaders\Ambient.vert" />
+    <None Include="res\shaders\AmbientNoAO.frag" />
     <None Include="res\shaders\AO.frag" />
     <None Include="res\shaders\AO.vert" />
     <None Include="res\shaders\Blur.frag" />
@@ -273,7 +275,7 @@
     <None Include="res\shaders\Lighting.vert" />
     <None Include="res\shaders\LocalLight.frag" />
     <None Include="res\shaders\LocalLight.vert" />
-    <None Include="res\shaders\ShadersList.ini" />
+    <None Include="res\shaders\ShadersList.json" />
     <None Include="res\shaders\Shadow.frag" />
     <None Include="res\shaders\Shadow.vert" />
     <None Include="res\shaders\SkyDome.frag" />

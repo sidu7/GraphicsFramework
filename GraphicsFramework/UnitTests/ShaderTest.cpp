@@ -8,7 +8,7 @@
 void ShaderTest::Init()
 {
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Init("SHADER_TEST_VERT", "SHADER_TEST_FRAG");
+	BasicShader->Init("SHADER_TEST");
 }
 
 void ShaderTest::Close()

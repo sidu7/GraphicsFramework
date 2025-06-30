@@ -33,5 +33,5 @@ public:
 	virtual void Uses(const VertexBuffer* vertexBuffer) = 0;
 	virtual void Uses(const IndexBuffer* indexBuffer) = 0;
 
-	virtual void Init(std::string vertexShaderId, std::string fragmentShaderId) = 0;
+	virtual void Init(std::string shaderId) = 0;
 };
