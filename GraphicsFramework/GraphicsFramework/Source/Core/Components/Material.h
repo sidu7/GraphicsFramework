@@ -25,6 +25,7 @@ public:
 	UniformBuffer* mMaterialUBO;
 
 	Material();
+	virtual ~Material();
 
 	virtual void Update() override;
 

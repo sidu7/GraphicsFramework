@@ -1,10 +1,11 @@
 #pragma once
+#include <stdint.h>
 
 class UniformBuffer
 {
 public:
 	virtual ~UniformBuffer() {}
 
-	virtual void Init(unsigned int size, const void* data = nullptr) = 0;
-	virtual void AddData(unsigned int size, const void* data, unsigned int offset = 0) const = 0;
+	virtual void Init(uint32_t size, uint32_t binding, const void* data = nullptr) = 0;
+	virtual void AddData(uint32_t size, const void* data, uint32_t offset = 0) const = 0;
 };

@@ -3,9 +3,8 @@
 #include <string>
 #include <vector>
 #include "Texture.h"
-#include "VertexArray.h"
 #include "VertexBuffer.h"
-#include "ElementArrayBuffer.h"
+#include "IndexBuffer.h"
 #include "Quaternion.h"
 
 #define DIFFUSE "texture_diffuse"
@@ -36,17 +35,16 @@ public:
 public:
 	std::vector<VertexData> mVertices;
 	std::vector<TextureData> mTextures;
-	std::vector<unsigned int> mIndices;
+	std::vector<uint16_t> mIndices;
 
-	Mesh(std::vector<VertexData> vertices, std::vector<TextureData> textures, std::vector<unsigned int>indices);
+	Mesh(std::vector<VertexData> vertices, std::vector<TextureData> textures, std::vector<uint16_t>indices);
 	
 	void Destroy();
 	void Draw(Shader* shader);
 
 private:
-	VertexArray* VAO;
 	VertexBuffer* VBO;
-	ElementArrayBuffer* EBO;
+	IndexBuffer* IBO;
 
 	void SetupMesh();
 };

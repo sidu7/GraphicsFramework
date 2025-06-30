@@ -2,8 +2,7 @@
 
 #include "Core/Core.h"
 #include "Rendering/RenderingFactory.h"
-#include "Rendering/VertexArray.h"
-#include "Rendering/ElementArrayBuffer.h"
+#include "Rendering/IndexBuffer.h"
 #include "Rendering/VertexBuffer.h"
 #include <algorithm>
 
@@ -15,27 +14,25 @@ void ShapeManager::Init()
 	}
 
 	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
+	std::vector<uint16_t> indices;
 
 	{
 		std::vector<glm::vec3> verts;
 		verts.push_back(glm::vec3(0.0f, 0.0f, 0.0f));
 		verts.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
 
-		unsigned int ind[] = {
+		uint16_t ind[] = {
 			0, 1
 		};
 
 		ShapeData& Data = mShapes[LINE];
-		Data.m_VBO = RenderingFactory::Instance()->CreateVertexBuffer();
-		Data.m_VAO = RenderingFactory::Instance()->CreateVertexArray();
-		Data.m_EBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
-		Data.m_EBO->AddData(&ind[0], 2, sizeof(unsigned int));
-		Data.m_VAO->AddBuffer(Data.m_VBO);
-		Data.m_VBO->AddData(&verts[0], 2 * sizeof(glm::vec3));
-		Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
-		Data.m_VAO->AddLayout();
-		Renderer::Instance()->UnbindVertexArray(Data.m_VAO);
+		Data.mVBO = RenderingFactory::Instance()->CreateVertexBuffer();
+		Data.mIBO = RenderingFactory::Instance()->CreateIndexBuffer();
+
+		Data.mVBO->SetDataLayout({ VertexFormat::Vec3 });
+		
+		Data.mVBO->AddData(&verts[0], 2 * sizeof(glm::vec3));
+		Data.mIBO->AddData(&ind[0], 2, IndexType::UInt16);		
 	}
 
 	//WireCube
@@ -51,7 +48,7 @@ void ShapeManager::Init()
 		verts.push_back(glm::vec3(0.5f, 0.5f, 0.5f));
 		verts.push_back(glm::vec3(-0.5f, 0.5f, 0.5f));
 
-		unsigned int ind[] = {
+		uint16_t ind[] = {
 			// Back face
 			0, 1, 1, 2, 2, 3, 3, 0,
 			// Front face
@@ -61,15 +58,13 @@ void ShapeManager::Init()
 		};
 
 		ShapeData& Data = mShapes[WIRECUBE];
-		Data.m_VBO = RenderingFactory::Instance()->CreateVertexBuffer();
-		Data.m_VAO = RenderingFactory::Instance()->CreateVertexArray();
-		Data.m_EBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
-		Data.m_EBO->AddData(&ind[0], 24, sizeof(unsigned int));
-		Data.m_VAO->AddBuffer(Data.m_VBO);
-		Data.m_VBO->AddData(&verts[0], 8 * sizeof(glm::vec3));
-		Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
-		Data.m_VAO->AddLayout();
-		Renderer::Instance()->UnbindVertexArray(Data.m_VAO);
+		Data.mVBO = RenderingFactory::Instance()->CreateVertexBuffer();
+		Data.mIBO = RenderingFactory::Instance()->CreateIndexBuffer();
+
+		Data.mVBO->SetDataLayout({ VertexFormat::Vec3 });
+
+		Data.mVBO->AddData(&verts[0], 8 * sizeof(glm::vec3));
+		Data.mIBO->AddData(&ind[0], 24, IndexType::UInt16);
 	}
 
 	//Pyramid
@@ -82,20 +77,18 @@ void ShapeManager::Init()
 		verts.push_back(glm::vec3(-0.5f, -0.5f, 0.5f));
 		verts.push_back(glm::vec3(-0.5f, -0.5f, -0.5f));
 
-		unsigned int ind[] = {
+		uint16_t ind[] = {
 			1, 0, 2, 2, 0, 3, 3, 0, 4, 4, 0, 1, 1, 2, 3, 3, 2, 4, 4, 3, 2, 2, 3, 1
 		};
 
 		ShapeData& Data = mShapes[PYRAMID];
-		Data.m_VBO = RenderingFactory::Instance()->CreateVertexBuffer();
-		Data.m_VAO = RenderingFactory::Instance()->CreateVertexArray();
-		Data.m_EBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
-		Data.m_EBO->AddData(&ind[0], 24, sizeof(unsigned int));
-		Data.m_VAO->AddBuffer(Data.m_VBO);
-		Data.m_VBO->AddData(&verts[0], 5 * sizeof(glm::vec3));
-		Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
-		Data.m_VAO->AddLayout();
-		Renderer::Instance()->UnbindVertexArray(Data.m_VAO);
+		Data.mVBO = RenderingFactory::Instance()->CreateVertexBuffer();
+		Data.mIBO = RenderingFactory::Instance()->CreateIndexBuffer();
+
+		Data.mVBO->SetDataLayout({ VertexFormat::Vec3 });
+
+		Data.mIBO->AddData(&ind[0], 24, IndexType::UInt16);
+		Data.mVBO->AddData(&verts[0], 5 * sizeof(glm::vec3));
 	}
 	
 	//Quad
@@ -548,36 +541,28 @@ void ShapeManager::Close()
 	std::for_each(mShapes.begin(), mShapes.end(), 
 		[](ShapeData& x)
 	{
-		delete x.m_VAO;
-		delete x.m_EBO;
-		delete x.m_VBO;
+		delete x.mIBO;
+		delete x.mVBO;
 	});
 }
 
-void ShapeManager::MakeVAO(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Shapes shape)
+void ShapeManager::MakeVAO(std::vector<Vertex> vertices, std::vector<uint16_t> indices, Shapes shape)
 {
 	ShapeData& Data = mShapes[shape];
-	Data.m_VAO = RenderingFactory::Instance()->CreateVertexArray();
-	Data.m_VBO = RenderingFactory::Instance()->CreateVertexBuffer();
-	Data.m_EBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
+	Data.mVBO = RenderingFactory::Instance()->CreateVertexBuffer();
+	Data.mIBO = RenderingFactory::Instance()->CreateIndexBuffer();
 
-	Renderer::Instance()->BindVertexArray(Data.m_VAO);
+	// Set vertex layout information on VBO
+	Data.mVBO->SetDataLayout({
+		VertexFormat::Vec3, // Position
+		VertexFormat::Vec3, // Normal
+		VertexFormat::Vec2 // Texture Coordinates
+		// VertexFormat::Vec2, // Tangent
+							 });
 
 	// Send vertex information to VBO
-	Data.m_VBO->AddData(&vertices[0], vertices.size() * sizeof(Vertex));
+	Data.mVBO->AddData(&vertices[0], vertices.size() * sizeof(Vertex));
 
-	// Set up index buffer EBO
-	Data.m_EBO->AddData(&indices[0], indices.size(),sizeof(unsigned int));
-
-	// Position
-	Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
-	// Normal
-	Data.m_VAO->Push(3, GL_FLOAT, sizeof(float));
-	// Texture coordinates
-	Data.m_VAO->Push(2, GL_FLOAT, sizeof(float));
-	// Tangent
-	//mVAO.Push(3, GL_FLOAT, sizeof(float));
-	Data.m_VAO->AddLayout();
-	// Unbind VAO
-	Renderer::Instance()->UnbindVertexArray(Data.m_VAO);
+	// Set up index buffer IBO
+	Data.mIBO->AddData(&indices[0], indices.size(), IndexType::UInt16);
 }

@@ -3,8 +3,7 @@
 #include <unordered_map>
 #include "glm/glm.hpp"
 
-class VertexArray;
-class ElementArrayBuffer;
+class IndexBuffer;
 class VertexBuffer;
 
 struct Vertex
@@ -28,9 +27,8 @@ enum Shapes
 
 struct ShapeData
 {
-	VertexArray* m_VAO = nullptr;
-	ElementArrayBuffer* m_EBO = nullptr;
-	VertexBuffer* m_VBO = nullptr;
+	IndexBuffer* mIBO = nullptr;
+	VertexBuffer* mVBO = nullptr;
 };
 
 class ShapeManager : public Singleton<ShapeManager>
@@ -41,5 +39,5 @@ public:
 	std::vector<ShapeData> mShapes;
 
 private:
-	void MakeVAO(std::vector<Vertex> vertices, std::vector<unsigned int> indices, Shapes shape);
+	void MakeVAO(std::vector<Vertex> vertices, std::vector<uint16_t> indices, Shapes shape);
 };

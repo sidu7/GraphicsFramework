@@ -6,6 +6,7 @@
 #include "Utils/JSONHelper.h"
 #include "Rendering/UniformBuffer.h"
 #include "Shape.h"
+#include "Core/Engine.h"
 
 Material::Material() :
 	mDiffuse(0.f),
@@ -17,7 +18,12 @@ Material::Material() :
 	mMaterialUBO(nullptr)
 {
 	mMaterialUBO = RenderingFactory::Instance()->CreateUniformBuffer();
-	mMaterialUBO->Init(sizeof(MaterialDataUBO));
+	mMaterialUBO->Init(sizeof(MaterialDataUBO), Engine::Instance()->GetSettings().mMaterialBindingPoint);
+}
+
+Material::~Material()
+{
+	delete mMaterialUBO;
 }
 
 void Material::Update()

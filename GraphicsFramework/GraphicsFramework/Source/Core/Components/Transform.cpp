@@ -10,7 +10,7 @@
 Transform::Transform()
 {
 	mMatricesUBO = RenderingFactory::Instance()->CreateUniformBuffer();
-	mMatricesUBO->Init(sizeof(ObjectMatricesUBO));
+	mMatricesUBO->Init(sizeof(ObjectMatricesUBO), Engine::Instance()->GetSettings().mTransformBindingPoint);
 }
 
 Transform::~Transform()

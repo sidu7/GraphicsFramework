@@ -17,13 +17,21 @@ class Model;
 class Shader;
 class Light;
 
+enum class Mode
+{
+	Animation,
+	IK
+};
+
 class AnimationScene : public Scene
 {
 public:
-	~AnimationScene();
-	void Init() override;
-	void Update() override;
-	void DebugDisplay() override;
+	virtual ~AnimationScene();
+	virtual void Init() override;
+	virtual void Close() override;
+	virtual void Update() override;
+	virtual void RenderObject(class Object* object, class Shader* shader) override;
+	virtual void DebugDisplay() override;
 
 private:
 	void AnimatorUpdate(std::string animName);
@@ -73,6 +81,7 @@ private:
 	float PathRunTime;
 	float totalRunTime;
 	float t1, t2;
+	Mode mMode;
 
 	//Curve
 	bool mPathWalk;

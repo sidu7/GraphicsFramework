@@ -15,11 +15,17 @@ public:
 	Shader_OpenGL();
 	virtual ~Shader_OpenGL();
 
-	unsigned int CreateProgram(std::string& vertexSource, std::string& fragmentSource);
-	unsigned int CompileShader(unsigned int type, std::string& Source);
+	virtual void Init(std::string vertexShaderId, std::string fragmentShaderId) override;
+	
+	virtual void Uses(const FrameBuffer* framebuffer) override;
+	virtual void Uses(const Texture* texture, unsigned int slot = 0) override;
+	virtual void Uses(const UniformBuffer* uniformBuffer, unsigned int binding = 0) override;
+	virtual void Uses(const VertexBuffer* vertexBuffer) override;
+	virtual void Uses(const IndexBuffer* indexBuffer) override;
 
-	void Init(std::string vertexFilePath, std::string fragmentFilePath);
+	unsigned int m_RendererID;
 
+protected:
 	void SetUniform1i(const std::string& name, int i);
 	void SetUniform1f(const std::string& name, float v);
 	void SetUniform2f(const std::string& name, float v1, float v2);
@@ -36,5 +42,6 @@ public:
 	void SetUniform4fvLoc(int location, glm::vec4 vector);
 	void SetUniformBlock(const std::string& name, unsigned int bindPoint);
 
-	unsigned int m_RendererID;
+	unsigned int CreateProgram(const ShaderSource& shaderSource);
+	unsigned int CompileShader(unsigned int type, const std::vector<char>& Source);
 };

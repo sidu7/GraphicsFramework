@@ -17,6 +17,7 @@ class AllProjects : public Scene
 public:
 	~AllProjects();
 	virtual void Init() override;
+	virtual void Close() override;
 	virtual void Update() override;
 	virtual void DebugDisplay() override;
 	virtual void RenderObject(class Object* object, Shader* shader) override;

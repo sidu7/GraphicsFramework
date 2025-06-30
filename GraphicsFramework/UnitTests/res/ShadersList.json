@@ -1,0 +1,45 @@
+{
+  "Shaders": [
+    {
+      "Id": "SHADER_TEST_VERT",
+      "Path": "res/ShaderTest.vert",
+      "Api": "OPENGL"
+    },
+    {
+      "Id": "SHADER_TEST_VERT",
+      "Path": "res/Vulkan/ShaderTest.vert",
+      "Api": "VULKAN"
+    },
+    {
+      "Id": "SHADER_TEST_FRAG",
+      "Path": "res/ShaderTest.frag"
+    },
+
+    {
+      "Id": "VERTEXBUFFER_TEST_VERT",
+      "Path": "res/VertexBufferTest.vert"
+    },
+    {
+      "Id": "VERTEXBUFFER_TEST_FRAG",
+      "Path": "res/VertexBufferTest.frag"
+    },
+
+    {
+      "Id": "INDEXBUFFER_TEST_VERT",
+      "Path": "res/IndexBufferTest.vert"
+    },
+    {
+      "Id": "INDEXBUFFER_TEST_FRAG",
+      "Path": "res/IndexBufferTest.frag"
+    },
+
+    {
+      "Id": "UNIFORMBUFFER_TEST_VERT",
+      "Path": "res/UniformBufferTest.vert"
+    },
+    {
+      "Id": "UNIFORMBUFFER_TEST_FRAG",
+      "Path": "res/UniformBufferTest.frag"
+    }
+  ]
+}

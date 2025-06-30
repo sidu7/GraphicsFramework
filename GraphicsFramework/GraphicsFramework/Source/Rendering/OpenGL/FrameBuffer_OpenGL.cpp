@@ -8,6 +8,7 @@ Author: Sidhant Tumma
 #include "FrameBuffer_OpenGL.h"
 
 #include "Core/Core.h"
+#include "Rendering/OpenGL/Renderer_OpenGL.h"
 #include "Rendering/RenderingFactory.h"
 #include "Rendering/OpenGL/Texture_OpenGL.h"
 
@@ -31,7 +32,7 @@ FrameBuffer_OpenGL::~FrameBuffer_OpenGL()
 	Delete();
 }
 
-void FrameBuffer_OpenGL::Init(int width, int height, int Texcount)
+void FrameBuffer_OpenGL::Init(int width, int height, ImageFormat format, int Texcount)
 {
 	mWidth = width;
 	mHeight = height;
@@ -47,7 +48,7 @@ void FrameBuffer_OpenGL::Init(int width, int height, int Texcount)
 	{
 		Texture_OpenGL* NewTexture = static_cast<Texture_OpenGL*>(RenderingFactory::Instance()->CreateTexture());
 
-		NewTexture->Init(4, mWidth, mHeight);
+		NewTexture->Init(format, mWidth, mHeight);
 		m_Textures.push_back(NewTexture);
 
 		// attach texture to framebuffer

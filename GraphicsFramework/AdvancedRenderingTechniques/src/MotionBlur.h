@@ -6,12 +6,14 @@ class Light;
 class FrameBuffer;
 class Texture;
 class Object;
+class UniformBuffer;
 
 class MotionBlur : public Scene
 {
 public:
 	~MotionBlur();
 	virtual void Init() override;
+	virtual void Close() override;
 	virtual void Update() override;
 	virtual void DebugDisplay() override;
 	virtual void RenderObject(Object* object, Shader* shader) override;
@@ -24,6 +26,7 @@ private:
 	Light* light;
 	FrameBuffer* G_Buffer;
 	int gBuffershow;
+	UniformBuffer* globalMatrices;
 
 	Shader* skyDomeShader;
 	Texture* skyDomeTexture;

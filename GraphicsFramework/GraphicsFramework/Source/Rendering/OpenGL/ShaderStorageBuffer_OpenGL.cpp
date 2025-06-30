@@ -1,5 +1,5 @@
 #include "ShaderStorageBuffer_OpenGL.h"
-#include "Rendering/Renderer.h"
+#include "Rendering/OpenGL/Renderer_OpenGL.h"
 
 
 ShaderStorageBuffer_OpenGL::ShaderStorageBuffer_OpenGL() : 

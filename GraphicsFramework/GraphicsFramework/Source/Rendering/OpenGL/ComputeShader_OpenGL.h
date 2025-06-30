@@ -25,5 +25,5 @@ public:
 	unsigned int m_RendererID;
 	std::string m_ShaderFilePath;	
 protected:
-	unsigned int CompileShader(unsigned int type, std::string& Source);
+	unsigned int CompileShader(unsigned int type, const std::vector<char>& Source);
 };

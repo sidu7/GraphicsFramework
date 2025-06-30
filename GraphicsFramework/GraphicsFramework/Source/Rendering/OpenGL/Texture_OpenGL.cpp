@@ -8,13 +8,13 @@ Author: Sidhant Tumma
 #include "Texture_OpenGL.h"
 
 #include "Core/Core.h"
+#include "Rendering/OpenGL/Renderer_OpenGL.h"
 
 Texture_OpenGL::Texture_OpenGL() : 
 	mRendererID(0),
 	mLocalBuffer(nullptr), 
 	mWidth(0), 
-	mHeight(0), 
-	mBPP(0)
+	mHeight(0)
 {
 }
 
@@ -25,9 +25,10 @@ void Texture_OpenGL::Init(const std::string& FilePath)
 	stbi_set_flip_vertically_on_load(1);
 		
 	// Load hdr texture
+	int NumChannels;
 	if (FilePath.substr(FilePath.find_last_of(".")) == ".hdr")
 	{
-		float* data = stbi_loadf(mFilePath.c_str(), &mWidth, &mHeight, &mBPP, 0);
+		float* data = stbi_loadf(mFilePath.c_str(), &mWidth, &mHeight, &NumChannels, 0);
 
 		if (!data)
 		{
@@ -54,7 +55,9 @@ void Texture_OpenGL::Init(const std::string& FilePath)
 		return;
 	}
 	
-	mLocalBuffer = stbi_load(mFilePath.c_str(), &mWidth, &mHeight, &mBPP, 0);
+	mLocalBuffer = stbi_load(mFilePath.c_str(), &mWidth, &mHeight, &NumChannels, 0);
+	
+	mFormat = GetImageFormat(NumChannels);
 
 	ReadBufferToTexture();
 
@@ -62,9 +65,8 @@ void Texture_OpenGL::Init(const std::string& FilePath)
 		stbi_image_free(mLocalBuffer);
 }
 
-void Texture_OpenGL::Init(int channels, int width, int height)
+void Texture_OpenGL::Init(ImageFormat format, int width, int height)
 {	
-	mBPP = channels;
 	mWidth = width;
 	mHeight = height;
 
@@ -77,29 +79,17 @@ void Texture_OpenGL::Init(int channels, int width, int height)
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 	GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
-	GLint format;
-	GLint internalformat;
-	switch (mBPP) {
-
-	case 1: format = GL_RED;
-		internalformat = GL_R32F;
-		break;
-	case 3: format = GL_RGB;
-		internalformat = GL_RGB32F;
-		break;
-	case 4: format = GL_RGBA;
-		internalformat = GL_RGBA32F;
-		break;
-	}
-
-	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, internalformat, mWidth, mHeight, 0, format, GL_FLOAT, NULL));
+	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GetGlInternalFormat(), mWidth, mHeight, 0, GetGlFormat(), GL_FLOAT, NULL));
 	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 }
 
 void Texture_OpenGL::Init(void* buffer, int size)
 {
-	mLocalBuffer = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buffer), size, &mWidth, &mHeight, &mBPP, 0);
-
+	int NumChannels;
+	mLocalBuffer = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buffer), size, &mWidth, &mHeight, &NumChannels, 0);
+	
+	mFormat = GetImageFormat(NumChannels);
+	
 	ReadBufferToTexture();
 }
 
@@ -113,6 +103,50 @@ void Texture_OpenGL::EnableTiling() const
 	GLCall(glBindTexture(GL_TEXTURE_2D, mRendererID));
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+}
+
+GLenum Texture_OpenGL::GetGlFormat()
+{
+	switch (mFormat) {
+		case ImageFormat::R16F:
+		case ImageFormat::R32F:
+			return GL_RED;
+		case ImageFormat::RG16F:
+		case ImageFormat::RG32F:
+			return GL_RG;
+		case ImageFormat::RGB16F:
+		case ImageFormat::RGB32F:
+			return GL_RGB;
+		case ImageFormat::RGBA16F:
+		case ImageFormat::RGBA32F:
+			return GL_RGBA;
+		default:
+			return GL_RGBA;
+	}
+}
+
+GLenum Texture_OpenGL::GetGlInternalFormat()
+{
+	switch (mFormat) {
+		case ImageFormat::R16F:
+			return GL_R16F;
+		case ImageFormat::RG16F:
+			return GL_RG16F;
+		case ImageFormat::RGB16F:
+			return GL_RGB16F;
+		case ImageFormat::RGBA16F:
+			return GL_RGBA16F;
+		case ImageFormat::R32F:
+			return GL_R32F;
+		case ImageFormat::RG32F:
+			return GL_RG32F;
+		case ImageFormat::RGB32F:
+			return GL_RGB32F;
+		case ImageFormat::RGBA32F:
+			return GL_RGBA32F;
+		default:
+			return GL_RGBA32F;
+	}
 }
 
 void Texture_OpenGL::ReadBufferToTexture()
@@ -130,17 +164,7 @@ void Texture_OpenGL::ReadBufferToTexture()
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
 	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 
-	GLint format;
-	switch (mBPP) {
-
-	case 1: format = GL_RED;
-		break;
-	case 3: format = GL_RGB;
-		break;
-	case 4: format = GL_RGBA;
-		break;
-	}
-	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, format, mWidth, mHeight, 0, format, GL_UNSIGNED_BYTE, mLocalBuffer));
+	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GetGlInternalFormat(), mWidth, mHeight, 0, GetGlFormat(), GL_UNSIGNED_BYTE, mLocalBuffer));
 	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 }
 

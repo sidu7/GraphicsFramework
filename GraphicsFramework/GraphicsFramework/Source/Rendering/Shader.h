@@ -7,13 +7,18 @@ Author: Sidhant Tumma
 
 #pragma once
 
-#include <string>
-#include "glm/glm.hpp"
+#include "Core/Core.h"
+
+class Texture;
+class UniformBuffer;
+class VertexBuffer;
+class IndexBuffer;
+class FrameBuffer;
 
 struct ShaderSource
 {
-	std::string vertexSource;
-	std::string fragmentSource;
+	std::vector<char> vertexSource;
+	std::vector<char> fragmentSource;
 };
 
 class Shader
@@ -21,24 +26,12 @@ class Shader
 public:
 	virtual ~Shader() {}
 
-	virtual unsigned int CreateProgram(std::string& vertexSource, std::string& fragmentSource) = 0;
-	virtual unsigned int CompileShader(unsigned int type, std::string& Source) = 0;
+	// Must call all relevant of these calls before Init
+	virtual void Uses(const FrameBuffer* framebuffer) = 0;
+	virtual void Uses(const Texture* texture, unsigned int slot = 0) = 0;
+	virtual void Uses(const UniformBuffer* uniformBuffer, unsigned int binding = 0) = 0;
+	virtual void Uses(const VertexBuffer* vertexBuffer) = 0;
+	virtual void Uses(const IndexBuffer* indexBuffer) = 0;
 
-	virtual void Init(std::string vertexFilePath, std::string fragmentFilePath) = 0;
-
-	virtual void SetUniform1i(const std::string& name, int i) = 0;
-	virtual void SetUniform1f(const std::string& name, float v) = 0;
-	virtual void SetUniform2f(const std::string& name, float v1, float v2) = 0;
-	virtual void SetUniform2f(const std::string& name, glm::vec2 v) = 0;
-	virtual void SetUniform3f(const std::string& name, float v1, float v2, float v3) = 0;
-	virtual void SetUniform3f(const std::string& name, glm::vec3 v) = 0;
-	virtual void SetUniform4f(const std::string& name, float v1, float v2, float v3, float v4) = 0;
-	virtual void SetUniform4f(const std::string& name, glm::vec4 v) = 0;
-	virtual void SetUniformMat4f(const std::string& name, glm::mat4 matrix) = 0;
-	virtual void SetUniformMat4fLoc(int location, glm::mat4 matrix) = 0;
-	virtual int GetUniformLocation(const std::string& name) = 0;
-	virtual void SetUniform2fvLoc(int location, glm::vec2 vector) = 0;
-	virtual void SetUniform3fvLoc(int location, glm::vec3 vector) = 0;
-	virtual void SetUniform4fvLoc(int location, glm::vec4 vector) = 0;
-	virtual void SetUniformBlock(const std::string& name, unsigned int bindPoint) = 0;
+	virtual void Init(std::string vertexShaderId, std::string fragmentShaderId) = 0;
 };

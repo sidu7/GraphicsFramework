@@ -3,10 +3,9 @@
 #include <string>
 #include "Rendering/RenderingFactory.h"
 
-Mesh::Mesh(std::vector<VertexData> vertices, std::vector<TextureData> textures, std::vector<unsigned int> indices) :
-	VAO(nullptr),
+Mesh::Mesh(std::vector<VertexData> vertices, std::vector<TextureData> textures, std::vector<uint16_t> indices) :
 	VBO(nullptr),
-	EBO(nullptr)
+	IBO(nullptr)
 {
 	mVertices = vertices;
 	mTextures = textures;
@@ -16,9 +15,8 @@ Mesh::Mesh(std::vector<VertexData> vertices, std::vector<TextureData> textures, 
 
 void Mesh::Destroy()
 {
-	delete VAO;
 	delete VBO;
-	delete EBO;
+	delete IBO;
 }
 
 void Mesh::Draw(Shader * shader)
@@ -48,42 +46,35 @@ void Mesh::Draw(Shader * shader)
 			number = std::to_string(heightNum++);
 		}
 
-		shader->SetUniform1i(name + number, i);
+		//shader->SetUniform1i(name + number, i);
 
 		Renderer::Instance()->BindTexture(mTextures[i].texture, i);
 	}
 
-	Renderer::Instance()->BindVertexArray(VAO);
-	GLCall(glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_INT, 0));
-	Renderer::Instance()->UnbindVertexArray(VAO);
+	Renderer::Instance()->Draw(VBO, IBO, shader);
 
-	GLCall(glActiveTexture(GL_TEXTURE0));
+	for (unsigned int i = 0; i < mTextures.size(); ++i)
+	{
+		Renderer::Instance()->UnbindTexture(mTextures[i].texture, i);
+	}
 }
 
 void Mesh::SetupMesh()
 {
-	VAO = RenderingFactory::Instance()->CreateVertexArray();
 	VBO = RenderingFactory::Instance()->CreateVertexBuffer();
-	EBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
+	IBO = RenderingFactory::Instance()->CreateIndexBuffer();
 
 	Renderer* pRenderer = Renderer::Instance();
+	
+	VBO->SetDataLayout(
+		{
+			VertexFormat::Vec3,  // aPos
+			VertexFormat::Vec3,  // aNormal
+			VertexFormat::Vec2,  // aTexCoord
+			VertexFormat::iVec4, // aBoneIDs
+			VertexFormat::Vec4 	 // aWeights
+		});
 
-	pRenderer->BindVertexArray(VAO);
-	pRenderer->BindVertexBuffer(VBO);
-	   
-	VBO->AddData(&mVertices[0], mVertices.size() * sizeof(VertexData));
-	   
-	pRenderer->BindElementArrayBuffer(EBO);
-	EBO->AddData(&mIndices[0], mIndices.size(), sizeof(unsigned int));
-	   
-	VAO->Push(3, GL_FLOAT, sizeof(float));
-	VAO->Push(3, GL_FLOAT, sizeof(float));
-	VAO->Push(2, GL_FLOAT, sizeof(float));
-	VAO->Push(4, GL_INT,   sizeof(int));
-	VAO->Push(4, GL_FLOAT, sizeof(float));
-	VAO->AddLayout();
-	   
-	pRenderer->UnbindVertexArray(VAO);
-	pRenderer->UnbindVertexBuffer(VBO);
-	pRenderer->UnbindElementArrayBuffer(EBO);
+	VBO->AddData(&mVertices[0], mVertices.size() * sizeof(VertexData));	   
+	IBO->AddData(&mIndices[0], mIndices.size(), IndexType::UInt16);
 }

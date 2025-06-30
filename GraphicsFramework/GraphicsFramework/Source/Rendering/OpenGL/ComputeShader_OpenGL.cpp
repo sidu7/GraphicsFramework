@@ -1,7 +1,7 @@
 #include "ComputeShader_OpenGL.h"
 
 #include "Core/Core.h"
-#include "Rendering/Renderer.h"
+#include "Rendering/OpenGL/Renderer_OpenGL.h"
 #include "Utils/FileHelper.h"
 #include "Rendering/OpenGL/Texture_OpenGL.h"
 
@@ -15,10 +15,10 @@ ComputeShader_OpenGL::~ComputeShader_OpenGL()
 {
 }
 
-unsigned int ComputeShader_OpenGL::CompileShader(unsigned int type, std::string& Source)
+unsigned int ComputeShader_OpenGL::CompileShader(unsigned int type, const std::vector<char>& Source)
 {
 	GLCall(unsigned int id = glCreateShader(type));
-	const char* src = Source.c_str();
+	const char* src = Source.data();
 	GLCall(glShaderSource(id, 1, &src, nullptr));
 	GLCall(glCompileShader(id));
 
@@ -41,7 +41,7 @@ unsigned int ComputeShader_OpenGL::CompileShader(unsigned int type, std::string&
 void ComputeShader_OpenGL::SetShader(std::string path)
 {
 	m_ShaderFilePath = path;
-	std::string shaderSource = FileHelper::ReadFile(path);
+	std::vector<char> shaderSource = FileHelper::ReadFile(path);
 	unsigned int shader = CompileShader(GL_COMPUTE_SHADER,shaderSource);
 
 	GLCall(glAttachShader(m_RendererID, shader));

@@ -5,8 +5,7 @@
 #include "Time.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "Window.h"
-#include "Imgui/imgui.h"
-
+#include "ImguiManager.h"
 
 void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 {
@@ -18,6 +17,9 @@ void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 	mCameraRealUp = glm::vec3(0.0f);
 	glm::vec2 wSize = Window::Instance()->GetWindowSize();
 	mProjection = glm::perspective(FOVangle, wSize.x/wSize.y, nearPlane, farPlane);
+#if defined(RENDERER_VULKAN)
+	mProjection[1][1] *= -1.f;
+#endif
 	pitch = 0.0f;
 	yaw = -90.0f;
 	CalculateFront();
@@ -66,7 +68,7 @@ void Camera::Update()
 
 void Camera::MouseMotionCallBack(SDL_MouseMotionEvent& mouseEvent)
 {
-	if (ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow))
+	if (ImguiManager::Instance()->IsAnyWindowFocused())
 	{
 		lastMouseX = mouseEvent.x;
 		lastMouseY = mouseEvent.y;

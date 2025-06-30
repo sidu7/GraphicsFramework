@@ -11,7 +11,7 @@
 #include "Rendering/Shader.h"
 #include "Rendering/VertexArray.h"
 #include "Rendering/VertexBuffer.h"
-#include "Rendering/ElementArrayBuffer.h"
+#include "Rendering/IndexBuffer.h"
 #include "glm/gtc/matrix_transform.hpp"
 #include "Imgui/imgui.h"
 #include <iostream>
@@ -50,16 +50,16 @@ void Wave::Init()
 	Renderer::Instance()->BindVertexBuffer(mVBOs[VERT]);
 	mVBOs[VERT]->AddDynamicData(NULL, size);
 	mVAO->Push(3, GL_FLOAT, sizeof(float));
-	mVAO->AddLayout();
+	mVAO->SetDataLayout();
 
 	mVBOs[NORM] = RenderingFactory::Instance()->CreateVertexBuffer();
 	Renderer::Instance()->BindVertexBuffer(mVBOs[NORM]);
 	mVBOs[NORM]->AddDynamicData(NULL, size);
 	mVAO->Push(3, GL_FLOAT, sizeof(float));
-	mVAO->AddLayout();
+	mVAO->SetDataLayout();
 
 	mEBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
-	Renderer::Instance()->BindElementArrayBuffer(mEBO);
+	Renderer::Instance()->BindIndexBuffer(mEBO);
 	mTriCount = 2 * (mHeightMap.grid.width() - 1) * (mHeightMap.grid.height() - 1);
 	unsigned* faces = new unsigned[3 * mTriCount];
 	for (int j = 1, n = 0; j < mHeightMap.grid.height(); ++j) {

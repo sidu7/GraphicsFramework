@@ -5,6 +5,7 @@
 #include "Engine.h"
 #include "Camera.h"
 #include "Window.h"
+#include "ImguiManager.h"
 
 void Inputs::Init()
 {
@@ -22,6 +23,7 @@ void Inputs::Update()
 	SDL_Event e;
 	while (SDL_PollEvent(&e) != 0)
 	{
+		ImguiManager::Instance()->ProcessWindowEvent(&e);
 		if (e.type == SDL_QUIT)
 		{
 			Engine::Instance()->appIsRunning = false;

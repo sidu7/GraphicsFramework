@@ -9,6 +9,10 @@
 #include <chrono>
 #include <functional>
 
+// STL
+#include <vector>
+#include <set>
+
 // RapidJson
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
@@ -23,6 +27,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtx/norm.hpp"
+#include <glm/gtc/random.hpp>
 
 // SDL
 #include <SDL/include/SDL.h>
@@ -39,5 +44,4 @@
 #include "Inputs.h"
 #include "Object.h"
 #include "Time.h"
-#include "Engine.h"
 #include "Scene.h"

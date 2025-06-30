@@ -9,6 +9,9 @@
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
+#include "Core/Components/Transform.h"
+#include "Core/Components/Material.h"
+#include "Core/Components/Shape.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <Imgui/imgui.h>
@@ -31,7 +34,7 @@ void Mechanics::Init()
 	NodeCount = 80;
 	Time = 0.0f;
 	NodeMass = 0.05f;
-	mSpringLength = 0.05f;
+	mSpringLength = 0.5f;
 	mSpringConstant = 30.0f;
 	mSpringFriction = 0.2f;
 	mGravitationalForce = glm::vec3(0.0f, -9.8f, 0.0f);
@@ -42,51 +45,20 @@ void Mechanics::Init()
 
 	//mSpringFriction = NodeCount * NodeMass * -mGravitationalForce.y / (mSpringLength/10.0f);
 
-	for (int i = 0; i < NodeCount; ++i)
-	{
-		Mass m{ NodeMass,glm::vec3(0.0f),glm::vec3(0.0f) };
-		RopeNode node;
-		node.mBody = m;
-		node.mPosition = glm::vec3(i * mSpringLength, 4.0f, 0.0);
-		node.mRotation = glm::vec3(0.0);
-		node.mScale = glm::vec3(0.5, 0.5, 0.5);
-		node.mModel = glm::mat4(1.0f);
-		node.mRenderData = &ShapeManager::Instance()->mShapes[Shapes::CUBE];
-		mRopeNodes.emplace_back(node);
-	}
+	ResetNodesAndSprings();
+}
 
-	for (int i = 0; i < NodeCount - 1; ++i)
-	{
-		Spring spring{ &mRopeNodes[i], &mRopeNodes[i + 1] };
-		mSprings.emplace_back(spring);
-	}
+void Mechanics::Close()
+{
+	delete mLight;
+	delete Drawing;
 
-	/*RopeNode node;
-	node.mPosition = glm::vec3(-5.0f - 20.0f, 4.0f, 0.0);
-	node.mRotation = glm::vec3(0.0);
-	node.mScale = glm::vec3(0.6, 0.6, 0.6);
-	node.mModel = glm::mat4(1.0f);
-	node.mRenderData = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
-	mRopeNodes.emplace_back(node);
+	mSprings.clear();
+	mRopeNodes.clear();
+}
 
-	NodeCount = 6;
-	for(int i = 0; i < NodeCount; ++i)
-	{
-		RopeNode node;
-		node.mPosition = glm::vec3(i*5.0f - 20.0f, 4.0f, 0.0);
-		node.mRotation = glm::vec3(0.0);
-		node.mScale = glm::vec3(2.0, 0.4, 0.4);
-		node.mModel = glm::mat4(1.0f);
-		node.mRenderData = ShapeManager::Instance()->mShapes[Shapes::CUBE];
-		mRopeNodes.emplace_back(node);
-	}
-
-	node.mPosition = glm::vec3(NodeCount * 5.0f - 20.0f, 4.0f, 0.0);
-	node.mRotation = glm::vec3(0.0);
-	node.mScale = glm::vec3(0.6, 0.6, 0.6);
-	node.mModel = glm::mat4(1.0f);
-	node.mRenderData = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
-	mRopeNodes.emplace_back(node);*/
+void Mechanics::RenderObject(Object* object, Shader* shader)
+{
 }
 
 void Mechanics::Update()
@@ -104,9 +76,12 @@ void Mechanics::Update()
 		deltaTime = deltaTime / numIterations;
 	}
 
-	for (int i = 0; i < numIterations; ++i)
+	if (!mPauseSimulation)
 	{
-		Simulate(deltaTime);
+		for (int i = 0; i < numIterations; ++i)
+		{
+			Simulate(deltaTime);
+		}
 	}
 
 	deltaTime = Time::Instance()->deltaTime;
@@ -168,7 +143,7 @@ void Mechanics::Update()
 
 
 
-	Drawing->Bind();
+	Renderer::Instance()->BindShader(Drawing);
 
 	Drawing->SetUniform3f("lightPos", mLight->position.x, mLight->position.y, mLight->position.z);
 	Drawing->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
@@ -193,7 +168,7 @@ void Mechanics::Update()
 		Drawing->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
 		Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
 		Drawing->SetUniform1f("shininess", 1.0f);
-		Renderer::Instance()->Draw(*node.mRenderData->m_VAO, *node.mRenderData->m_EBO, *Drawing);
+		Renderer::Instance()->Draw(node.mRenderData->mVAO, node.mRenderData->mIBO, Drawing);
 	}
 
 	//Floor
@@ -206,8 +181,8 @@ void Mechanics::Update()
 	Drawing->SetUniform3f("diffuse", 0.0f, 0.5f, 0.0f);
 	Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
 	Drawing->SetUniform1f("shininess", 1.0f);
-	std::pair<VertexArray*, ElementArrayBuffer*> shape = ShapeManager::Instance()->mShapes[Shapes::QUAD];
-	Renderer::Instance()->Draw(*shape.first, *shape.second, *Drawing);*/
+	ShapeData& shape = ShapeManager::Instance()->mShapes[Shapes::QUAD];
+	Renderer::Instance()->Draw(shape.mVAO, shape.mIBO, Drawing);*/
 }
 
 void Mechanics::DebugDisplay()
@@ -216,6 +191,11 @@ void Mechanics::DebugDisplay()
 	ImGui::InputFloat("Rope Friction Constant", &mSpringFriction);
 	ImGui::InputFloat("Rope Connection Velocity", &mRopeConnectionVelocity, 0.5);
 	ImGui::InputFloat("Air Friction", &mAirFriction);
+	if (ImGui::Button("Reset"))
+	{
+		ResetNodesAndSprings();
+	}
+	ImGui::Checkbox("Pause", &mPauseSimulation);
 	ImGui::End();
 }
 
@@ -256,7 +236,7 @@ void Mechanics::Solve()
 	}
 
 	//Apply Gravitational forces
-	for (int i = 0; i < mRopeNodes.size(); ++i)
+	for (int i = 1; i < mRopeNodes.size() - 1; ++i)
 	{
 		Mass& mass = mRopeNodes[i].mBody;
 		mass.mForce += mGravitationalForce * mass.mMass;
@@ -268,6 +248,7 @@ void Mechanics::Apply(float time)
 {
 	//float deltaTime = Time::Instance()->deltaTime;
 	float deltaTime = time;
+
 	for (int i = 0; i < mRopeNodes.size(); ++i)
 	{
 		RopeNode& node = mRopeNodes[i];
@@ -332,4 +313,45 @@ Derivative Mechanics::Func(const State& initial, float time, const Derivative& x
 glm::vec3 Mechanics::Func(glm::vec3 initial, float time, glm::vec3 x)
 {
 	return initial + x * time;
+}
+
+void Mechanics::ResetNodesAndSprings()
+{
+	mRopeNodes.clear();
+
+	RopeNode node;
+	node.mPosition = mRopeConnectionPosition1;
+	node.mRotation = glm::vec3(0.0);
+	node.mScale = glm::vec3(0.6, 0.6, 0.6);
+	node.mModel = glm::mat4(1.0f);
+	node.mRenderData = &ShapeManager::Instance()->mShapes[Shapes::SPHERE];
+	mRopeNodes.emplace_back(node);
+
+	const float NodeDistance = 0.5f;
+	for (int i = 0; i < NodeCount; ++i)
+	{
+		Mass m{ NodeMass,glm::vec3(0.0f),glm::vec3(0.0f) };
+		RopeNode node;
+		node.mBody = m;
+		node.mPosition = glm::vec3(i * NodeDistance, 4.0f, 0.0);
+		node.mRotation = glm::vec3(0.0);
+		node.mScale = glm::vec3(0.3, 0.3, 0.3);
+		node.mModel = glm::mat4(1.0f);
+		node.mRenderData = &ShapeManager::Instance()->mShapes[Shapes::CUBE];
+		mRopeNodes.emplace_back(node);
+	}
+
+	node.mPosition = mRopeConnectionPosition2;
+	node.mRotation = glm::vec3(0.0);
+	node.mScale = glm::vec3(0.6, 0.6, 0.6);
+	node.mModel = glm::mat4(1.0f);
+	node.mRenderData = &ShapeManager::Instance()->mShapes[Shapes::SPHERE];
+	mRopeNodes.emplace_back(node);
+
+	mSprings.clear();
+	for (int i = 0; i < NodeCount + 1; ++i)
+	{
+		Spring spring{ &mRopeNodes[i], &mRopeNodes[i + 1] };
+		mSprings.emplace_back(spring);
+	}
 }

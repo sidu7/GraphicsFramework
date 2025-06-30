@@ -3,7 +3,7 @@
 #if defined(RENDERER_OPENGL)
 #include "Rendering/OpenGL/RenderingFactory_OpenGL.h"
 #elif defined(RENDERER_VULKAN)
-#include "Rendering/OpenGL/RenderingFactory_Vulkan.h"
+#include "Rendering/Vulkan/RenderingFactory_Vulkan.h"
 #elif defined(RENDERER_DX12)
 #endif
 

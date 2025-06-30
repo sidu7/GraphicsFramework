@@ -14,10 +14,18 @@
 #include "Rendering/RenderingFactory.h"
 #include "Rendering/Shader.h"
 #include "Rendering/FrameBuffer.h"
+#include "Rendering/UniformBuffer.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <Imgui/imgui.h>
+
+struct Matrices
+{
+	glm::mat4 mView;
+	glm::mat4 mProjection;
+	glm::mat4 mPrevView;
+};
 
 MotionBlur::~MotionBlur()
 {
@@ -39,7 +47,7 @@ void MotionBlur::Init()
 	Engine::Instance()->GetCamera()->pitch = -20.0f;
 	Engine::Instance()->GetCamera()->yaw = -265.3f;
 	Engine::Instance()->GetCamera()->mCameraPos = glm::vec3(51.0f, 92.0f, -240.0f);
-	Engine::Instance()->GetCamera()->mSpeed *= 3;
+	Engine::Instance()->GetCamera()->mSpeed = 60.0f;
 	Engine::Instance()->GetCamera()->CalculateFront();
 
 	Renderer::Instance()->BindShader(lighting);
@@ -55,6 +63,9 @@ void MotionBlur::Init()
 	Color->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
 
 	gBuffershow = 0;
+
+	globalMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
+	globalMatrices->Init(sizeof(Matrices));
 
 	//SkyDome shaders
 	skyDomeShader = RenderingFactory::Instance()->CreateShader(); 
@@ -96,6 +107,34 @@ void MotionBlur::Init()
 	MotionBlurShader->Init("res/motionblur/MotionBlur.vert", "res/motionblur/MotionBlur.frag");
 	ReconBlur = false;
 	PerPixel = true;
+
+	Engine::Instance()->stopMoving = false;
+}
+
+void MotionBlur::Close()
+{
+	delete baseShader;
+	delete lighting;
+	delete ambient;
+	delete light;
+
+	delete G_Buffer;
+	delete Color;
+	delete globalMatrices;
+
+	//SkyDome shaders
+	delete skyDomeShader;
+	delete skyDomeTexture;
+
+	// Clear Objects in Scene
+	ObjectManager::Instance()->ClearObjects();
+
+	delete TileMax;
+	delete NeighbourMax;
+	delete TileMaxShader;
+	delete NeighbourMaxShader;
+	delete ReconstructionShader;
+	delete MotionBlurShader;
 }
 
 void MotionBlur::Update()
@@ -107,19 +146,21 @@ void MotionBlur::Update()
 	Renderer* pRenderer = Renderer::Instance();
 
 	//G-Buffer pass
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+	pRenderer->SetDepthTest(true);
+	pRenderer->SetBlending(false);
 	pRenderer->BindFrameBuffer(G_Buffer);
 	G_Buffer->Clear();
 	pRenderer->BindShader(baseShader);
-	baseShader->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
-	baseShader->SetUniformMat4f("prevview", Engine::Instance()->GetCamera()->mPrevView);
-	baseShader->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
+
+	Matrices MatData{ Engine::Instance()->GetCamera()->mView, Engine::Instance()->GetCamera()->mProjection, Engine::Instance()->GetCamera()->mPrevView };
+	globalMatrices->AddData(sizeof(MatData), &MatData);
 	baseShader->SetUniform1f("deltaTime", Time::Instance()->deltaTime);
 	baseShader->SetUniform1i("k", k);
 
+	pRenderer->BindUniformBuffer(globalMatrices, 0);
 	ObjectManager::Instance()->RenderObjects(baseShader);
 
+	pRenderer->UnbindUniformBuffer(globalMatrices);
 	pRenderer->UnbindShader(baseShader);
 	pRenderer->UnbindFrameBuffer(G_Buffer);
 
@@ -132,19 +173,20 @@ void MotionBlur::Update()
 	}
 	else
 	{
-		glViewport(0, 0, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		pRenderer->SetViewportSize(glm::vec2(0, 0), glm::vec2(Window::Instance()->GetWidth(), Window::Instance()->GetHeight()));
+		pRenderer->Clear();
 	}
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+
+	pRenderer->SetDepthTest(false);
+	pRenderer->SetBlending(false);
 
 	pRenderer->BindShader(ambient);
 	G_Buffer->TexBind(2, 3);
 	ambient->SetUniform1i("diffusetex", 3);
-	Renderer::Instance()->DrawQuad();
+	Renderer::Instance()->DrawQuad(ambient);
 	pRenderer->UnbindShader(ambient);
 
-	glEnable(GL_BLEND);
+	pRenderer->SetBlending(true);
 	// Global Lighting pass	
 	pRenderer->BindShader(lighting);
 	G_Buffer->TexBind(0, 1);
@@ -161,12 +203,12 @@ void MotionBlur::Update()
 	lighting->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
 	lighting->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
 	lighting->SetUniform1i("GBufferShow", gBuffershow);
-	Renderer::Instance()->DrawQuad();
+	Renderer::Instance()->DrawQuad(lighting);
 	pRenderer->UnbindShader(lighting);
 
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
+	pRenderer->SetCullingFace(CullFace::None);
+	pRenderer->SetBlending(false);
+	pRenderer->SetDepthTest(true);
 
 	// Copy depth contents from G-Buffer
 	if (MotionBlurOn)
@@ -189,16 +231,15 @@ void MotionBlur::Update()
 	skyDomeShader->SetUniform1i("skyDome", 1);
 	skyDomeShader->SetUniform1f("exposure", exposure);
 	skyDomeShader->SetUniform1f("contrast", contrast);
-	Renderer::Instance()->Draw(skyDome->GetComponent<Shape>()->mShapeData->m_VAO, skyDome->GetComponent<Shape>()->mShapeData->m_EBO, skyDomeShader);
+	Renderer::Instance()->Draw(skyDome->GetComponent<Shape>()->mShapeData->mVBO, skyDome->GetComponent<Shape>()->mShapeData->mIBO, skyDomeShader);
 	pRenderer->UnbindShader(skyDomeShader);
 	//Engine::Instance().stopMoving = true;
 
 	if (MotionBlurOn)
 	{
 		pRenderer->UnbindFrameBuffer(Color);
-		glDisable(GL_BLEND);
-		glDisable(GL_DEPTH_TEST);
-
+		pRenderer->SetBlending(false);
+		pRenderer->SetDepthTest(false);
 
 		pRenderer->BindShader(MotionBlurShader);
 		Color->TexBind(0, 1);
@@ -206,7 +247,7 @@ void MotionBlur::Update()
 		G_Buffer->TexBind(4, 2);
 		MotionBlurShader->SetUniform1i("Velocity", 2);
 		MotionBlurShader->SetUniform1i("S", S);
-		Renderer::Instance()->DrawQuad();
+		Renderer::Instance()->DrawQuad(MotionBlurShader);
 
 		pRenderer->UnbindShader(MotionBlurShader);
 	}
@@ -237,45 +278,49 @@ void MotionBlur::RenderObject(Object* object, Shader* shader)
 		if (material->pTexture)
 		{
 			Renderer::Instance()->BindTexture(material->pTexture, 8);
-			Renderer::Instance()->BindUniformBuffer(material->mMaterialUBO, 3);
 		}
+		Renderer::Instance()->BindUniformBuffer(material->mMaterialUBO, 3);
 	}
 
 	Shape* shape = object->GetComponent<Shape>();
 	if (shape)
 	{
-		if (shape && glIsEnabled(GL_CULL_FACE))
+		if (shape && Renderer::Instance()->GetCullingFace() != CullFace::None)
 		{
 			if (shape->mShape == Shapes::QUAD)
 			{
-				glCullFace(GL_BACK);
+				Renderer::Instance()->SetCullingFace(CullFace::Back);
 			}
 			else
 			{
-				glCullFace(GL_FRONT);
+				Renderer::Instance()->SetCullingFace(CullFace::Front);
 			}
 		}
 
 		if (shape->mMesh)
 		{
-			Renderer::Instance()->Draw(shape->mShapeData->m_VAO, shape->mShapeData->m_EBO, shader);
+			Renderer::Instance()->Draw(shape->mShapeData->mVBO, shape->mShapeData->mIBO, shader);
 		}
 		if (shape->mWireMesh)
 		{
-			Renderer::Instance()->DebugDrawLines(shape->mShapeData->m_VAO, shape->mShapeData->m_EBO, shader);
+			Renderer::Instance()->DebugDrawLines(shape->mShapeData->mVBO, shape->mShapeData->mIBO, shader);
 		}
 		if (shape->mDebugMesh)
 		{
-			Renderer::Instance()->DebugDraw(shape->mShapeData->m_VAO, shape->mShapeData->m_EBO, shader);
+			Renderer::Instance()->DebugDraw(shape->mShapeData->mVBO, shape->mShapeData->mIBO, shader);
 		}
 	}
 
+	if (transform)
+	{
+		Renderer::Instance()->UnbindUniformBuffer(transform->mMatricesUBO);
+	}
 	if (material)
 	{
 		if (material->pTexture)
 		{
 			Renderer::Instance()->UnbindTexture(material->pTexture, 8);
-			Renderer::Instance()->UnbindUniformBuffer(material->mMaterialUBO);
 		}
+		Renderer::Instance()->UnbindUniformBuffer(material->mMaterialUBO);
 	}
 }

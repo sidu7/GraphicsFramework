@@ -10,6 +10,9 @@
 #include "Rendering/Model.h"
 #include "Rendering/Shader.h"
 #include "Rendering/RenderingFactory.h"
+#include "Core/Components/Transform.h"
+#include "Core/Components/Shape.h"
+#include "Core/Components/Material.h"
 
 
 AnimationScene::~AnimationScene()
@@ -20,6 +23,8 @@ AnimationScene::~AnimationScene()
 
 void AnimationScene::Init()
 {
+	mMode = Mode::Animation;
+
 	demoModel = new Model();
 	demoModel->LoadModel("res/ArcherWalking.fbx");
 	demoModel->AddAnimation("res/ArcherDancing.fbx");
@@ -47,7 +52,7 @@ void AnimationScene::Init()
 	mDoOnce = true;
 	IKDuration = 1.0f;
 
-	animation = demoModel->mAnimations[3];
+	animation = demoModel->mAnimations[0];
 	//demoModel->LoadModel("res/arissa.fbx");
 
 	drawModel = true;
@@ -63,9 +68,9 @@ void AnimationScene::Init()
 	light = new Light(glm::vec3(10.0, 100.0, 40.0));
 
 	modelDraw = RenderingFactory::Instance()->CreateShader();
-	modelDraw->Init("src/animshaders/ModelDraw.vert", "src/animshaders/ModelDraw.frag");
+	modelDraw->Init("res/Shaders/ModelDraw.vert", "res/Shaders/ModelDraw.frag");
 	Drawing = RenderingFactory::Instance()->CreateShader(); 
-	Drawing->Init("src/animshaders/Drawing.vert", "src/animshaders/Drawing.frag");
+	Drawing->Init("res/Shaders/Drawing.vert", "res/Shaders/Drawing.frag");
 
 	std::ifstream file("res/JSON Data/ControlPoints.json");
 	std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -104,12 +109,91 @@ void AnimationScene::Init()
 	showControlWindow = false;
 	mGoalPosition = glm::vec3(-5.0f, 14.0f, 10.0f);
 	maxIterations = 10;
-	sqrDistanceError = 0.2f;
+	sqrDistanceError = 0.02f;
+}
+
+void AnimationScene::Close()
+{
+	delete demoModel;
+
+	mBonesTransformation.clear();
+
+	delete light;
+
+	delete modelDraw;
+	delete Drawing;
+
+	controlPoints.clear();		
+	controlPointsMatrices.clear();
+	mArcLengthTable.clear();
+	delete mCurveVAO;
+}
+
+void AnimationScene::RenderObject(Object* object, Shader* shader)
+{
+	Transform* transform = object->GetComponent<Transform>();
+	if (transform)
+	{
+		Renderer::Instance()->BindUniformBuffer(transform->mMatricesUBO, 1);
+	}
+
+	Material* material = object->GetComponent<Material>();
+	if (material)
+	{
+		if (material->pTexture)
+		{
+			Renderer::Instance()->BindTexture(material->pTexture, 8);
+		}
+		Renderer::Instance()->BindUniformBuffer(material->mMaterialUBO, 3);
+	}
+
+	Shape* shape = object->GetComponent<Shape>();
+	if (shape)
+	{
+		if (shape && Renderer::Instance()->GetCullingFace() != CullFace::None)
+		{
+			if (shape->mShape == Shapes::QUAD)
+			{
+				Renderer::Instance()->SetCullingFace(CullFace::Back);
+			}
+			else
+			{
+				Renderer::Instance()->SetCullingFace(CullFace::Front);
+			}
+		}
+
+		if (shape->mMesh)
+		{
+			Renderer::Instance()->Draw(shape->mShapeData->mVAO, shape->mShapeData->mIBO, shader);
+		}
+		if (shape->mWireMesh)
+		{
+			Renderer::Instance()->DebugDrawLines(shape->mShapeData->mVAO, shape->mShapeData->mIBO, shader);
+		}
+		if (shape->mDebugMesh)
+		{
+			Renderer::Instance()->DebugDraw(shape->mShapeData->mVAO, shape->mShapeData->mIBO, shader);
+		}
+	}
+
+	if (transform)
+	{
+		Renderer::Instance()->UnbindUniformBuffer(transform->mMatricesUBO);
+	}
+
+	if (material)
+	{
+		if (material->pTexture)
+		{
+			Renderer::Instance()->UnbindTexture(material->pTexture, 8);
+		}
+		Renderer::Instance()->UnbindUniformBuffer(material->mMaterialUBO);
+	}
 }
 
 void AnimationScene::Update()
 {
-	modelDraw->Bind();
+	Renderer::Instance()->BindShader(modelDraw);
 
 	if (!isPaused)
 	{
@@ -168,6 +252,10 @@ void AnimationScene::Update()
 
 		mPathMatrix *= rotation;
 	}
+	else
+	{
+		mPathMatrix = glm::mat4(1.0f);
+	}
 
 	if (!isPaused)
 	{
@@ -175,22 +263,27 @@ void AnimationScene::Update()
 		AnimationRunTime += Time::Instance()->deltaTime * speedFactor;
 	}
 
-	if (mDoOnce)
-	{
-		AnimatorUpdate(animation);
-		mDoOnce = false;
-	}
-
 	glm::mat4 matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	matrix = glm::scale(matrix, glm::vec3(0.1f));
 
-	if (mEndEffector == glm::vec3(0.0f))
+	if (mMode == Mode::Animation)
 	{
-		mEndEffector = demoModel->mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
+		AnimatorUpdate(animation);
 	}
+	if (mMode == Mode::IK)
+	{
+		if (mDoOnce)
+		{
+			AnimatorUpdate(animation);
+			mDoOnce = false;
+		}
+		IKUpdate(matrix, AnimationRunTime / IKDuration);
 
-
-	IKUpdate(matrix, AnimationRunTime / IKDuration);
+		if (mEndEffector == glm::vec3(0.0f))
+		{
+			mEndEffector = demoModel->mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
+		}
+	}
 
 	for (unsigned int i = 0; i < demoModel->mBones.size(); ++i)
 	{
@@ -213,7 +306,7 @@ void AnimationScene::Update()
 	}
 
 
-	Drawing->Bind();
+	Renderer::Instance()->BindShader(Drawing);
 	Drawing->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
 	Drawing->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
 	Drawing->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
@@ -232,33 +325,33 @@ void AnimationScene::Update()
 			Drawing->SetUniformMat4f("model", mPathMatrix * matrix * demoModel->mBones[i].mCurrentGlobalTransformation);
 			Drawing->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
 			const ShapeData& shape = ShapeManager::Instance()->mShapes[Shapes::CUBE];
-			Renderer::Instance()->Draw(*shape.m_VAO, *shape.m_EBO, *Drawing);
+			Renderer::Instance()->Draw(shape.mVAO, shape.mIBO, Drawing);
 		}
 		DrawBones();
 		Drawing->SetUniform1i("lighting", 1);
 	}
 
-	glEnable(GL_DEPTH_TEST);
+	Renderer::Instance()->SetDepthTest(true);
 
 	for (unsigned int i = 0; i < controlPoints.size(); ++i)
 	{
-		Drawing->Bind();
+		Renderer::Instance()->BindShader(Drawing);
 		glm::mat4 controlModel = glm::translate(glm::mat4(1.0f), glm::vec3(controlPoints[i]));
 		controlModel = glm::translate(controlModel, glm::vec3(0.0f, 0.125f, 0.0f));
 		controlModel = glm::scale(controlModel, glm::vec3(0.25f));
 		Drawing->SetUniformMat4f("model", controlModel);
 		Drawing->SetUniform3f("diffuse", 0.0f, 0.0f, 1.0f);
 		const ShapeData& shape = ShapeManager::Instance()->mShapes[Shapes::CUBE];
-		Renderer::Instance()->Draw(*shape.m_VAO, *shape.m_EBO, *Drawing);
+		Renderer::Instance()->Draw(shape.mVAO, shape.mIBO, Drawing);
 	}
 
-	Drawing->Bind();
+	Renderer::Instance()->BindShader(Drawing);
 	Drawing->SetUniformMat4f("model", glm::mat4(1.0f));
 
-	mCurveVAO->Bind();
+	Renderer::Instance()->BindVertexArray(mCurveVAO);
 	//glLineWidth(2.0f);
 	glDrawArrays(GL_LINES, 1, mCurvePointsSize - 1);
-	mCurveVAO->Unbind();
+	Renderer::Instance()->UnbindVertexArray(mCurveVAO);
 
 	matrix = glm::mat4(1.0f);
 	matrix = glm::translate(matrix, glm::vec3(0.0f, 0.0f, 0.0f));
@@ -270,7 +363,7 @@ void AnimationScene::Update()
 	Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
 	Drawing->SetUniform1f("shininess", 1.0f);
 	const ShapeData& shapeQuad = ShapeManager::Instance()->mShapes[Shapes::QUAD];
-	Renderer::Instance()->Draw(*shapeQuad.m_VAO, *shapeQuad.m_EBO, *Drawing);
+	Renderer::Instance()->Draw(shapeQuad.mVAO, shapeQuad.mIBO, Drawing);
 
 	matrix = glm::mat4(1.0f);
 	matrix = glm::translate(matrix, mGoalPosition);
@@ -281,18 +374,44 @@ void AnimationScene::Update()
 	Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
 	Drawing->SetUniform1f("shininess", 1.0f);
 	const ShapeData& shapeSphere = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
-	Renderer::Instance()->Draw(*shapeSphere.m_VAO, *shapeSphere.m_EBO, *Drawing);
+	Renderer::Instance()->Draw(shapeSphere.mVAO, shapeSphere.mIBO, Drawing);
 }
 
 void AnimationScene::DebugDisplay()
 {
 	ImGui::Begin("Animation");
-	bool selected = true;
-	if (ImGui::BeginCombo("", "Select Animation"))
+
+	const std::vector<std::string> Modes = {
+		"Animation",
+		"Inverse Kinematics"
+	};
+	if (ImGui::BeginCombo("Project Mode", Modes[static_cast<uint16_t>(mMode)].c_str()))
+	{
+		for (uint16_t i = 0; i < Modes.size(); ++i)
+		{
+			if (ImGui::Selectable(Modes[i].c_str(), i == static_cast<uint16_t>(mMode)))
+			{
+				mMode = static_cast<Mode>(i);
+				switch (mMode)
+				{
+					case Mode::Animation:
+						AnimationRunTime = 0.01f;
+						break;
+
+					case Mode::IK:
+						mDoOnce = true;
+						animation = demoModel->mAnimations[3]; // Pickup animation
+						break;
+				}
+			}
+		}
+		ImGui::EndCombo();
+	}
+	if (ImGui::BeginCombo("Select Animation", animation.c_str()))
 	{
 		for (unsigned int i = 0; i < demoModel->mAnimations.size(); ++i)
 		{
-			if (ImGui::Selectable(demoModel->mAnimations[i].c_str(), selected))
+			if (ImGui::Selectable(demoModel->mAnimations[i].c_str(), demoModel->mAnimations[i] == animation))
 			{
 				animation = demoModel->mAnimations[i];
 				AnimationRunTime = 0.01f;
@@ -330,7 +449,14 @@ void AnimationScene::DebugDisplay()
 		isPaused = true;
 		AnimationRunTime += 2.0f * Time::Instance()->deltaTime;
 	}
-	ImGui::Checkbox("Walk on Path", &mPathWalk);
+	if (ImGui::Checkbox("Walk on Path", &mPathWalk))
+	{
+		PathRunTime = 0.0f;
+		if (mPathWalk)
+		{
+			animation = demoModel->mAnimations[0]; // Walking Animation
+		}
+	}
 	if (ImGui::Button(showControlWindow ? "Hide Control Points Window" : "Show Control Points Window"))
 	{
 		showControlWindow = !showControlWindow;
@@ -393,8 +519,11 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 			//interpolate for timeframe
 			AnimationData& anim = bone.mAnimations[animName];
 			double TimeinTicks = AnimationRunTime * anim.mTicksPerSec;
-			double timeFrame = fmod(TimeinTicks, anim.mDuration);
-			timeFrame = anim.mDuration - 2; // Static IK pose
+			double timeFrame = glm::mod(TimeinTicks, anim.mDuration);
+			if (mMode == Mode::IK)
+			{
+				timeFrame = anim.mDuration - 2; // Static IK pose
+			}
 			unsigned int posIndex = FindLessThaninList<glm::vec3>(timeFrame, anim.mKeyPositions);
 			unsigned int rotIndex = FindLessThaninList<Quaternion>(timeFrame, anim.mKeyRotations);
 			unsigned int sclIndex = FindLessThaninList<glm::vec3>(timeFrame, anim.mKeyScalings);
@@ -455,7 +584,7 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 			bone.mCurrentGlobalTransformation = trans;
 		}
 
-		//mBonesTransformation.push_back(bone.mCurrentGlobalTransformation);
+		mBonesTransformation.push_back(bone.mCurrentGlobalTransformation);
 	}
 }
 
@@ -484,12 +613,12 @@ void AnimationScene::DrawBones()
 	vb->AddData(&vertices[0], vertices.size() * sizeof(glm::vec3));
 	  
 	va->Push(3, GL_FLOAT, sizeof(float));
-	va->AddLayout();
+	va->SetDataLayout();
 
 	//glLineWidth(1.0f);
 	glDrawArrays(GL_LINES, 0, demoModel->mBones.size() * 2 - 2);
-	va->Unbind();
-	vb->Unbind();
+	Renderer::Instance()->UnbindVertexArray(va);
+	Renderer::Instance()->UnbindVertexBuffer(vb);
 
 	delete va;
 	delete vb;
@@ -549,10 +678,10 @@ void AnimationScene::CreateControlPointsVAO()
 	vb->AddData(&curvePoints[0], curvePoints.size() * sizeof(glm::vec4));
 
 	mCurveVAO->Push(4, GL_FLOAT, sizeof(float));
-	mCurveVAO->AddLayout();
+	mCurveVAO->SetDataLayout();
 
-	vb->Unbind();
-	mCurveVAO->Unbind();
+	Renderer::Instance()->UnbindVertexBuffer(vb);
+	Renderer::Instance()->UnbindVertexArray(mCurveVAO);
 	delete vb;
 }
 
@@ -604,9 +733,7 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 				glm::quat q = glm::quat(cos(alpha / 2.0f), sin(alpha / 2.0f) * axis.x / alen,
 					sin(alpha / 2.0f) * axis.y / alen, sin(alpha / 2.0f) * axis.z / alen);
 				glm::normalize(q);
-				demoModel->mBones[mIKBones[j]].mIKTransformation = demoModel->mBones[mIKBones[j]].mIKTransformation *
-					glm::toMat4(q);
-				//demoModel->mBones[mIKBones[j]].mIKTransformation = glm::toMat4(q);
+				demoModel->mBones[mIKBones[j]].mIKTransformation *= glm::toMat4(q);
 
 				for (int k = j; k >= 0; --k)
 				{

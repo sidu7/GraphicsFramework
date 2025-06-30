@@ -14,14 +14,17 @@ public:
 	Texture_OpenGL();
 	virtual ~Texture_OpenGL();
 
-	virtual void Init(int channels, int width, int height) override;
+	virtual void Init(ImageFormat format, int width, int height) override;
 	virtual void Init(const std::string& FilePath) override;
 	virtual void Init(void* buffer, int size) override;
 
 	virtual void EnableTiling() const override;
 	virtual inline std::string GetSourcePath() const override { return mFilePath; }
 
-	int mWidth, mHeight, mBPP;
+	GLenum GetGlFormat();
+	GLenum GetGlInternalFormat();
+
+	int mWidth, mHeight;
 	std::string mFilePath;
 	unsigned int mRendererID;
 

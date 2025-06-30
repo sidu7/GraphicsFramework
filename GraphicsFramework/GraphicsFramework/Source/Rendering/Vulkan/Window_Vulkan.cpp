@@ -14,17 +14,6 @@ void Window_Vulkan::Init(int width, int height)
 	}
 	SDL_Vulkan_LoadLibrary(nullptr);
 
-	//printf("%i joysticks were found.\n\n", SDL_NumJoysticks());//NUmber of joysticks
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-	// Enable AntiAliasiing
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
 	scrWidth = width;
 	scrHeight = height;
 
@@ -40,13 +29,6 @@ void Window_Vulkan::Init(int width, int height)
 	{
 		printf("Could not create window: %s\n", SDL_GetError());
 		return;
-	}
-
-	glContext = nullptr;
-	glContext = SDL_GL_CreateContext(pWindow);
-	if (glContext == NULL)
-	{
-		printf("Vulkan context could not be created. SDL Error: %s\n", SDL_GetError());
 	}
 }
 

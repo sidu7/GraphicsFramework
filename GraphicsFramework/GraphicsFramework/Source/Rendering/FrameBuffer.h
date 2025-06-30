@@ -13,7 +13,7 @@ class FrameBuffer
 public:
 	virtual ~FrameBuffer() {}
 	 
-	virtual void Init(int width, int height, int Texcount = 1) = 0;
+	virtual void Init(int width, int height, ImageFormat format, int Texcount = 1) = 0;
 
 	virtual void CopyDepthTo(const FrameBuffer* target) = 0;
 	virtual void TexBind(unsigned int index = 0, unsigned int slot = 0) = 0;

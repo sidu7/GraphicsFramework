@@ -7,6 +7,7 @@ Author: Sidhant Tumma
 
 #pragma once
 
+#include "Core/Core.h"
 #include "Rendering/VertexBuffer.h"
 
 class VertexBuffer_OpenGL : public VertexBuffer
@@ -14,10 +15,15 @@ class VertexBuffer_OpenGL : public VertexBuffer
 public:
 	VertexBuffer_OpenGL();
 	virtual ~VertexBuffer_OpenGL();
-	 
-	virtual void AddData(const void* data,unsigned int size) const override;
-	virtual void AddSubData(const void* data, unsigned int size, unsigned offset = 0) const override;
-	virtual void AddDynamicData(const void* data, unsigned int size) const override;
+	
+	virtual void SetDataLayout(const std::vector<VertexFormat>& vertexFormats) override;
+	virtual void Delete() const override;
+	
+	virtual void AddData(const void* data,unsigned int size) override;
+	virtual void AddSubData(const void* data, unsigned int size, unsigned offset = 0) override;
+	virtual void AddDynamicData(const void* data, unsigned int size) override;
 
-	unsigned int m_RendererID;
+
+	unsigned int m_VertexBufferID;
+	unsigned int m_VertexArrayID;
 };

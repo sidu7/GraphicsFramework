@@ -1,4 +1,4 @@
-#version 330 core
+#version 420
 layout (location = 0) out vec4 Normals;
 layout (location = 1) out vec4 WorldPosition;
 layout (location = 2) out vec4 DiffuseColor;
@@ -12,11 +12,17 @@ smooth in vec4 X;
 smooth in vec4 Xprime;
 smooth in float depth;
 
-uniform sampler2D texDiff;
+layout (binding = 8) uniform sampler2D texDiff;
+
+layout (binding = 3) uniform ColorData 
+{
+	vec4 diffuse;
+	vec4 specular;
+	float shininess;
+	bool lighting;
+};
+
 uniform vec2 windowSize;
-uniform vec3 diffuse;
-uniform vec3 specular;
-uniform float shininess;
 uniform float deltaTime;
 uniform int k;
 
@@ -24,8 +30,8 @@ void main()
 {    
 	Normals.xyz = normalize(normalVec);
 	WorldPosition.xyz = worldPos;
-	DiffuseColor.xyz = diffuse + texture(texDiff,TexCoords).rgb;
-	SpecularAlpha.xyz = specular;
+	DiffuseColor.xyz = diffuse.xyz + texture(texDiff,TexCoords).rgb;
+	SpecularAlpha.xyz = specular.xyz;
 	SpecularAlpha.w = shininess;
 	
 	vec2 a = (X.xy/X.w) * 0.5 + 0.5;

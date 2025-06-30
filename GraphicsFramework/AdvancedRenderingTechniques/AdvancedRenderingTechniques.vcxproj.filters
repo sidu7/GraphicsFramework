@@ -27,10 +27,10 @@
     <ClCompile Include="src\AllProjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Main.cpp">
+    <ClCompile Include="src\MotionBlur.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MotionBlur.cpp">
+    <ClCompile Include="src\AdvancedRenderingTechniquesApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -43,6 +43,9 @@
     </ClInclude>
     <ClInclude Include="res\shaders\Imgui.h">
       <Filter>Resource Files\Shaders</Filter>
+    </ClInclude>
+    <ClInclude Include="src\AdvancedRenderingTechniquesApplication.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -201,6 +204,9 @@
     </None>
     <None Include="res\motionblur\TileMax.vert">
       <Filter>Resource Files\MotionBlur</Filter>
+    </None>
+    <None Include="res\shaders\ShadersList.ini">
+      <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

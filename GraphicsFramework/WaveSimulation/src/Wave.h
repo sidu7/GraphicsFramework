@@ -8,7 +8,7 @@ class Light;
 class Shader;
 class VertexArray;
 class VertexBuffer;
-class ElementArrayBuffer;
+class IndexBuffer;
 
 class Wave : public Scene
 {
@@ -28,7 +28,7 @@ private:
 	VertexArray* mVAO;
 	VertexBuffer* mVBOs[2];
 	enum { VERT = 0, NORM = 1 };
-	ElementArrayBuffer* mEBO;
+	IndexBuffer* mEBO;
 	int mTriCount;
 	std::vector<glm::vec3> mMeshPositions, mMeshNormals;
 	glm::vec3 mDiffuseColor;

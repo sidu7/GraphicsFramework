@@ -8,7 +8,7 @@
 class Light;
 class Shader;
 class VertexArray;
-class ElementArrayBuffer;
+class IndexBuffer;
 struct ShapeData;
 
 struct Mass
@@ -49,16 +49,19 @@ struct Derivative
 class Mechanics : public Scene
 {
 public:
-	~Mechanics();
-	void Init() override;
-	void Update() override;
-	void DebugDisplay() override;
+	virtual ~Mechanics();
+	virtual void Init() override;
+	virtual void Close() override;
+	virtual void Update() override;
+	virtual void RenderObject(class Object* object, class Shader* shader) override;
+	virtual void DebugDisplay() override;
 
 private:
 	void Simulate(float deltaTime);
 	void Start();
 	void Solve();
 	void Apply(float deltaTime);
+	void ResetNodesAndSprings();
 
 	Derivative Func(const State& initial, float time, const Derivative& x, glm::vec3 acceleration);
 	glm::vec3 Func(glm::vec3 initial, float time, glm::vec3 x);
@@ -67,6 +70,7 @@ private:
 	Light* mLight;
 	Shader* Drawing;
 
+	bool mPauseSimulation;
 	float Time;
 	int NodeCount;
 	float NodeMass;

@@ -6,13 +6,14 @@
 class RenderingFactory_OpenGL : public RenderingFactory
 {
 public:
+	virtual std::string GetApiName() { return "OPENGL"; }
+
 	virtual ComputeShader* CreateComputeShader();
-	virtual ElementArrayBuffer* CreateElementArrayBuffer();
+	virtual IndexBuffer* CreateIndexBuffer();
 	virtual FrameBuffer* CreateFrameBuffer();
 	virtual Shader* CreateShader();
 	virtual ShaderStorageBuffer* CreateShaderStorageBuffer();
 	virtual Texture* CreateTexture();
 	virtual UniformBuffer* CreateUniformBuffer();
-	virtual VertexArray* CreateVertexArray();
 	virtual VertexBuffer* CreateVertexBuffer();
 };

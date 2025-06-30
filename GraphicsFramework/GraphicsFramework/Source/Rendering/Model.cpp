@@ -129,7 +129,7 @@ Mesh Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 {
 	std::vector<Mesh::VertexData> vertices;
 	std::vector<Mesh::TextureData> textures;
-	std::vector<unsigned int> indices;
+	std::vector<uint16_t> indices;
 	std::vector<unsigned int> vertexindex;
 
 	//Processing vertices

@@ -5,7 +5,7 @@
 #include <unordered_map>
 
 class VertexArray;
-class ElementArrayBuffer;
+class IndexBuffer;
 enum Shapes;
 class Shader;
 class Component;

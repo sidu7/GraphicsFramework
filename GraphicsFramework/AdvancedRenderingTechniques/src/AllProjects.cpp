@@ -25,6 +25,12 @@
 
 #define MAX_BLUR_WEIGHTS_NUM 101
 
+struct Matrices
+{
+	glm::mat4 mView;
+	glm::mat4 mProjection;
+};
+
 AllProjects::~AllProjects()
 {
 }
@@ -50,7 +56,7 @@ void AllProjects::Init()
 	locallight->Init("res/shaders/LocalLight.vert", "res/shaders/LocalLight.frag");
 
 	globalMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
-	globalMatrices->Init(2 * sizeof(glm::mat4));
+	globalMatrices->Init(sizeof(Matrices));
 
 	blurHorizontal = RenderingFactory::Instance()->CreateComputeShader(); 
 	blurHorizontal->SetShader("res/shaders/BlurHorizontal.compute");
@@ -173,11 +179,52 @@ void AllProjects::Init()
 	showLocalLights = true;
 }
 
-struct Matrices
+void AllProjects::Close()
 {
-	glm::mat4 mView;
-	glm::mat4 mProjection;
-};
+	delete baseShader;
+	delete lighting;
+	delete ambient;
+	delete ambientNoAO;
+	delete shadow;
+	delete locallight;
+	delete globalMatrices;
+	delete blurHorizontal;
+	delete blurVertical;
+	delete light;
+
+	delete G_Buffer;
+	delete ShadowMap;
+
+	memset(lightColors, 0, sizeof(lightColors));	
+	blurWeights.clear();
+
+	delete block;
+
+	// Shadow blur
+	delete horizontalBlurred;
+	delete blurredShadowMap;
+
+	//SkyDome shaders
+	delete skyDomeShader;
+	delete skyDomeTexture;
+	delete skyDomeIrradiance;
+
+	// IBL
+	memset(&Hblock, 0, sizeof(Hblock));
+	HammersleyRandomPoints();
+	delete HUniBlock;
+
+	//SSAO
+	delete AOShader;
+	delete BlurredAO;
+	delete BilateralHorizontal;
+	delete BilateralVertical;
+	delete HorizontalBlurredAO;
+	delete ResultBlurredAO;
+
+	// Clear Objects in Scene
+	ObjectManager::Instance()->ClearObjects();
+}
 
 void AllProjects::Update()
 {
@@ -188,8 +235,9 @@ void AllProjects::Update()
 	Renderer* pRenderer = Renderer::Instance();
 
 	//G-Buffer pass
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+	pRenderer->SetDepthTest(true);
+	pRenderer->SetBlending(false);
+
 	pRenderer->BindFrameBuffer(G_Buffer);
 	G_Buffer->Clear();
 	pRenderer->BindShader(baseShader);
@@ -262,8 +310,8 @@ void AllProjects::Update()
 	//ShaderStorageBuffer::PutMemoryBarrier();
 	//IrradianceETerms->Bind(3);
 
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+	pRenderer->SetDepthTest(false);
+	pRenderer->SetBlending(false);
 
 	//AO Pass
 	pRenderer->BindFrameBuffer(BlurredAO);
@@ -278,7 +326,7 @@ void AllProjects::Update()
 	AOShader->SetUniform1i("AOn", AONum);
 	AOShader->SetUniform1f("AOR", AORadius);
 	AOShader->SetUniform1f("AOscale", AOScale);
-	Renderer::Instance()->DrawQuad();
+	Renderer::Instance()->DrawQuad(AOShader);
 	pRenderer->UnbindShader(AOShader);
 
 	pRenderer->UnbindFrameBuffer(BlurredAO);
@@ -312,11 +360,11 @@ void AllProjects::Update()
 	pRenderer->UnbindUniformBuffer(block);
 
 	//Ambient light pass
-	glViewport(0, 0, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	pRenderer->SetViewportSize(glm::vec2(0, 0), glm::vec2(Window::Instance()->GetWidth(), Window::Instance()->GetHeight()));
+	pRenderer->Clear();
 
-	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_BLEND);
+	pRenderer->SetDepthTest(false);
+	pRenderer->SetBlending(false);
 
 	Shader* ambientShader = showAO ? ambient : ambientNoAO;
 	pRenderer->BindShader(ambientShader);
@@ -345,7 +393,7 @@ void AllProjects::Update()
 	ambientShader->SetUniform1i("showSpecular", IBLSpecular);
 	ambientShader->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
 	Renderer::Instance()->BindUniformBuffer(HUniBlock, 5);
-	Renderer::Instance()->DrawQuad();
+	Renderer::Instance()->DrawQuad(ambientShader);
 	Renderer::Instance()->UnbindUniformBuffer(HUniBlock);
 	pRenderer->UnbindShader(ambientShader);
 
@@ -361,7 +409,7 @@ void AllProjects::Update()
 	// Global Lighting pass
 	if (gBuffershow == 0)
 	{
-		glEnable(GL_BLEND);
+		pRenderer->SetBlending(true);
 	}
 
 	if (lighton)
@@ -392,15 +440,14 @@ void AllProjects::Update()
 		lighting->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
 		lighting->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
 		lighting->SetUniform1i("GBufferShow", gBuffershow);
-		Renderer::Instance()->DrawQuad();
+		Renderer::Instance()->DrawQuad(lighting);
 		pRenderer->UnbindShader(lighting);
 	}
 
 	// Local Lighting pass
 	if (gBuffershow == 0 && showLocalLights)
 	{
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_FRONT);
+		pRenderer->SetCullingFace(CullFace::Front);
 
 		pRenderer->BindShader(locallight);
 		locallight->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
@@ -427,13 +474,14 @@ void AllProjects::Update()
 				locallight->SetUniformMat4f("model", model);
 				locallight->SetUniform3f("Light", lightColors[i][j].x, lightColors[i][j].y, lightColors[i][j].z);				
 				ShapeData& shape = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
-				Renderer::Instance()->Draw(shape.m_VAO, shape.m_EBO, locallight);
+				Renderer::Instance()->Draw(shape.mVBO, shape.mIBO, locallight);
 			}
 		}
 	}
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
+
+	pRenderer->SetCullingFace(CullFace::None);
+	pRenderer->SetBlending(false);
+	pRenderer->SetDepthTest(true);
 
 	// Copy depth contents from G-Buffer
 	G_Buffer->CopyDepthTo(Renderer::Instance()->GetBackBuffer());
@@ -447,7 +495,7 @@ void AllProjects::Update()
 	skyDomeShader->SetUniform1i("skyDome", 1);
 	skyDomeShader->SetUniform1f("exposure", exposure);
 	skyDomeShader->SetUniform1f("contrast", contrast);
-	Renderer::Instance()->Draw(skyDome->GetComponent<Shape>()->mShapeData->m_VAO, skyDome->GetComponent<Shape>()->mShapeData->m_EBO, skyDomeShader);
+	Renderer::Instance()->Draw(skyDome->GetComponent<Shape>()->mShapeData->mVBO, skyDome->GetComponent<Shape>()->mShapeData->mIBO, skyDomeShader);
 	pRenderer->UnbindShader(skyDomeShader);
 	Engine::Instance()->stopMoving = true;
 }
@@ -472,16 +520,11 @@ void AllProjects::DebugDisplay()
 	if (ImGui::BeginCombo("Select G-Buffer", bufferList[gBuffershow]))
 	{
 		lighton = true;
-		if (ImGui::Selectable(bufferList[0], selected))
-			gBuffershow = 0;
-		if (ImGui::Selectable(bufferList[1], selected))
-			gBuffershow = 1;
-		if (ImGui::Selectable(bufferList[2], selected))
-			gBuffershow = 2;
-		if (ImGui::Selectable(bufferList[3], selected))
-			gBuffershow = 3;
-		if (ImGui::Selectable(bufferList[4], selected))
-			gBuffershow = 4;
+		for (int i = 0; i < ARRAY_SIZE(bufferList); ++i)
+		{
+			if (ImGui::Selectable(bufferList[i], selected))
+				gBuffershow = i;
+		}
 		ImGui::EndCombo();
 	}
 	ImGui::DragFloat3("Light Position", &light->position[0], 2.0f, -300.0f, 300.0f);
@@ -530,29 +573,29 @@ void AllProjects::RenderObject(Object* object, Shader* shader)
 	Shape* shape = object->GetComponent<Shape>();
 	if (shape)
 	{
-		if (shape && glIsEnabled(GL_CULL_FACE))
+		if (shape && Renderer::Instance()->GetCullingFace() != CullFace::None)
 		{
 			if (shape->mShape == Shapes::QUAD)
 			{
-				glCullFace(GL_BACK);
+				Renderer::Instance()->SetCullingFace(CullFace::Back);
 			}
 			else
 			{
-				glCullFace(GL_FRONT);
+				Renderer::Instance()->SetCullingFace(CullFace::Front);
 			}
 		}
 
 		if (shape->mMesh)
 		{
-			Renderer::Instance()->Draw(shape->mShapeData->m_VAO, shape->mShapeData->m_EBO, shader);
+			Renderer::Instance()->Draw(shape->mShapeData->mVBO, shape->mShapeData->mIBO, shader);
 		}
 		if (shape->mWireMesh)
 		{
-			Renderer::Instance()->DebugDrawLines(shape->mShapeData->m_VAO, shape->mShapeData->m_EBO, shader);
+			Renderer::Instance()->DebugDrawLines(shape->mShapeData->mVBO, shape->mShapeData->mIBO, shader);
 		}
 		if (shape->mDebugMesh)
 		{
-			Renderer::Instance()->DebugDraw(shape->mShapeData->m_VAO, shape->mShapeData->m_EBO, shader);
+			Renderer::Instance()->DebugDraw(shape->mShapeData->mVBO, shape->mShapeData->mIBO, shader);
 		}
 	}
 

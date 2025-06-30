@@ -53,3 +53,8 @@ void Window_OpenGL::Close()
 	SDL_DestroyWindow(pWindow);
 	SDL_Quit();
 }
+
+SDL_GLContext Window_OpenGL::GetContext() const
+{
+	return glContext;
+}

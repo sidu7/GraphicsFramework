@@ -1,11 +1,23 @@
 #pragma once
 
+#include "Core/CommandLine.h"
+#include "Core/Engine.h"
+#include "Core/Application.h"
+
 // Main declaration
-#if defined(RENDERER_OPENGL) || defined(RENDERER_VULKAN)
-#define MAIN_ENTRYPOINT int main(int argc, char* args[])
-#elif defined(RENDERER_DX12)
-#define MAIN_ENTRYPOINT int main(int argc, char* args[])
-#else
-#define MAIN_ENTRYPOINT
-#error "Renderer define not found"
-#endif
+extern Application* CreateApplication();
+
+int main(int argc, char** argv)
+{
+	Application* App = CreateApplication();
+	
+	CommandLine::Instance()->Init(argc, argv);
+	Engine::Instance()->Start(App->GetSettingsFilePath());
+	App->Init();
+	Engine::Instance()->Run();
+	App->Close();
+	Engine::Instance()->Stop();
+
+	delete App;
+	return 0;
+}

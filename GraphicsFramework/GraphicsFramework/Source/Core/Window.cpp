@@ -23,11 +23,6 @@ SDL_Window* Window::GetWindow() const
 	return pWindow;
 }
 
-SDL_GLContext Window::GetContext() const
-{
-	return glContext;
-}
-
 glm::vec2 Window::GetWindowSize()
 {
 	int x, y;

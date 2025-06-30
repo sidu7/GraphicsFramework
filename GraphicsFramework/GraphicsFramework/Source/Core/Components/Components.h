@@ -26,6 +26,7 @@ public:
 
 	Component() : mOwner(nullptr) {}
 	Component(std::string name);
+	virtual ~Component() {}
 	
 	virtual void Update() {}
 	virtual void Serialize(rapidjson::Value::Object data) = 0;

@@ -6,7 +6,8 @@ Author: Sidhant Tumma
 - End Header --------------------------------------------------------*/
 
 #include "Shader_OpenGL.h"
-#include "Rendering/Renderer.h"
+#include "Rendering/OpenGL/Renderer_OpenGL.h"
+#include "Rendering/ShaderManager.h"
 #include "Core/Core.h"
 #include "Utils/FileHelper.h"
 
@@ -16,12 +17,32 @@ Shader_OpenGL::Shader_OpenGL()
 	GLCall(m_RendererID = glCreateProgram());
 }
 
-void Shader_OpenGL::Init(std::string vertexFilePath, std::string fragmentFilePath)
+void Shader_OpenGL::Init(std::string vertexShaderId, std::string fragmentShaderId)
 {
 	ShaderSource shaders;
-	shaders.vertexSource = FileHelper::ReadFile(vertexFilePath);
-	shaders.fragmentSource = FileHelper::ReadFile(fragmentFilePath);
-	m_RendererID = CreateProgram(shaders.vertexSource, shaders.fragmentSource);
+	shaders.vertexSource = ShaderManager::Instance()->GetShaderContents(vertexShaderId);
+	shaders.fragmentSource = ShaderManager::Instance()->GetShaderContents(fragmentShaderId);
+	m_RendererID = CreateProgram(shaders);
+}
+
+void Shader_OpenGL::Uses(const FrameBuffer* framebuffer)
+{
+}
+
+void Shader_OpenGL::Uses(const Texture* texture, unsigned int slot)
+{
+}
+
+void Shader_OpenGL::Uses(const UniformBuffer* uniformBuffer, unsigned int binding)
+{
+}
+
+void Shader_OpenGL::Uses(const VertexBuffer* vertexBuffer)
+{
+}
+
+void Shader_OpenGL::Uses(const IndexBuffer* indexBuffer)
+{
 }
 
 Shader_OpenGL::~Shader_OpenGL()
@@ -29,10 +50,10 @@ Shader_OpenGL::~Shader_OpenGL()
 	GLCall(glDeleteProgram(m_RendererID));
 }
 
-unsigned int Shader_OpenGL::CompileShader(unsigned int type, std::string& Source)
+unsigned int Shader_OpenGL::CompileShader(unsigned int type, const std::vector<char>& Source)
 {
 	GLCall(unsigned int id = glCreateShader(type));
-	const char* src = Source.c_str();
+	const char* src = Source.data();
 	GLCall(glShaderSource(id, 1, &src, nullptr));
 	GLCall(glCompileShader(id));
 
@@ -52,11 +73,11 @@ unsigned int Shader_OpenGL::CompileShader(unsigned int type, std::string& Source
 	return id;
 }
 
-unsigned int Shader_OpenGL::CreateProgram(std::string& vertexSource, std::string& fragmentSource)
+unsigned int Shader_OpenGL::CreateProgram(const ShaderSource& shaderSource)
 {
 	GLCall(unsigned int program = glCreateProgram());
-	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexSource);
-	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
+	unsigned int vs = CompileShader(GL_VERTEX_SHADER, shaderSource.vertexSource);
+	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, shaderSource.fragmentSource);
 
 	GLCall(glAttachShader(program, vs));
 	GLCall(glAttachShader(program, fs));

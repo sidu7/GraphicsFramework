@@ -11,7 +11,7 @@ class JSONHelper
 {
 public:
 
-	static auto ParseFile(std::string& path)
+	static auto ParseFile(const std::string& path)
 	{
 		std::ifstream file(path); 
 		std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>()); 

@@ -2,7 +2,7 @@
 #include "Components.h"
 
 class VertexArray;
-class ElementArrayBuffer;
+class IndexBuffer;
 enum Shapes;
 struct ShapeData;
 

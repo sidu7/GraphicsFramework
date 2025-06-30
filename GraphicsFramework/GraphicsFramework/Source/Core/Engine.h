@@ -1,19 +1,39 @@
 #pragma once
 
-#include "Singleton.h"
-#include "Core.h"
+#include "Core/Core.h"
 
 class Camera;
 class Scene;
 class Window;
 
+typedef std::function<void()> CustomDebugFunc;
+typedef std::function<void()> NextFrameFunc;
+
+struct Settings
+{
+	glm::ivec2 mWindowSize;
+	std::string mShadersListPath;
+
+	uint32_t mTransformBindingPoint;
+	uint32_t mMaterialBindingPoint;
+
+	void Parse(rapidjson::Document& settingsFile);
+};
+
 class Engine : public Singleton<Engine>
 {
 public:
-	
-	void Start(Scene* scene,int width, int height);
+	void Start(const std::string& settingsFilePath);
 	void Run();
 	void Stop();
+	
+	template<typename Project>
+	void SetScene();
+
+	void AddCustomDebugFunction(CustomDebugFunc DebugFunction);
+
+	void ExecuteOnNextFrameStart(NextFrameFunc NextFrameFunction);
+	void ExecuteOnNextFrameEnd(NextFrameFunc NextFrameFunction);
 
 	bool appIsRunning;
 	bool stopMoving;
@@ -21,7 +41,26 @@ public:
 
 	Camera* GetCamera();
 	inline Scene* GetScene() { return pScene; }
+
+	inline const Settings& GetSettings() { return mSettings; }
+
 protected:
+	void ClearScene();
+
 	Camera* pCamera;
 	Scene* pScene;
+	std::vector<CustomDebugFunc> CustomDebugFunctions;
+	
+	std::vector<NextFrameFunc> StartFrameFuncs;
+	std::vector<NextFrameFunc> EndFrameFuncs;
+
+	Settings mSettings;
 };
+
+template<typename Project>
+inline void Engine::SetScene()
+{
+	ClearScene();
+	pScene = new Project();
+	pScene->Init();
+}

@@ -1,13 +1,12 @@
 #include "RenderingFactory_OpenGL.h"
 
 #include "Rendering/OpenGL/ComputeShader_OpenGL.h"
-#include "Rendering/OpenGL/ElementArrayBuffer_OpenGL.h"
+#include "Rendering/OpenGL/IndexBuffer_OpenGL.h"
 #include "Rendering/OpenGL/FrameBuffer_OpenGL.h"
 #include "Rendering/OpenGL/Shader_OpenGL.h"
 #include "Rendering/OpenGL/ShaderStorageBuffer_OpenGL.h"
 #include "Rendering/OpenGL/Texture_OpenGL.h"
 #include "Rendering/OpenGL/UniformBuffer_OpenGL.h"
-#include "Rendering/OpenGL/VertexArray_OpenGL.h"
 #include "Rendering/OpenGL/VertexBuffer_OpenGL.h"
 
 ComputeShader* RenderingFactory_OpenGL::CreateComputeShader()
@@ -15,9 +14,9 @@ ComputeShader* RenderingFactory_OpenGL::CreateComputeShader()
 	return new ComputeShader_OpenGL();
 }
 
-ElementArrayBuffer* RenderingFactory_OpenGL::CreateElementArrayBuffer()
+IndexBuffer* RenderingFactory_OpenGL::CreateIndexBuffer()
 {
-	return new ElementArrayBuffer_OpenGL();
+	return new IndexBuffer_OpenGL();
 }
 
 FrameBuffer* RenderingFactory_OpenGL::CreateFrameBuffer()
@@ -43,11 +42,6 @@ Texture* RenderingFactory_OpenGL::CreateTexture()
 UniformBuffer* RenderingFactory_OpenGL::CreateUniformBuffer()
 {
 	return new UniformBuffer_OpenGL();
-}
-
-VertexArray* RenderingFactory_OpenGL::CreateVertexArray()
-{
-	return new VertexArray_OpenGL();
 }
 
 VertexBuffer* RenderingFactory_OpenGL::CreateVertexBuffer()

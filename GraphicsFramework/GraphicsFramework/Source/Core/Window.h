@@ -2,6 +2,8 @@
 
 #include "Core.h"
 
+class Window;
+
 class WindowFactory
 {
 public:
@@ -17,7 +19,6 @@ public:
 	virtual void Close() = 0;
 
 	virtual SDL_Window* GetWindow() const;
-	virtual SDL_GLContext GetContext() const;
 	virtual glm::vec2 GetWindowSize();
 	virtual int GetWidth();
 	virtual int GetHeight();
@@ -25,5 +26,4 @@ public:
 protected:
 	SDL_Window* pWindow;
 	int scrWidth, scrHeight;
-	SDL_GLContext glContext;
 };

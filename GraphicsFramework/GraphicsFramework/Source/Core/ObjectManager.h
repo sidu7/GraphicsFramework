@@ -14,6 +14,7 @@ public:
 	void UpdateObjects();
 	void RenderObjects(Shader* shader);
 	void Close();
+	void ClearObjects();
 
 	friend class Renderer;
 private:

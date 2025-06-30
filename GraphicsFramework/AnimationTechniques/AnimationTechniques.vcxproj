@@ -209,6 +209,12 @@
     <ClInclude Include="src\AnimationScene.h" />
     <ClInclude Include="src\Mechanics.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="res\Shaders\Drawing.frag" />
+    <None Include="res\Shaders\Drawing.vert" />
+    <None Include="res\Shaders\ModelDraw.frag" />
+    <None Include="res\Shaders\ModelDraw.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

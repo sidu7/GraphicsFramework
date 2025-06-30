@@ -16,6 +16,14 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WaveSimulation", "WaveSimulation\WaveSimulation.vcxproj", "{F428B73C-26CE-4A68-9A39-0BBB962CCFA5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VulkanTest", "VulkanTest\VulkanTest.vcxproj", "{5D44F401-ACDF-414F-A504-AD518F8DA970}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DFD84CF5-8909-4FCE-A28F-58F0A7E524F0} = {DFD84CF5-8909-4FCE-A28F-58F0A7E524F0}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTests", "UnitTests\UnitTests.vcxproj", "{7F2A0253-6715-4E9A-83F9-23958CD475F8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{DFD84CF5-8909-4FCE-A28F-58F0A7E524F0} = {DFD84CF5-8909-4FCE-A28F-58F0A7E524F0}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +119,18 @@ Global
 		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Release_OpenGL|x64.Build.0 = Release|x64
 		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Release_Vulkan|x64.ActiveCfg = Release|x64
 		{5D44F401-ACDF-414F-A504-AD518F8DA970}.Release_Vulkan|x64.Build.0 = Release|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Debug_DX12|x64.ActiveCfg = Debug_DX12|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Debug_DX12|x64.Build.0 = Debug_DX12|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Debug_OpenGL|x64.ActiveCfg = Debug_OpenGL|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Debug_OpenGL|x64.Build.0 = Debug_OpenGL|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Debug_Vulkan|x64.ActiveCfg = Debug_Vulkan|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Debug_Vulkan|x64.Build.0 = Debug_Vulkan|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Release_DX12|x64.ActiveCfg = Release_DX12|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Release_DX12|x64.Build.0 = Release_DX12|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Release_OpenGL|x64.ActiveCfg = Release_OpenGL|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Release_OpenGL|x64.Build.0 = Release_OpenGL|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Release_Vulkan|x64.ActiveCfg = Release_Vulkan|x64
+		{7F2A0253-6715-4E9A-83F9-23958CD475F8}.Release_Vulkan|x64.Build.0 = Release_Vulkan|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

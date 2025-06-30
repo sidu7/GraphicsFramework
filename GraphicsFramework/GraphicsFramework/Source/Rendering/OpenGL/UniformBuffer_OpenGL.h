@@ -8,8 +8,8 @@ public:
 	UniformBuffer_OpenGL();
 	virtual ~UniformBuffer_OpenGL();
 
-	virtual void Init(unsigned int size, const void* data = nullptr) override;
-	virtual void AddData(unsigned int size, const void* data, unsigned int offset = 0) const override;
+	virtual void Init(uint32_t size, uint32_t binding, const void* data = nullptr) override;
+	virtual void AddData(uint32_t size, const void* data, uint32_t offset = 0) const override;
 
 	unsigned int m_RendererId;
 };

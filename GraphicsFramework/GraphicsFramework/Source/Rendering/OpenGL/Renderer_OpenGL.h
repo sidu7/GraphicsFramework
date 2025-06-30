@@ -9,26 +9,34 @@ Author: Sidhant Tumma
 
 #include "Rendering/Renderer.h"
 
-class RenderingObject
-{
-public:
-	virtual inline unsigned int GetId() = 0;
-};
+#define ASSERT(x) if (!(x)) __debugbreak();
+#define GLCall(x) GLClearError();\
+	x;\
+	ASSERT(GLLogCall(#x,__FILE__,__LINE__))
+
+
+void GLClearError();
+
+bool GLLogCall(const char* function, const char* file, int line);
 
 class Renderer_OpenGL : public Renderer
 {
 public:
 	virtual void Init() override;
-	virtual void Clear() const override;
+	virtual void Close() override;
+	
+	virtual void StartFrame() override;
 	virtual void SwapBuffers() override;
+
+	virtual void WaitFrameFinish() const override {}
+	virtual void Clear() const override;
 
 	// Bind Functions
 	virtual void BindShader(const Shader* shader) override;
 	virtual void BindComputeShader(const ComputeShader* shader) override;
 	virtual void BindFrameBuffer(const FrameBuffer* framebuffer) override;
-	virtual void BindVertexArray(const VertexArray* vertexArray) override;
 	virtual void BindVertexBuffer(const VertexBuffer* vertexBuffer) override;
-	virtual void BindElementArrayBuffer(const ElementArrayBuffer* elementArrayBuffer) override;
+	virtual void BindIndexBuffer(const IndexBuffer* elementArrayBuffer) override;
 	virtual void BindUniformBuffer(const UniformBuffer* uniformBuffer, unsigned int bindpoint = 0) override;
 	virtual void BindTexture(const Texture* texture, unsigned int slot = 0) override;
 	
@@ -36,21 +44,28 @@ public:
 	virtual void UnbindShader(const Shader* shader) override;
 	virtual void UnbindComputeShader(const ComputeShader* shader) override;
 	virtual void UnbindFrameBuffer(const FrameBuffer* framebuffer) override;
-	virtual void UnbindVertexArray(const VertexArray* vertexArray) override;
 	virtual void UnbindVertexBuffer(const VertexBuffer* vertexBuffer) override;
-	virtual void UnbindElementArrayBuffer(const ElementArrayBuffer* elementArrayBuffer) override;
+	virtual void UnbindIndexBuffer(const IndexBuffer* indexBuffer) override;
 	virtual void UnbindUniformBuffer(const UniformBuffer* uniformBuffer) override;
 	virtual void UnbindTexture(const Texture* texture, unsigned int slot = 0) override;
 
 	// Draw Functions
-	virtual void Draw(const VertexArray* va, const ElementArrayBuffer* ib, const Shader* shader) override;
-	virtual void DebugDraw(const VertexArray* va, const ElementArrayBuffer* ib, const Shader* shader) override;
-	virtual void DebugDrawLines(const VertexArray * va, const ElementArrayBuffer* ib, const Shader * shader) override;
-	virtual void DrawDebugCircle(const VertexArray* va, const Shader* shader) override;
-	virtual void DrawDebugLine(const VertexArray* va, const Shader* shader) override;
-	virtual void DrawQuad() override;
+	virtual void Draw(const Shader* shader, const VertexBuffer* vertexBuffer, int32_t vertexCount, int32_t vertexStart, int32_t instanceCount = 1, int32_t instanceStart = 0) override;
+	virtual void Draw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader) override;
+	virtual void DebugDraw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader) override;
+	virtual void DebugDrawLines(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader * shader) override;
+	virtual void DrawDebugCircle(const VertexBuffer* vertexBuffer, const Shader* Shader) override;
+	virtual void DrawDebugLine(const VertexBuffer* vertexBuffer, const Shader* shader) override;
+
+	// Rendering Features
+	virtual void SetDepthTest(bool bEnabled) override;
+	virtual void SetBlending(bool bEnabled) override;
+	virtual void SetCullingFace(CullFace Face) override;
+	virtual CullFace GetCullingFace() override;
 
 	virtual const FrameBuffer* GetBackBuffer() override;
+	virtual void SetViewportSize(glm::vec2 Offset, glm::vec2 Size) override;
 protected:
 	FrameBuffer* BackBuffer;
+	CullFace CullingFace;
 };

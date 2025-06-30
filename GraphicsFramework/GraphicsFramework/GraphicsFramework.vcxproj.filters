@@ -52,6 +52,12 @@
     <Filter Include="Source\Rendering\OpenGL">
       <UniqueIdentifier>{f979dd64-99cc-4d27-bb6c-4fd4112e2fb9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Rendering\ApiInterface">
+      <UniqueIdentifier>{709c0ddf-1e29-4203-9de1-1804cc81e155}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Rendering\Vulkan\Internal">
+      <UniqueIdentifier>{c9582c7a-dbb9-4eca-a0af-dcd2761d1a8b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\JSON Data\ControlPoints.json">
@@ -198,9 +204,6 @@
     <ClCompile Include="ThirdParty\Imgui\imgui_widgets.cpp">
       <Filter>ThirdParty\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Core\Window.cpp">
-      <Filter>Source\Core</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Rendering\Vulkan\Window_Vulkan.cpp">
       <Filter>Source\Rendering\Vulkan</Filter>
     </ClCompile>
@@ -209,9 +212,6 @@
     </ClCompile>
     <ClCompile Include="Source\Rendering\OpenGL\Window_OpenGL.cpp">
       <Filter>Source\Rendering\OpenGL</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Rendering\Renderer.cpp">
-      <Filter>Source\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Source\Rendering\Mesh.cpp">
       <Filter>Source\Rendering</Filter>
@@ -228,7 +228,7 @@
     <ClCompile Include="Source\Rendering\OpenGL\ComputeShader_OpenGL.cpp">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Rendering\OpenGL\ElementArrayBuffer_OpenGL.cpp">
+    <ClCompile Include="Source\Rendering\OpenGL\IndexBuffer_OpenGL.cpp">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClCompile>
     <ClCompile Include="Source\Rendering\OpenGL\FrameBuffer_OpenGL.cpp">
@@ -246,14 +246,86 @@
     <ClCompile Include="Source\Rendering\OpenGL\UniformBuffer_OpenGL.cpp">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Rendering\OpenGL\VertexArray_OpenGL.cpp">
-      <Filter>Source\Rendering\OpenGL</Filter>
-    </ClCompile>
     <ClCompile Include="Source\Rendering\OpenGL\VertexBuffer_OpenGL.cpp">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Rendering\Renderer.cpp">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClCompile>
     <ClCompile Include="Source\Rendering\RenderingFactorySelector.cpp">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Window.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\RenderingFactory_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\ShaderStorageBuffer_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Texture_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\UniformBuffer_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\VertexBuffer_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\ComputeShader_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\FrameBuffer_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\IndexBuffer_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Renderer_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Shader_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Internal\VulkanHelper.cpp">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="ThirdParty\Imgui\imgui_tables.cpp">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Internal\RenderPass_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Internal\CommandBuffer_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Internal\CommandBufferPool_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Internal\Fence_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Internal\CommandQueue_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Internal\Semaphore_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\ShaderManager.cpp">
       <Filter>Source\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Application.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\CommandLine.cpp">
+      <Filter>Source\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Internal\DescriptorSet_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Rendering\Vulkan\Internal\DescriptorPool_Vulkan.cpp">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -1100,26 +1172,11 @@
     <ClInclude Include="Source\Rendering\Vulkan\Window_Vulkan.h">
       <Filter>Source\Rendering\Vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core\Window.h">
-      <Filter>Source\Core</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Rendering\OpenGL\Renderer_OpenGL.h">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Rendering\OpenGL\Window_OpenGL.h">
       <Filter>Source\Rendering\OpenGL</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\Renderer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\ComputeShader.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\ElementArrayBuffer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\FrameBuffer.h">
-      <Filter>Source\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="Source\Rendering\Mesh.h">
       <Filter>Source\Rendering</Filter>
@@ -1130,34 +1187,13 @@
     <ClInclude Include="Source\Rendering\Quaternion.h">
       <Filter>Source\Rendering</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Rendering\Shader.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\ShaderStorageBuffer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\Texture.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\UniformBuffer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\VertexArray.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\VertexBuffer.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Rendering\RenderingFactory.h">
-      <Filter>Source\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Rendering\OpenGL\RenderingFactory_OpenGL.h">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Rendering\OpenGL\ComputeShader_OpenGL.h">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Rendering\OpenGL\ElementArrayBuffer_OpenGL.h">
+    <ClInclude Include="Source\Rendering\OpenGL\IndexBuffer_OpenGL.h">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Rendering\OpenGL\FrameBuffer_OpenGL.h">
@@ -1175,14 +1211,119 @@
     <ClInclude Include="Source\Rendering\OpenGL\UniformBuffer_OpenGL.h">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Rendering\OpenGL\VertexArray_OpenGL.h">
-      <Filter>Source\Rendering\OpenGL</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Rendering\OpenGL\VertexBuffer_OpenGL.h">
       <Filter>Source\Rendering\OpenGL</Filter>
     </ClInclude>
     <ClInclude Include="Source\Utils\FileHelper.h">
       <Filter>Source\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\ComputeShader.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\IndexBuffer.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\FrameBuffer.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Renderer.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\RenderingFactory.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Shader.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\ShaderStorageBuffer.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Texture.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\UniformBuffer.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\VertexBuffer.h">
+      <Filter>Source\Rendering\ApiInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Window.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\RenderingFactory_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Shader_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\ShaderStorageBuffer_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Texture_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\UniformBuffer_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\VertexBuffer_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\ComputeShader_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\FrameBuffer_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\IndexBuffer_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Renderer_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Internal\VulkanHelper.h">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\Imgui\imgui_impl_opengl3_loader.h">
+      <Filter>ThirdParty\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Internal\RenderPass_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Internal\CommandBuffer_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Internal\CommandBufferPool_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Internal\Fence_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Internal\CommandQueue_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Internal\Semaphore_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\ShaderManager.h">
+      <Filter>Source\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\EntryPoint.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Application.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GraphicsFramework.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\CommandLine.h">
+      <Filter>Source\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Internal\DescriptorSet_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Rendering\Vulkan\Internal\DescriptorPool_Vulkan.h">
+      <Filter>Source\Rendering\Vulkan\Internal</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

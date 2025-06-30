@@ -1,6 +1,7 @@
 #include "ObjectManager.h"
 
 #include "Core/Core.h"
+#include "Core/Engine.h"
 #include "Object.h"
 #include "Core/Scene.h"
 #include "Rendering/Renderer.h"
@@ -42,5 +43,11 @@ void ObjectManager::RenderObjects(Shader* shader)
 
 void ObjectManager::Close()
 {
+	ClearObjects();
+}
+
+void ObjectManager::ClearObjects()
+{
 	std::for_each(mObjects.begin(), mObjects.end(), [](Object* x) { delete x; });
+	mObjects.clear();
 }
