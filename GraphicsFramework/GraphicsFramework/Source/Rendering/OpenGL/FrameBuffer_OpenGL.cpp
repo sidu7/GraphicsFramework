@@ -84,22 +84,6 @@ void FrameBuffer_OpenGL::CopyDepthTo(const FrameBuffer* target)
 					  0, 0, targetOpengl->mWidth, targetOpengl->mHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 }
 
-void FrameBuffer_OpenGL::TexBind(unsigned int index, unsigned int slot)
-{
-	if (index < m_Textures.size())
-	{
-		Renderer::Instance()->BindTexture(m_Textures[index], slot);
-	}
-}
-
-void FrameBuffer_OpenGL::TexUnbind(unsigned int index,unsigned int slot)
-{
-	if (index < m_Textures.size())
-	{
-		Renderer::Instance()->UnbindTexture(m_Textures[index], slot);
-	}
-}
-
 void FrameBuffer_OpenGL::Clear() const
 {
 	GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));

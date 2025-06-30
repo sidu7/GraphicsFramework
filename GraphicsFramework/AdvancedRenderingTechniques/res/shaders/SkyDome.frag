@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 out vec4 FragColor;
 
@@ -6,7 +6,7 @@ const float pi = 22.0f/7.0f;
 
 in vec3 fragPos;
 
-uniform sampler2D skyDome;
+layout (binding = 1) uniform sampler2D skyDome;
 uniform float exposure;
 uniform float contrast;
 

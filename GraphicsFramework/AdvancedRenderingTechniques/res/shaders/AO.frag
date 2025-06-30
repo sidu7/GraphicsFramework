@@ -6,8 +6,8 @@ const float pi = 22.0f/7.0f;
 
 in vec2 TexCoord;
 
-uniform sampler2D normaltex;
-uniform sampler2D worldpostex;
+layout (binding = 2) uniform sampler2D normaltex;
+layout (binding = 3) uniform sampler2D worldpostex;
 uniform float contrast;
 uniform float AOR;
 uniform int AOn;

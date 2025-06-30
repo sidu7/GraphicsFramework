@@ -6,8 +6,8 @@ class UniformBuffer;
 
 struct ObjectMatricesUBO
 {
-	glm::mat4 mModelTr;
 	glm::mat4 mNormalTr;
+	glm::mat4 mModelTr;
 	glm::mat4 mPrevModelTr;
 };
 

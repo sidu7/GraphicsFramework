@@ -30,6 +30,8 @@ private:
 	Shader* lighting;
 	Shader* locallight;
 	Shader* shadow;
+
+	// Ubos
 	UniformBuffer* globalMatrices;
 
 	// AO

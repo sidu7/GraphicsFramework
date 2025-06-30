@@ -44,7 +44,7 @@ void Transform::Update()
 
 	if (mMatricesUBO)
 	{
-		ObjectMatricesUBO UboData{ mModelTransformation, glm::inverse(mModelTransformation), mPrevModelTransformation };
+		ObjectMatricesUBO UboData{ glm::inverse(mModelTransformation), mModelTransformation, mPrevModelTransformation };
 		mMatricesUBO->AddData(sizeof(UboData), &UboData);
 	}
 }

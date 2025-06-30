@@ -27,8 +27,9 @@
 
 struct Matrices
 {
-	glm::mat4 mView;
 	glm::mat4 mProjection;
+	glm::mat4 mView;
+	glm::mat4 mInvView;
 };
 
 AllProjects::~AllProjects()
@@ -38,25 +39,25 @@ AllProjects::~AllProjects()
 void AllProjects::Init()
 {
 	baseShader = RenderingFactory::Instance()->CreateShader();
-	baseShader->Init("res/shaders/Drawing.vert", "res/shaders/Drawing.frag");
+	baseShader->Init("DRAWING");
 
 	lighting = RenderingFactory::Instance()->CreateShader(); 
-	lighting->Init("res/shaders/Lighting.vert", "res/shaders/Lighting.frag");
+	lighting->Init("LIGHTING");
 
 	ambient = RenderingFactory::Instance()->CreateShader(); 
-	ambient->Init("res/shaders/Ambient.vert", "res/shaders/Ambient.frag");
+	ambient->Init("AMBIENT");
 
 	ambientNoAO = RenderingFactory::Instance()->CreateShader();
-	ambientNoAO->Init("res/shaders/Ambient.vert", "res/shaders/AmbientNoAO.frag");
+	ambientNoAO->Init("AMBIENT_NO_AO");
 
 	shadow = RenderingFactory::Instance()->CreateShader(); 
-	shadow->Init("res/shaders/Shadow.vert", "res/shaders/Shadow.frag");
+	shadow->Init("SHADOW");
 
 	locallight = RenderingFactory::Instance()->CreateShader(); 
-	locallight->Init("res/shaders/LocalLight.vert", "res/shaders/LocalLight.frag");
+	locallight->Init("LOCAL_LIGHT");
 
 	globalMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
-	globalMatrices->Init(sizeof(Matrices));
+	globalMatrices->Init(sizeof(Matrices), 2);
 
 	blurHorizontal = RenderingFactory::Instance()->CreateComputeShader(); 
 	blurHorizontal->SetShader("res/shaders/BlurHorizontal.compute");
@@ -71,20 +72,20 @@ void AllProjects::Init()
 	Engine::Instance()->GetCamera()->CalculateFront();
 
 	Renderer::Instance()->BindShader(lighting);
-	lighting->SetUniform3f("Light", 1.0f, 1.0f, 1.0f);
+	//lighting->SetUniform3f("Light", 1.0f, 1.0f, 1.0f);
 
 	Renderer::Instance()->BindShader(ambient);
-	ambient->SetUniform3f("Ambient", 0.1f, 0.1f, 0.1f);
+	//ambient->SetUniform3f("Ambient", 0.1f, 0.1f, 0.1f);
 
 	Renderer::Instance()->BindShader(ambientNoAO);
-	ambientNoAO->SetUniform3f("Ambient", 0.1f, 0.1f, 0.1f);
+	//ambientNoAO->SetUniform3f("Ambient", 0.1f, 0.1f, 0.1f);
 
 	showAO = true;
 
 	G_Buffer = RenderingFactory::Instance()->CreateFrameBuffer(); 
-	G_Buffer->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), 4);
+	G_Buffer->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), ImageFormat::RGBA32F, 4);
 	ShadowMap = RenderingFactory::Instance()->CreateFrameBuffer(); 
-	ShadowMap->Init(1024, 1024);
+	ShadowMap->Init(1024, 1024, ImageFormat::RGBA32F);
 
 	gBuffershow = 0;
 
@@ -116,19 +117,19 @@ void AllProjects::Init()
 	std::cout << "Weights total:" << sum << std::endl;
 
 	block = RenderingFactory::Instance()->CreateUniformBuffer(); 
-	block->Init(MAX_BLUR_WEIGHTS_NUM * sizeof(float));
+	block->Init(MAX_BLUR_WEIGHTS_NUM * sizeof(float), 5);
 
 	biasAlpha = 0.057f;
 
 	// Shadow blur
 	horizontalBlurred = RenderingFactory::Instance()->CreateTexture();
-	horizontalBlurred->Init(4, ShadowMap->GetWidth(), ShadowMap->GetHeight());
+	horizontalBlurred->Init(ImageFormat::RGBA32F, ShadowMap->GetWidth(), ShadowMap->GetHeight());
 	blurredShadowMap = RenderingFactory::Instance()->CreateTexture(); 
-	blurredShadowMap->Init(4, ShadowMap->GetWidth(), ShadowMap->GetHeight());
+	blurredShadowMap->Init(ImageFormat::RGBA32F, ShadowMap->GetWidth(), ShadowMap->GetHeight());
 
 	//SkyDome shaders
 	skyDomeShader = RenderingFactory::Instance()->CreateShader(); 
-	skyDomeShader->Init("res/shaders/SkyDome.vert", "res/shaders/SkyDome.frag");
+	skyDomeShader->Init("SKYDOME");
 	skyDomeTexture = RenderingFactory::Instance()->CreateTexture(); 
 	skyDomeTexture->Init("res/Textures/popDome.hdr");
 	skyDomeIrradiance = RenderingFactory::Instance()->CreateTexture(); 
@@ -140,24 +141,24 @@ void AllProjects::Init()
 	Hblock.N = HBlockSize;
 	HammersleyRandomPoints();
 	HUniBlock = RenderingFactory::Instance()->CreateUniformBuffer(); 
-	HUniBlock->Init(sizeof(Hblock));
+	HUniBlock->Init(sizeof(Hblock), 5);
 	HUniBlock->AddData(sizeof(Hblock), &Hblock);
 	IBLDiffuse = true;
 	IBLSpecular = true;
 
 	//SSAO
 	AOShader = RenderingFactory::Instance()->CreateShader(); 
-	AOShader->Init("res/shaders/AO.vert", "res/shaders/AO.frag");
+	AOShader->Init("AMBIENT_OCCLUSION");
 	BlurredAO = RenderingFactory::Instance()->CreateFrameBuffer(); 
-	BlurredAO->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
+	BlurredAO->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), ImageFormat::RGBA32F);
 	BilateralHorizontal = RenderingFactory::Instance()->CreateComputeShader(); 
 	BilateralHorizontal->SetShader("res/shaders/BilateralHorizontal.compute");
 	BilateralVertical = RenderingFactory::Instance()->CreateComputeShader(); 
 	BilateralVertical->SetShader("res/shaders/BilateralVertical.compute");
 	HorizontalBlurredAO = RenderingFactory::Instance()->CreateTexture(); 
-	HorizontalBlurredAO->Init(4, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
+	HorizontalBlurredAO->Init(ImageFormat::RGBA32F, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
 	ResultBlurredAO = RenderingFactory::Instance()->CreateTexture(); 
-	ResultBlurredAO->Init(4, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
+	ResultBlurredAO->Init(ImageFormat::RGBA32F, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
 	AONum = 115;
 	AORadius = 10.0f;
 	AOScale = 3.0f;
@@ -173,7 +174,7 @@ void AllProjects::Init()
 	ObjectManager::Instance()->AddObject("res/JSON Data/Teapot6.json");
 	ObjectManager::Instance()->AddObject("res/JSON Data/Teapot7.json");
 	ObjectManager::Instance()->AddObject("res/JSON Data/Teapot8.json");
-	//ObjectManager::Instance().AddObject("res/JSON Data/Teapot9.json");
+
 	skyDome = ObjectManager::Instance()->ReadObject("res/JSON Data/SkyDome.json");
 	skyDome->GetComponent<Transform>()->mModelTransformation = glm::scale(glm::mat4(1.0f), skyDome->GetComponent<Transform>()->mScale);
 	showLocalLights = true;
@@ -242,9 +243,13 @@ void AllProjects::Update()
 	G_Buffer->Clear();
 	pRenderer->BindShader(baseShader);
 
-	Matrices MatData{ Engine::Instance()->GetCamera()->mView , Engine::Instance()->GetCamera()->mProjection };
+	Matrices MatData{
+		Engine::Instance()->GetCamera()->mProjection,
+		Engine::Instance()->GetCamera()->mView ,
+		glm::inverse(Engine::Instance()->GetCamera()->mView)
+	};
 	globalMatrices->AddData(sizeof(MatData), &MatData);
-	pRenderer->BindUniformBuffer(globalMatrices, 0);
+	pRenderer->BindUniformBuffer(globalMatrices, globalMatrices->GetBinding());
 
 	ObjectManager::Instance()->RenderObjects(baseShader);
 
@@ -263,7 +268,7 @@ void AllProjects::Update()
 
 	Matrices ShadowMatricesData{ LightLookAt , LightProj };
 	globalMatrices->AddData(sizeof(ShadowMatricesData), &ShadowMatricesData);
-	pRenderer->BindUniformBuffer(globalMatrices, 0);
+	pRenderer->BindUniformBuffer(globalMatrices, globalMatrices->GetBinding());
 
 	shadowMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)) * LightProj * LightLookAt;
 
@@ -299,16 +304,16 @@ void AllProjects::Update()
 		pRenderer->UnbindUniformBuffer(block);
 	}
 
-	//IrradianceETerms->Bind(3);
-	//irradianceCompute->Bind();
-	////irradianceCompute->SetInputUniformImage("skydome", skyDomeTexture->GetTextureID(), 0, skyDomeTexture->mBPP);
-	//skyDomeTexture->Bind();
-	//irradianceCompute->SetUniform1i("skydome", 0);
-	//irradianceCompute->SetUniform1i("width", skyDomeTexture->mWidth);
-	//irradianceCompute->SetUniform1i("height", skyDomeTexture->mHeight);
-	//irradianceCompute->Run(9, 1, 1);
-	//ShaderStorageBuffer::PutMemoryBarrier();
-	//IrradianceETerms->Bind(3);
+	////IrradianceETerms->Bind(3);
+	////irradianceCompute->Bind();
+	//////irradianceCompute->SetInputUniformImage("skydome", skyDomeTexture->GetTextureID(), 0, skyDomeTexture->mBPP);
+	////skyDomeTexture->Bind();
+	////irradianceCompute->SetUniform1i("skydome", 0);
+	////irradianceCompute->SetUniform1i("width", skyDomeTexture->mWidth);
+	////irradianceCompute->SetUniform1i("height", skyDomeTexture->mHeight);
+	////irradianceCompute->Run(9, 1, 1);
+	////ShaderStorageBuffer::PutMemoryBarrier();
+	////IrradianceETerms->Bind(3);
 
 	pRenderer->SetDepthTest(false);
 	pRenderer->SetBlending(false);
@@ -318,20 +323,20 @@ void AllProjects::Update()
 	BlurredAO->Clear();
 
 	pRenderer->BindShader(AOShader);
-	G_Buffer->TexBind(0, 2);
-	AOShader->SetUniform1i("normaltex", 2);
-	G_Buffer->TexBind(1, 3);
-	AOShader->SetUniform1i("worldpostex", 3);
-	AOShader->SetUniform1f("contrast", AOContrast);
-	AOShader->SetUniform1i("AOn", AONum);
-	AOShader->SetUniform1f("AOR", AORadius);
-	AOShader->SetUniform1f("AOscale", AOScale);
+	pRenderer->BindTexture(G_Buffer->GetTexture(0), 2);
+	pRenderer->BindTexture(G_Buffer->GetTexture(1), 3);
+	//AOShader->SetUniform1f("contrast", AOContrast);
+	//AOShader->SetUniform1i("AOn", AONum);
+	//AOShader->SetUniform1f("AOR", AORadius);
+	//AOShader->SetUniform1f("AOscale", AOScale);
 	Renderer::Instance()->DrawQuad(AOShader);
 	pRenderer->UnbindShader(AOShader);
+	pRenderer->UnbindTexture(G_Buffer->GetTexture(0), 2);
+	pRenderer->UnbindTexture(G_Buffer->GetTexture(1), 3);
 
 	pRenderer->UnbindFrameBuffer(BlurredAO);
 
-	//Bilateral Filter
+	//Bilateral Filter Blur
 	pRenderer->BindUniformBuffer(block, 2);
 	block->AddData(sizeof(float) * blurWeights.size(), &blurWeights[0]);
 	pRenderer->BindComputeShader(BilateralHorizontal);
@@ -368,39 +373,32 @@ void AllProjects::Update()
 
 	Shader* ambientShader = showAO ? ambient : ambientNoAO;
 	pRenderer->BindShader(ambientShader);
-	G_Buffer->TexBind(0, 2);
-	ambientShader->SetUniform1i("normaltex", 2);
-	G_Buffer->TexBind(1, 3);
-	ambientShader->SetUniform1i("worldpostex", 3);
-	G_Buffer->TexBind(2, 4);
-	ambientShader->SetUniform1i("diffusetex", 4);
-	G_Buffer->TexBind(3, 5);
-	ambientShader->SetUniform1i("speculartex", 5);
+	pRenderer->BindTexture(G_Buffer->GetTexture(0), 2);
+	pRenderer->BindTexture(G_Buffer->GetTexture(1), 3);
+	pRenderer->BindTexture(G_Buffer->GetTexture(2), 4);
+	pRenderer->BindTexture(G_Buffer->GetTexture(3), 5);
 	pRenderer->BindTexture(skyDomeIrradiance, 6);
-	ambientShader->SetUniform1i("irradiance", 6);
 	pRenderer->BindTexture(skyDomeTexture, 7);
-	ambientShader->SetUniform1i("skydome", 7);
 
 	if (showAO)
 	{
 		pRenderer->BindTexture(ResultBlurredAO, 8);
 		//BlurredAO->TexBind(0, 8);
-		ambientShader->SetUniform1i("AOtex", 8);
 	}
-	ambientShader->SetUniform1f("exposure", exposure);
-	ambientShader->SetUniform1f("contrast", contrast);
-	ambientShader->SetUniform1i("showDiffuse", IBLDiffuse);
-	ambientShader->SetUniform1i("showSpecular", IBLSpecular);
-	ambientShader->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
+	//ambientShader->SetUniform1f("exposure", exposure);
+	//ambientShader->SetUniform1f("contrast", contrast);
+	//ambientShader->SetUniform1i("showDiffuse", IBLDiffuse);
+	//ambientShader->SetUniform1i("showSpecular", IBLSpecular);
+	//ambientShader->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
 	Renderer::Instance()->BindUniformBuffer(HUniBlock, 5);
 	Renderer::Instance()->DrawQuad(ambientShader);
 	Renderer::Instance()->UnbindUniformBuffer(HUniBlock);
 	pRenderer->UnbindShader(ambientShader);
 
-	G_Buffer->TexUnbind(0, 2);
-	G_Buffer->TexUnbind(1, 3);
-	G_Buffer->TexUnbind(2, 4);
-	G_Buffer->TexUnbind(3, 5);
+	pRenderer->UnbindTexture(G_Buffer->GetTexture(0), 2);
+	pRenderer->UnbindTexture(G_Buffer->GetTexture(1), 3);
+	pRenderer->UnbindTexture(G_Buffer->GetTexture(2), 4);
+	pRenderer->UnbindTexture(G_Buffer->GetTexture(3), 5);
 	pRenderer->UnbindTexture(skyDomeIrradiance, 6);
 	pRenderer->UnbindTexture(skyDomeTexture, 7);
 	//BlurredAO->TexUnbind(0, 8);
@@ -415,14 +413,10 @@ void AllProjects::Update()
 	if (lighton)
 	{
 		pRenderer->BindShader(lighting);
-		G_Buffer->TexBind(0, 1);
-		lighting->SetUniform1i("normaltex", 1);
-		G_Buffer->TexBind(1, 2);
-		lighting->SetUniform1i("worldpostex", 2);
-		G_Buffer->TexBind(2, 3);
-		lighting->SetUniform1i("diffusetex", 3);
-		G_Buffer->TexBind(3, 4);
-		lighting->SetUniform1i("specularalpha", 4);
+		pRenderer->BindTexture(G_Buffer->GetTexture(0), 1);
+		pRenderer->BindTexture(G_Buffer->GetTexture(1), 2);
+		pRenderer->BindTexture(G_Buffer->GetTexture(2), 3);
+		pRenderer->BindTexture(G_Buffer->GetTexture(3), 4);
 		if (softShadows)
 		{
 			pRenderer->BindTexture(blurredShadowMap, 5);
@@ -431,17 +425,20 @@ void AllProjects::Update()
 		{
 			pRenderer->BindTexture(ShadowMap->GetTexture(), 5);
 		}
-		lighting->SetUniform1i("shadowmap", 5);
-		lighting->SetUniformMat4f("shadowmat", shadowMatrix);
-		lighting->SetUniform1f("biasAlpha", biasAlpha);
-		lighting->SetUniform1f("exposure", exposure);
-		lighting->SetUniform1f("contrast", contrast);
-
-		lighting->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
-		lighting->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
-		lighting->SetUniform1i("GBufferShow", gBuffershow);
+		//lighting->SetUniformMat4f("shadowmat", shadowMatrix);
+		//lighting->SetUniform1f("biasAlpha", biasAlpha);
+		//lighting->SetUniform1f("exposure", exposure);
+		//lighting->SetUniform1f("contrast", contrast);
+		
+		//lighting->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
+		//lighting->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
+		//lighting->SetUniform1i("GBufferShow", gBuffershow);
 		Renderer::Instance()->DrawQuad(lighting);
 		pRenderer->UnbindShader(lighting);
+		pRenderer->UnbindTexture(G_Buffer->GetTexture(0), 1);
+		pRenderer->UnbindTexture(G_Buffer->GetTexture(1), 2);
+		pRenderer->UnbindTexture(G_Buffer->GetTexture(2), 3);
+		pRenderer->UnbindTexture(G_Buffer->GetTexture(3), 4);
 	}
 
 	// Local Lighting pass
@@ -450,19 +447,15 @@ void AllProjects::Update()
 		pRenderer->SetCullingFace(CullFace::Front);
 
 		pRenderer->BindShader(locallight);
-		locallight->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
-		locallight->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
-		G_Buffer->TexBind(0, 1);
-		locallight->SetUniform1i("normaltex", 1);
-		G_Buffer->TexBind(1, 2);
-		locallight->SetUniform1i("worldpostex", 2);
-		G_Buffer->TexBind(2, 3);
-		locallight->SetUniform1i("diffusetex", 3);
-		G_Buffer->TexBind(3, 4);
-		locallight->SetUniform1i("specularalpha", 4);
-		locallight->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
+		//locallight->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
+		//locallight->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
+		pRenderer->BindTexture(G_Buffer->GetTexture(0), 1);
+		pRenderer->BindTexture(G_Buffer->GetTexture(1), 2);
+		pRenderer->BindTexture(G_Buffer->GetTexture(2), 3);
+		pRenderer->BindTexture(G_Buffer->GetTexture(3), 4);
+		//locallight->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
 		float lightRadius = 4.0f;
-		locallight->SetUniform1f("lightRadius", lightRadius);
+		//locallight->SetUniform1f("lightRadius", lightRadius);
 		for (unsigned int i = 0; i < 40; ++i)
 		{
 			for (unsigned int j = 0; j < 40; ++j)
@@ -470,13 +463,18 @@ void AllProjects::Update()
 				glm::mat4 model = glm::mat4(1.0f);
 				model = glm::translate(model, glm::vec3(i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2, j * lightRadius * 2 - 40.0f * lightRadius));
 				model = glm::scale(model, glm::vec3(lightRadius));
-				locallight->SetUniform3f("lightPos", i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2, j * lightRadius * 2 - 40.0f * lightRadius);
-				locallight->SetUniformMat4f("model", model);
-				locallight->SetUniform3f("Light", lightColors[i][j].x, lightColors[i][j].y, lightColors[i][j].z);				
+				//locallight->SetUniform3f("lightPos", i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2, j * lightRadius * 2 - 40.0f * lightRadius);
+				//locallight->SetUniformMat4f("model", model);
+				//locallight->SetUniform3f("Light", lightColors[i][j].x, lightColors[i][j].y, lightColors[i][j].z);				
 				ShapeData& shape = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
 				Renderer::Instance()->Draw(shape.mVBO, shape.mIBO, locallight);
 			}
 		}
+
+		pRenderer->UnbindTexture(G_Buffer->GetTexture(0), 1);
+		pRenderer->UnbindTexture(G_Buffer->GetTexture(1), 2);
+		pRenderer->UnbindTexture(G_Buffer->GetTexture(2), 3);
+		pRenderer->UnbindTexture(G_Buffer->GetTexture(3), 4);
 	}
 
 	pRenderer->SetCullingFace(CullFace::None);
@@ -488,15 +486,15 @@ void AllProjects::Update()
 
 	// Forward render Skydome
 	pRenderer->BindShader(skyDomeShader);
-	skyDomeShader->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
-	skyDomeShader->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
-	skyDomeShader->SetUniformMat4f("model", skyDome->GetComponent<Transform>()->mModelTransformation);
+	//skyDomeShader->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
+	//skyDomeShader->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
+	//skyDomeShader->SetUniformMat4f("model", skyDome->GetComponent<Transform>()->mModelTransformation);
 	pRenderer->BindTexture(skyDomeTexture, 1);
-	skyDomeShader->SetUniform1i("skyDome", 1);
-	skyDomeShader->SetUniform1f("exposure", exposure);
-	skyDomeShader->SetUniform1f("contrast", contrast);
+	//skyDomeShader->SetUniform1f("exposure", exposure);
+	//skyDomeShader->SetUniform1f("contrast", contrast);
 	Renderer::Instance()->Draw(skyDome->GetComponent<Shape>()->mShapeData->mVBO, skyDome->GetComponent<Shape>()->mShapeData->mIBO, skyDomeShader);
 	pRenderer->UnbindShader(skyDomeShader);
+	pRenderer->UnbindTexture(skyDomeTexture, 1);
 	Engine::Instance()->stopMoving = true;
 }
 
@@ -555,9 +553,9 @@ void AllProjects::DebugDisplay()
 void AllProjects::RenderObject(Object* object, Shader* shader)
 {
 	Transform* transform = object->GetComponent<Transform>();
-	if (transform)
+	if (transform && transform->mMatricesUBO)
 	{
-		Renderer::Instance()->BindUniformBuffer(transform->mMatricesUBO, 1);
+		Renderer::Instance()->BindUniformBuffer(transform->mMatricesUBO, transform->mMatricesUBO->GetBinding());
 	}
 
 	Material* material = object->GetComponent<Material>();
@@ -567,7 +565,10 @@ void AllProjects::RenderObject(Object* object, Shader* shader)
 		{
 			Renderer::Instance()->BindTexture(material->pTexture, 8);
 		}
-		Renderer::Instance()->BindUniformBuffer(material->mMaterialUBO, 3);
+		if (material->mMaterialUBO)
+		{
+			Renderer::Instance()->BindUniformBuffer(material->mMaterialUBO, material->mMaterialUBO->GetBinding());
+		}
 	}
 
 	Shape* shape = object->GetComponent<Shape>();

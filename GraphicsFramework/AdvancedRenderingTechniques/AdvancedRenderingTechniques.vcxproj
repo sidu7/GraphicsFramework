@@ -219,7 +219,6 @@
     <ClCompile Include="src\MotionBlur.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="res\shaders\Imgui.h" />
     <ClInclude Include="src\AdvancedRenderingTechniquesApplication.h" />
     <ClInclude Include="src\AllProjects.h" />
     <ClInclude Include="src\MotionBlur.h" />

@@ -62,22 +62,6 @@ void FrameBuffer_Vulkan::CopyDepthTo(const FrameBuffer* target)
 {
 }
 
-void FrameBuffer_Vulkan::TexBind(unsigned int index, unsigned int slot)
-{
-	if (index < m_Textures.size())
-	{
-		Renderer::Instance()->BindTexture(m_Textures[index], slot);
-	}
-}
-
-void FrameBuffer_Vulkan::TexUnbind(unsigned int index,unsigned int slot)
-{
-	if (index < m_Textures.size())
-	{
-		Renderer::Instance()->UnbindTexture(m_Textures[index], slot);
-	}
-}
-
 void FrameBuffer_Vulkan::Clear() const
 {
 }

@@ -34,13 +34,13 @@ MotionBlur::~MotionBlur()
 void MotionBlur::Init()
 {
 	baseShader = RenderingFactory::Instance()->CreateShader();
-	baseShader->Init("res/motionblur/GBuffer.vert", "res/motionblur/GBuffer.frag");
+	baseShader->Init("GBUFFER");
 
 	lighting = RenderingFactory::Instance()->CreateShader(); 
-	lighting->Init("res/motionblur/Lighting.vert", "res/motionblur/Lighting.frag");
+	lighting->Init("MOTIONBLUR_LIGHTING");
 
 	ambient = RenderingFactory::Instance()->CreateShader(); 
-	ambient->Init("res/motionblur/Ambient.vert", "res/motionblur/Ambient.frag");
+	ambient->Init("MOTIONBLUR_AMBIENT");
 
 	light = new Light(glm::vec3(100.0f, 200.0f, 10.0f));
 
@@ -51,25 +51,25 @@ void MotionBlur::Init()
 	Engine::Instance()->GetCamera()->CalculateFront();
 
 	Renderer::Instance()->BindShader(lighting);
-	lighting->SetUniform3f("Light", 3.2f, 3.2f, 3.2f);
+	//lighting->SetUniform3f("Light", 3.2f, 3.2f, 3.2f);
 
 	Renderer::Instance()->BindShader(ambient);
-	ambient->SetUniform3f("Ambient", 0.1f, 0.1f, 0.1f);
+	//ambient->SetUniform3f("Ambient", 0.1f, 0.1f, 0.1f);
 
 	G_Buffer = RenderingFactory::Instance()->CreateFrameBuffer(); 
-	G_Buffer->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), 5);
+	G_Buffer->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), ImageFormat::RGBA32F, 5);
 
 	Color = RenderingFactory::Instance()->CreateFrameBuffer(); 
-	Color->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
+	Color->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), ImageFormat::RGBA32F);
 
 	gBuffershow = 0;
 
 	globalMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
-	globalMatrices->Init(sizeof(Matrices));
+	globalMatrices->Init(sizeof(Matrices), 2);
 
 	//SkyDome shaders
 	skyDomeShader = RenderingFactory::Instance()->CreateShader(); 
-	skyDomeShader->Init("res/shaders/SkyDome.vert", "res/shaders/SkyDome.frag");
+	skyDomeShader->Init("SKYDOME");
 
 	skyDomeTexture = RenderingFactory::Instance()->CreateTexture(); 
 	skyDomeTexture->Init("res/Textures/popDome.hdr");
@@ -91,20 +91,20 @@ void MotionBlur::Init()
 	k = 20;
 	S = 15;
 	TileMax = RenderingFactory::Instance()->CreateFrameBuffer(); 
-	TileMax->Init(Window::Instance()->GetWidth() / k, Window::Instance()->GetHeight() / k);
+	TileMax->Init(Window::Instance()->GetWidth() / k, Window::Instance()->GetHeight() / k, ImageFormat::RGBA32F);
 	NeighbourMax = RenderingFactory::Instance()->CreateFrameBuffer(); 
-	NeighbourMax->Init(Window::Instance()->GetWidth() / k, Window::Instance()->GetHeight() / k);
+	NeighbourMax->Init(Window::Instance()->GetWidth() / k, Window::Instance()->GetHeight() / k, ImageFormat::RGBA32F);
 
 	TileMaxShader = RenderingFactory::Instance()->CreateShader(); 
-	TileMaxShader->Init("res/motionblur/TileMax.vert", "res/motionblur/TileMax.frag");
+	TileMaxShader->Init("TILE_MAX");
 	NeighbourMaxShader = RenderingFactory::Instance()->CreateShader(); 
-	NeighbourMaxShader->Init("res/motionblur/NeighbourMax.vert", "res/motionblur/NeighbourMax.frag");
+	NeighbourMaxShader->Init("NEIGHBOUR_MAX");
 
 	ReconstructionShader = RenderingFactory::Instance()->CreateShader(); 
-	ReconstructionShader->Init("res/motionblur/Reconstruction.vert", "res/motionblur/Reconstruction.frag");
+	ReconstructionShader->Init("RECONSTRUCTION");
 	MotionBlurOn = true;
 	MotionBlurShader = RenderingFactory::Instance()->CreateShader(); 
-	MotionBlurShader->Init("res/motionblur/MotionBlur.vert", "res/motionblur/MotionBlur.frag");
+	MotionBlurShader->Init("MOTIONBLUR");
 	ReconBlur = false;
 	PerPixel = true;
 
@@ -154,8 +154,8 @@ void MotionBlur::Update()
 
 	Matrices MatData{ Engine::Instance()->GetCamera()->mView, Engine::Instance()->GetCamera()->mProjection, Engine::Instance()->GetCamera()->mPrevView };
 	globalMatrices->AddData(sizeof(MatData), &MatData);
-	baseShader->SetUniform1f("deltaTime", Time::Instance()->deltaTime);
-	baseShader->SetUniform1i("k", k);
+	//baseShader->SetUniform1f("deltaTime", Time::Instance()->deltaTime);
+	//baseShader->SetUniform1i("k", k);
 
 	pRenderer->BindUniformBuffer(globalMatrices, 0);
 	ObjectManager::Instance()->RenderObjects(baseShader);
@@ -181,28 +181,28 @@ void MotionBlur::Update()
 	pRenderer->SetBlending(false);
 
 	pRenderer->BindShader(ambient);
-	G_Buffer->TexBind(2, 3);
-	ambient->SetUniform1i("diffusetex", 3);
+	pRenderer->BindTexture(G_Buffer->GetTexture(2), 3);
+	//ambient->SetUniform1i("diffusetex", 3);
 	Renderer::Instance()->DrawQuad(ambient);
 	pRenderer->UnbindShader(ambient);
 
 	pRenderer->SetBlending(true);
 	// Global Lighting pass	
 	pRenderer->BindShader(lighting);
-	G_Buffer->TexBind(0, 1);
-	lighting->SetUniform1i("normaltex", 1);
-	G_Buffer->TexBind(1, 2);
-	lighting->SetUniform1i("worldpostex", 2);
-	G_Buffer->TexBind(2, 3);
-	lighting->SetUniform1i("diffusetex", 3);
-	G_Buffer->TexBind(3, 4);
-	lighting->SetUniform1i("specularalpha", 4);
-	lighting->SetUniform1f("exposure", exposure);
-	lighting->SetUniform1f("contrast", contrast);
-
-	lighting->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
-	lighting->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
-	lighting->SetUniform1i("GBufferShow", gBuffershow);
+	pRenderer->BindTexture(G_Buffer->GetTexture(0), 1);
+	//lighting->SetUniform1i("normaltex", 1);
+	pRenderer->BindTexture(G_Buffer->GetTexture(1), 2);
+	//lighting->SetUniform1i("worldpostex", 2);
+	pRenderer->BindTexture(G_Buffer->GetTexture(2), 3);
+	//lighting->SetUniform1i("diffusetex", 3);
+	pRenderer->BindTexture(G_Buffer->GetTexture(3), 4);
+	//lighting->SetUniform1i("specularalpha", 4);
+	//lighting->SetUniform1f("exposure", exposure);
+	//lighting->SetUniform1f("contrast", contrast);
+	
+	//lighting->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
+	//lighting->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
+	//lighting->SetUniform1i("GBufferShow", gBuffershow);
 	Renderer::Instance()->DrawQuad(lighting);
 	pRenderer->UnbindShader(lighting);
 
@@ -224,13 +224,13 @@ void MotionBlur::Update()
 
 	// Forward render Skydome
 	pRenderer->BindShader(skyDomeShader);
-	skyDomeShader->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
-	skyDomeShader->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
-	skyDomeShader->SetUniformMat4f("model", skyDome->GetComponent<Transform>()->mModelTransformation);
+	//skyDomeShader->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
+	//skyDomeShader->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
+	//skyDomeShader->SetUniformMat4f("model", skyDome->GetComponent<Transform>()->mModelTransformation);
 	pRenderer->BindTexture(skyDomeTexture, 1);
-	skyDomeShader->SetUniform1i("skyDome", 1);
-	skyDomeShader->SetUniform1f("exposure", exposure);
-	skyDomeShader->SetUniform1f("contrast", contrast);
+	//skyDomeShader->SetUniform1i("skyDome", 1);
+	//skyDomeShader->SetUniform1f("exposure", exposure);
+	//skyDomeShader->SetUniform1f("contrast", contrast);
 	Renderer::Instance()->Draw(skyDome->GetComponent<Shape>()->mShapeData->mVBO, skyDome->GetComponent<Shape>()->mShapeData->mIBO, skyDomeShader);
 	pRenderer->UnbindShader(skyDomeShader);
 	//Engine::Instance().stopMoving = true;
@@ -242,11 +242,11 @@ void MotionBlur::Update()
 		pRenderer->SetDepthTest(false);
 
 		pRenderer->BindShader(MotionBlurShader);
-		Color->TexBind(0, 1);
-		MotionBlurShader->SetUniform1i("Color", 1);
-		G_Buffer->TexBind(4, 2);
-		MotionBlurShader->SetUniform1i("Velocity", 2);
-		MotionBlurShader->SetUniform1i("S", S);
+		pRenderer->BindTexture(Color->GetTexture(0), 1);
+		//MotionBlurShader->SetUniform1i("Color", 1);
+		pRenderer->BindTexture(G_Buffer->GetTexture(4), 2);
+		//MotionBlurShader->SetUniform1i("Velocity", 2);
+		//MotionBlurShader->SetUniform1i("S", S);
 		Renderer::Instance()->DrawQuad(MotionBlurShader);
 
 		pRenderer->UnbindShader(MotionBlurShader);

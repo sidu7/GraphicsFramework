@@ -1,4 +1,4 @@
-#version 330 core
+#version 430 core
 
 out vec4 FragColor;
 
@@ -6,11 +6,11 @@ in vec2 TexCoord;
 
 const float pi = 22.0f/7.0f;
 
-uniform sampler2D normaltex;
-uniform sampler2D worldpostex;
-uniform sampler2D diffusetex;
-uniform sampler2D specularalpha;
-uniform sampler2D shadowmap;
+layout (binding = 1) uniform sampler2D normaltex;
+layout (binding = 2) uniform sampler2D worldpostex;
+layout (binding = 3) uniform sampler2D diffusetex;
+layout (binding = 4) uniform sampler2D specularalpha;
+layout (binding = 5) uniform sampler2D shadowmap;
 
 uniform vec3 lightPos;
 uniform vec3 Light;

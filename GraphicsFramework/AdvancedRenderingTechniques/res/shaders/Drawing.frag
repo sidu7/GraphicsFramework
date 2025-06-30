@@ -11,7 +11,7 @@ in vec2 TexCoords;
 
 layout (binding = 8) uniform sampler2D texDiff;
 
-layout (binding = 3) uniform ColorData 
+layout (binding = 1) uniform ColorData 
 {
 	vec4 diffuse;
 	vec4 specular;

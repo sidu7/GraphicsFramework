@@ -8,8 +8,8 @@ struct MaterialDataUBO
 {
 	glm::vec4 mDiffuse;
 	glm::vec4 mSpecular;
-	float mShininess;
-	bool mLighting;
+	alignas(16) float mShininess;
+	alignas(16) bool mLighting;
 };
 
 class Material : public Component

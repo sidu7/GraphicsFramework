@@ -12,14 +12,15 @@ uniform HBlock
 
 in vec2 TexCoord;
 
+layout (binding = 2) uniform sampler2D normaltex;
+layout (binding = 3) uniform sampler2D worldpostex;
+layout (binding = 4) uniform sampler2D diffusetex;
+layout (binding = 5) uniform sampler2D speculartex;
+layout (binding = 6) uniform sampler2D irradiance;
+layout (binding = 7) uniform sampler2D skydome;
+
 uniform vec3 Ambient;
 uniform mat4 inverseview;
-uniform sampler2D diffusetex;
-uniform sampler2D normaltex;
-uniform sampler2D speculartex;
-uniform sampler2D worldpostex;
-uniform sampler2D irradiance;
-uniform sampler2D skydome;
 uniform float exposure;
 uniform float contrast;
 uniform bool showDiffuse;

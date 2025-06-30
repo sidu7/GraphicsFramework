@@ -168,6 +168,6 @@ void Settings::Parse(rapidjson::Document& settingsFile)
 	}
 	if (Root.HasMember("MaterialBindingPoint"))
 	{
-		mTransformBindingPoint = Root["MaterialBindingPoint"].GetInt();
+		mMaterialBindingPoint = Root["MaterialBindingPoint"].GetInt();
 	}
 }

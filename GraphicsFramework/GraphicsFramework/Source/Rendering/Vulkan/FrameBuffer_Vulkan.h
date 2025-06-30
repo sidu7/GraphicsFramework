@@ -21,8 +21,6 @@ public:
 	virtual void Init(int width, int height, ImageFormat format, int Texcount = 1) override;
 
 	virtual void CopyDepthTo(const FrameBuffer* target) override;
-	virtual void TexBind(unsigned int index = 0, unsigned int slot = 0) override;
-	virtual void TexUnbind(unsigned int index, unsigned int slot) override;
 	virtual void Clear() const override;
 	virtual void DepthBind() override;
 	virtual void DepthUnbind() override;
