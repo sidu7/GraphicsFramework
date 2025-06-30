@@ -35,6 +35,7 @@ class FrameBuffer_Vulkan;
 class Semaphore_Vulkan;
 class Fence_Vulkan;
 struct BufferInfo;
+class SwapChain_Vulkan;
 
 enum CommandQueueType
 {
@@ -175,12 +176,7 @@ protected:
 	CommandQueue_Vulkan* CommandQueues[CommandQueueType::Count];
 
 	// SwapChain
-	VkSwapchainKHR SwapChain;
-	VkSwapchainKHR OldSwapChain;
-	std::vector<VkImage> SwapChainImages;
-	std::vector<VkImageView> SwapChainImageViews;
-	VkFormat SwapChainImageFormat = VK_FORMAT_UNDEFINED;
-	VkExtent2D SwapChainImageExtent = {};
+	SwapChain_Vulkan* SwapChain;
 	std::vector<FrameBuffer_Vulkan*> SwapchainFrameBuffers;
 
 	std::vector<Semaphore_Vulkan*> ImageAvailableSemaphores;

@@ -4,6 +4,7 @@
 #include "CommandBuffer_Vulkan.h"
 #include "Fence_Vulkan.h"
 #include "Semaphore_Vulkan.h"
+#include "SwapChain_Vulkan.h"
 
 CommandQueue_Vulkan::CommandQueue_Vulkan() :
 	mQueue(VK_NULL_HANDLE)
@@ -83,7 +84,7 @@ void CommandQueue_Vulkan::SubmitCommandBuffer(const CommandBuffer_Vulkan* comman
 	VKCall(vkQueueSubmit(mQueue, 1, &SubmitInfo, Fence ? Fence->mFence : VK_NULL_HANDLE), "Command Buffer Submit Failed.");
 }
 
-void CommandQueue_Vulkan::PresentToScreen(const Semaphore_Vulkan* WaitFor, VkSwapchainKHR SwapChain, uint32_t SwapChainImageIdx) const
+void CommandQueue_Vulkan::PresentToScreen(const Semaphore_Vulkan* WaitFor, SwapChain_Vulkan* SwapChain) const
 {
 	if (mType != CommandQueueType::Present)
 	{
@@ -96,8 +97,8 @@ void CommandQueue_Vulkan::PresentToScreen(const Semaphore_Vulkan* WaitFor, VkSwa
 	PresentInfo.waitSemaphoreCount = ARRAY_SIZE(WaitSemaphores);
 	PresentInfo.pWaitSemaphores = WaitSemaphores;
 	PresentInfo.swapchainCount = 1;
-	PresentInfo.pSwapchains = &SwapChain;
-	PresentInfo.pImageIndices = &SwapChainImageIdx;
+	PresentInfo.pSwapchains = &SwapChain->SwapChain;
+	PresentInfo.pImageIndices = &SwapChain->ImageIdx;
 	PresentInfo.pResults = nullptr;
 
 	VkResult PresentResult = vkQueuePresentKHR(mQueue, &PresentInfo);

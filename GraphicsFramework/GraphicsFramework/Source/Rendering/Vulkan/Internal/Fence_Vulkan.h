@@ -9,6 +9,7 @@ public:
 	~Fence_Vulkan();
 
 	void Wait();
+	void Reset();
 
 	VkFence mFence;
 };

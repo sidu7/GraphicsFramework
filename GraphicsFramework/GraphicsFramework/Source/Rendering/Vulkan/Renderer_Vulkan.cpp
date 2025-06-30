@@ -37,6 +37,7 @@ Author: Sidhant Tumma
 #include "Internal/CommandQueue_Vulkan.h"
 #include "Internal/Fence_Vulkan.h"
 #include "Internal/Semaphore_Vulkan.h"
+#include "Internal/SwapChain_Vulkan.h"
 
 class VertexArray;
 class VertexBuffer;
@@ -79,6 +80,9 @@ void Renderer_Vulkan::Init()
 	
 	InitHelper.InitVulkan();
 
+	SwapChain = new SwapChain_Vulkan();
+	SwapChain->Init();
+
 	// Command Queues
 	for (uint32_t i = 0; i < CommandQueueType::Count; ++i)
 	{
@@ -97,15 +101,15 @@ void Renderer_Vulkan::Init()
 	TransientTransferCmdBufferPool->Init(CommandQueueType::Transfer, true /*isTransient*/);
 	
 	ScreenRenderPass = new RenderPass_Vulkan();
-	ScreenRenderPass->Init(SwapChainImageFormat, true, false);
+	ScreenRenderPass->Init(SwapChain->ImageFormat, true, false);
 
 	ImGuiRenderPass = new RenderPass_Vulkan();
-	ImGuiRenderPass->Init(SwapChainImageFormat, false, true);
+	ImGuiRenderPass->Init(SwapChain->ImageFormat, false, true);
 
-	for (const VkImageView& ImageView : SwapChainImageViews)
+	for (const VkImageView& ImageView : SwapChain->ImageViews)
 	{
 		FrameBuffer_Vulkan* frameBuffer = static_cast<FrameBuffer_Vulkan*>(RenderingFactory::Instance()->CreateFrameBuffer());
-		frameBuffer->InitAsBackBuffer(SwapChainImageExtent.width, SwapChainImageExtent.height, ImageView);
+		frameBuffer->InitAsBackBuffer(SwapChain->ImageExtent.width, SwapChain->ImageExtent.height, ImageView);
 		SwapchainFrameBuffers.push_back(frameBuffer);
 	}
 
@@ -130,12 +134,12 @@ void Renderer_Vulkan::Init()
 
 	Viewport.x = 0.0f;
 	Viewport.y = 0.0f;
-	Viewport.width = SwapChainImageExtent.width;
-	Viewport.height = SwapChainImageExtent.height;
+	Viewport.width = SwapChain->ImageExtent.width;
+	Viewport.height = SwapChain->ImageExtent.height;
 	Viewport.minDepth = 0.0f;
 	Viewport.maxDepth = 1.0f;
 
-	ScissorRect.extent = SwapChainImageExtent;
+	ScissorRect.extent = SwapChain->ImageExtent;
 	ScissorRect.offset = { 0, 0 };
 
 	Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -153,11 +157,6 @@ void Renderer_Vulkan::Close()
 	vkDestroyDescriptorPool(Device, ImGuiDescPool, nullptr);
 	delete ImGuiRenderPass;
 	delete ScreenRenderPass;
-
-	for (const VkImageView& ImageView : SwapChainImageViews)
-	{
-		vkDestroyImageView(Device, ImageView, nullptr);
-	}
 
 	for (const FrameBuffer_Vulkan* FrameBuffer : SwapchainFrameBuffers)
 	{
@@ -186,7 +185,8 @@ void Renderer_Vulkan::Close()
 	delete TransientTransferCmdBufferPool;
 	delete TransientGraphicsCmdBufferPool;
 
-	vkDestroySwapchainKHR(Device, SwapChain, nullptr);
+	delete SwapChain;
+
 	vkDestroyDevice(Device, nullptr);
 	vkDestroySurfaceKHR(VulkanInstance, Surface, nullptr);
 	VkHelper.DestroyDebugMessenger(DebugMessenger);
@@ -208,10 +208,10 @@ void Renderer_Vulkan::StartFrame()
 
 	VKCall(vkWaitForFences(Device, 1, &InFlightFences[FrameIdx]->mFence, VK_TRUE, UINT64_MAX), "Waiting for Fence failed.");
 
-	VkResult AcquireResult = vkAcquireNextImageKHR(Device, SwapChain, UINT64_MAX, ImageAvailableSemaphores[FrameIdx]->mSemaphore, VK_NULL_HANDLE, &SwapChainImageIdx);
+	SwapChain->AcquireNextImage(ImageAvailableSemaphores[FrameIdx]);
 
-	VKCall(vkResetFences(Device, 1, &InFlightFences[FrameIdx]->mFence), "Fence Reset Failed.");
-
+	InFlightFences[FrameIdx]->Reset();
+		
 	GetCommandBuffer()->Reset();
 
 	// Record Command Buffer
@@ -228,7 +228,7 @@ void Renderer_Vulkan::SwapBuffers()
 	GetQueue(CommandQueueType::Graphics)->SubmitCommandBuffer(GetCommandBuffer(), ImageAvailableSemaphores[FrameIdx], RenderingFinishedSemaphores[FrameIdx], InFlightFences[FrameIdx]);
 
 	// Present to Screen
-	GetQueue(CommandQueueType::Present)->PresentToScreen(RenderingFinishedSemaphores[FrameIdx], SwapChain, SwapChainImageIdx);
+	GetQueue(CommandQueueType::Present)->PresentToScreen(RenderingFinishedSemaphores[FrameIdx], SwapChain);
 
 	FrameIdx = (FrameIdx + 1) % BACKBUFFER_COUNT;
 }

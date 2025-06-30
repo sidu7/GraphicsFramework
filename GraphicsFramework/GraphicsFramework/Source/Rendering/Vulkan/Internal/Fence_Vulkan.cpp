@@ -22,3 +22,8 @@ void Fence_Vulkan::Wait()
 {
 	VKCall(vkWaitForFences(Renderer_Vulkan::Get()->GetDevice(), 1, &mFence, VK_TRUE, UINT64_MAX), "Waiting for Fence Failed.");
 }
+
+void Fence_Vulkan::Reset()
+{
+	VKCall(vkResetFences(Renderer_Vulkan::Get()->GetDevice(), 1, &mFence), "Fence Reset Failed.");
+}

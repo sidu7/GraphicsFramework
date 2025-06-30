@@ -10,6 +10,7 @@
 #include "CommandBuffer_Vulkan.h"
 #include "CommandQueue_Vulkan.h"
 #include "RenderPass_Vulkan.h"
+#include "SwapChain_Vulkan.h"
 
 // Required Layers
 const std::vector<const char*> Layers = {
@@ -17,54 +18,6 @@ const std::vector<const char*> Layers = {
 	"VK_LAYER_KHRONOS_validation"
 #endif
 };
-
-bool SwapChainDetails::IsValid()
-{
-	return !Formats.empty() && !PresentModes.empty();
-}
-
-VkExtent2D SwapChainDetails::GetImageExtent()
-{
-	if (SurfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
-	{
-		return SurfaceCapabilities.currentExtent;
-	}
-
-	int Width, Height;
-	SDL_Vulkan_GetDrawableSize(Window::Instance()->GetWindow(), &Width, &Height);
-
-	VkExtent2D ImageExtent;
-	ImageExtent.width = std::clamp((uint32_t)Width, SurfaceCapabilities.minImageExtent.width, SurfaceCapabilities.maxImageExtent.width);
-	ImageExtent.height = std::clamp((uint32_t)Height, SurfaceCapabilities.minImageExtent.height, SurfaceCapabilities.maxImageExtent.height);
-
-	return ImageExtent;
-}
-
-const VkSurfaceFormatKHR& SwapChainDetails::GetSurfaceFormat()
-{
-	for (const VkSurfaceFormatKHR& FormatData : Formats)
-	{
-		if (FormatData.colorSpace == VK_COLORSPACE_SRGB_NONLINEAR_KHR)
-		{
-			return FormatData;
-		}
-	}
-
-	return Formats[0];
-}
-
-const VkPresentModeKHR SwapChainDetails::GetPresentMode()
-{
-	for (VkPresentModeKHR PresentMode : PresentModes)
-	{
-		if (PresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
-		{
-			return PresentMode;
-		}
-	}
-
-	return VK_PRESENT_MODE_FIFO_KHR;
-}
 
 bool VulkanHelper::AreLayersAvailable(std::vector<const char*> Layers)
 {
@@ -153,31 +106,6 @@ bool VulkanHelper::AreDeviceExtensionsAvailable(std::vector<const char*> Extensi
 	return true;
 }
 
-SwapChainDetails VulkanHelper::GetSwapChainDetails(VkPhysicalDevice PhysicalDevice, VkSurfaceKHR Surface)
-{
-	SwapChainDetails Details;
-
-	vkGetPhysicalDeviceSurfaceCapabilitiesKHR(PhysicalDevice, Surface, &Details.SurfaceCapabilities);
-
-	uint32_t SurfaceFormatCount = 0;
-	vkGetPhysicalDeviceSurfaceFormatsKHR(PhysicalDevice, Surface, &SurfaceFormatCount, nullptr);
-	if (SurfaceFormatCount > 0)
-	{
-		Details.Formats.resize(SurfaceFormatCount);
-		vkGetPhysicalDeviceSurfaceFormatsKHR(PhysicalDevice, Surface, &SurfaceFormatCount, Details.Formats.data());
-	}
-
-	uint32_t SurfacePresentModesCount = 0;
-	vkGetPhysicalDeviceSurfacePresentModesKHR(PhysicalDevice, Surface, &SurfacePresentModesCount, nullptr);
-	if (SurfacePresentModesCount > 0)
-	{
-		Details.PresentModes.resize(SurfacePresentModesCount);
-		vkGetPhysicalDeviceSurfacePresentModesKHR(PhysicalDevice, Surface, &SurfacePresentModesCount, Details.PresentModes.data());
-	}
-
-	return Details;
-}
-
 bool VulkanHelper::IsDeviceSupported(VkPhysicalDevice PhysicalDevice, VkSurfaceKHR Surface, QueueFamilyIndices* OutQueueFamilyData)
 {
 	// Device supported checks
@@ -219,7 +147,7 @@ bool VulkanHelper::IsDeviceSupported(VkPhysicalDevice PhysicalDevice, VkSurfaceK
 			bool bExtensionsSupported = AreDeviceExtensionsAvailable(VulkanRenderer->DeviceExtensions, PhysicalDevice);
 
 			// Is swapchain supported
-			SwapChainDetails SwapChainData = GetSwapChainDetails(PhysicalDevice, Surface);
+			SwapChainDetails SwapChainData = SwapChain_Vulkan::GetSwapChainDetails(PhysicalDevice, Surface);
 
 			if (bExtensionsSupported && OutQueueFamilyData->IsValid() && SwapChainData.IsValid())
 			{
@@ -285,75 +213,6 @@ void VulkanHelper::DestroyDebugMessenger(VkDebugUtilsMessengerEXT DebugMessenger
 		else
 		{
 			std::cout << "Could not find vkDestroyDebugUtilsMessengerEXT function" << std::endl;
-		}
-	}
-}
-
-void VulkanHelper::CreateSwapChain(Renderer_Vulkan* VkRenderer)
-{
-	SwapChainDetails SwapChainData = GetSwapChainDetails(VkRenderer->PhysicalDevice, VkRenderer->Surface);
-
-	if (SwapChainData.IsValid())
-	{
-		VkSurfaceFormatKHR SurfaceFormat = SwapChainData.GetSurfaceFormat();
-
-		VkSwapchainCreateInfoKHR SwapChainInfo = { VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR };
-		SwapChainInfo.surface = VkRenderer->Surface;
-		SwapChainInfo.minImageCount = BACKBUFFER_COUNT;
-		SwapChainInfo.imageFormat = SurfaceFormat.format;
-		VkRenderer->SwapChainImageFormat = SurfaceFormat.format;
-		SwapChainInfo.imageColorSpace = SurfaceFormat.colorSpace;
-		SwapChainInfo.imageExtent = SwapChainData.GetImageExtent();
-		VkRenderer->SwapChainImageExtent = SwapChainInfo.imageExtent;
-		SwapChainInfo.imageArrayLayers = 1;
-		SwapChainInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		SwapChainInfo.preTransform = SwapChainData.SurfaceCapabilities.currentTransform;
-		SwapChainInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		SwapChainInfo.presentMode = SwapChainData.GetPresentMode();
-		SwapChainInfo.clipped = VK_TRUE;
-		SwapChainInfo.oldSwapchain = VK_NULL_HANDLE;
-
-		if (VkRenderer->QueueFamilyData.QueueIndices[CommandQueueType::Graphics] != VkRenderer->QueueFamilyData.QueueIndices[CommandQueueType::Present])
-		{
-			const std::vector<uint32_t> QueueFamilyIndices = {VkRenderer->QueueFamilyData.QueueIndices[CommandQueueType::Graphics], VkRenderer->QueueFamilyData.QueueIndices[CommandQueueType::Present] };
-			SwapChainInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-			SwapChainInfo.queueFamilyIndexCount = QueueFamilyIndices.size();
-			SwapChainInfo.pQueueFamilyIndices = QueueFamilyIndices.data();
-		}
-		else
-		{
-			SwapChainInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-			SwapChainInfo.queueFamilyIndexCount = 0;
-			SwapChainInfo.pQueueFamilyIndices = nullptr;
-		}
-
-		VKCall(vkCreateSwapchainKHR(VkRenderer->Device, &SwapChainInfo, nullptr, &VkRenderer->SwapChain), "SwapChain creation Failed.");
-
-		// Get SwapChain Images
-		uint32_t SwapChainImagesCount = 0;
-		VKCall(vkGetSwapchainImagesKHR(VkRenderer->Device, VkRenderer->SwapChain, &SwapChainImagesCount, nullptr), "Swapchain Images Count retrival Failed.");
-		VkRenderer->SwapChainImages.resize(SwapChainImagesCount);
-		VKCall(vkGetSwapchainImagesKHR(VkRenderer->Device, VkRenderer->SwapChain, &SwapChainImagesCount, VkRenderer->SwapChainImages.data()), "Swapchain Images retrival Failed.");
-
-		// Create Image Views
-		VkRenderer->SwapChainImageViews.resize(SwapChainImagesCount);
-		for (uint16_t i = 0; i < VkRenderer->SwapChainImages.size(); ++i)
-		{
-			VkImageViewCreateInfo ImageViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
-			ImageViewInfo.image = VkRenderer->SwapChainImages[i];
-			ImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-			ImageViewInfo.format = VkRenderer->SwapChainImageFormat;
-			ImageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-			ImageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-			ImageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-			ImageViewInfo.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-			ImageViewInfo.subresourceRange.layerCount = 1;
-			ImageViewInfo.subresourceRange.baseArrayLayer = 0;
-			ImageViewInfo.subresourceRange.levelCount = 1;
-			ImageViewInfo.subresourceRange.baseMipLevel = 0;
-			ImageViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-
-			VKCall(vkCreateImageView(VkRenderer->Device, &ImageViewInfo, nullptr, &VkRenderer->SwapChainImageViews[i]), "Swapchain Image View creation Failed.");
 		}
 	}
 }
@@ -461,9 +320,6 @@ void VulkanHelper::InitVulkan()
 				DeviceInfo.pEnabledFeatures = nullptr;
 
 				VKCall(vkCreateDevice(VkRenderer->PhysicalDevice, &DeviceInfo, nullptr, &VkRenderer->Device), "Vulkan Logical Device creation Failed.");
-
-				// Create SwapChain
-				CreateSwapChain(VkRenderer);
 			}
 		}
 	}
