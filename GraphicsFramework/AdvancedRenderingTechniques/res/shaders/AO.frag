@@ -8,10 +8,14 @@ in vec2 TexCoord;
 
 layout (binding = 2) uniform sampler2D normaltex;
 layout (binding = 3) uniform sampler2D worldpostex;
-uniform float contrast;
-uniform float AOR;
-uniform int AOn;
-uniform float AOscale;
+
+layout (binding = 3) uniform AOParams
+{
+	int AOn;
+	float AOR;
+	float AOscale;
+	float contrast;
+};
 
 void main()
 {

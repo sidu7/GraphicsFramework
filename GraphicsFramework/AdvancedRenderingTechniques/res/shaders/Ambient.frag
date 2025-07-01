@@ -12,6 +12,13 @@ layout (binding = 5) uniform HBlock
 
 in vec2 TexCoord;
 
+layout (binding = 2) uniform Matrices
+{
+	mat4 perspective;
+	mat4 view;
+	mat4 inverseview;
+};
+
 layout (binding = 2) uniform sampler2D normaltex;
 layout (binding = 3) uniform sampler2D worldpostex;
 layout (binding = 4) uniform sampler2D diffusetex;
@@ -21,7 +28,6 @@ layout (binding = 7) uniform sampler2D skydome;
 layout (binding = 8) uniform sampler2D AOtex;
 
 uniform vec3 Ambient;
-uniform mat4 inverseview;
 uniform float exposure;
 uniform float contrast;
 uniform bool showDiffuse;

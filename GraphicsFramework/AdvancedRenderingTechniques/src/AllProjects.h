@@ -12,6 +12,14 @@ class Light;
 class Object;
 class Texture;
 
+struct AOParams
+{
+	int AONum;
+	alignas(4) float AORadius;
+	alignas(4) float AOScale;
+	alignas(4) float AOContrast;
+};
+
 class AllProjects : public Scene
 {
 public:
@@ -33,6 +41,7 @@ private:
 
 	// Ubos
 	UniformBuffer* globalMatrices;
+	UniformBuffer* AoUbo;
 
 	// AO
 	Shader* ambient;
@@ -92,8 +101,5 @@ private:
 	ComputeShader* BilateralVertical;
 	Texture* HorizontalBlurredAO;
 	Texture* ResultBlurredAO;
-	int AONum;
-	float AORadius;
-	float AOScale;
-	float AOContrast;
+	AOParams AoParameters;
 };

@@ -6,6 +6,13 @@ in vec2 TexCoord;
 
 const float pi = 22.0f/7.0f;
 
+layout (binding = 2) uniform Matrices
+{
+	mat4 projection;
+	mat4 view;
+	mat4 inverseview;
+};
+
 layout (binding = 1) uniform sampler2D normaltex;
 layout (binding = 2) uniform sampler2D worldpostex;
 layout (binding = 3) uniform sampler2D diffusetex;
@@ -14,7 +21,6 @@ layout (binding = 4) uniform sampler2D specularalpha;
 uniform vec3 lightPos;
 uniform vec3 Light;
 uniform int GBufferShow;
-uniform mat4 inverseview;
 uniform float lightRadius;
 
 void main()

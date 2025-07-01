@@ -159,10 +159,14 @@ void AllProjects::Init()
 	HorizontalBlurredAO->Init(ImageFormat::RGBA32F, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
 	ResultBlurredAO = RenderingFactory::Instance()->CreateTexture(); 
 	ResultBlurredAO->Init(ImageFormat::RGBA32F, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
-	AONum = 115;
-	AORadius = 10.0f;
-	AOScale = 3.0f;
-	AOContrast = 1.0f;
+
+	AoParameters.AONum = 115;
+	AoParameters.AORadius = 10.0f;
+	AoParameters.AOScale = 3.0f;
+	AoParameters.AOContrast = 1.0f;
+
+	AoUbo = RenderingFactory::Instance()->CreateUniformBuffer();
+	AoUbo->Init(sizeof(AOParams), 3, &AoParameters);
 
 	// Load Objects in Scene
 	ObjectManager::Instance()->AddObject("res/JSON Data/Floor.json");
@@ -193,6 +197,7 @@ void AllProjects::Close()
 	delete blurVertical;
 	delete light;
 
+	delete AoUbo;
 	delete G_Buffer;
 	delete ShadowMap;
 
@@ -321,7 +326,7 @@ void AllProjects::Update()
 	//AO Pass
 	pRenderer->BindFrameBuffer(BlurredAO);
 	BlurredAO->Clear();
-
+	pRenderer->BindUniformBuffer(AoUbo, AoUbo->GetBinding());
 	pRenderer->BindShader(AOShader);
 	pRenderer->BindTexture(G_Buffer->GetTexture(0), 2);
 	pRenderer->BindTexture(G_Buffer->GetTexture(1), 3);
@@ -331,6 +336,7 @@ void AllProjects::Update()
 	//AOShader->SetUniform1f("AOscale", AOScale);
 	Renderer::Instance()->DrawQuad(AOShader);
 	pRenderer->UnbindShader(AOShader);
+	pRenderer->UnbindUniformBuffer(AoUbo);
 	pRenderer->UnbindTexture(G_Buffer->GetTexture(0), 2);
 	pRenderer->UnbindTexture(G_Buffer->GetTexture(1), 3);
 
@@ -543,10 +549,10 @@ void AllProjects::DebugDisplay()
 	ImGui::Checkbox("Pause Moving", &Engine::Instance()->stopMoving);
 	ImGui::Checkbox("Show IBL Diffuse", &IBLDiffuse);
 	ImGui::Checkbox("Show IBL Specular", &IBLSpecular);
-	ImGui::InputInt("AONum", &AONum);
-	ImGui::InputFloat("AORadius", &AORadius, 1.0f);
-	ImGui::InputFloat("AOScale", &AOScale, 0.1f);
-	ImGui::InputFloat("AOContrast", &AOContrast, 0.1f);
+	ImGui::InputInt("AONum", &AoParameters.AONum);
+	ImGui::InputFloat("AORadius", &AoParameters.AORadius, 1.0f);
+	ImGui::InputFloat("AOScale", &AoParameters.AOScale, 0.1f);
+	ImGui::InputFloat("AOContrast", &AoParameters.AOContrast, 0.1f);
 	ImGui::End();
 }
 
