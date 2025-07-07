@@ -4,7 +4,7 @@ out vec4 FragColor;
 
 const float pi = 22.0f/7.0f;
 
-uniform HBlock
+layout (binding = 5) uniform HBlock
 { 
 	float Num;
 	float Numbers[2 * 100];
@@ -26,11 +26,16 @@ layout (binding = 5) uniform sampler2D speculartex;
 layout (binding = 6) uniform sampler2D irradiance;
 layout (binding = 7) uniform sampler2D skydome;
 
-uniform vec3 Ambient;
-uniform float exposure;
-uniform float contrast;
-uniform bool showDiffuse;
-uniform bool showSpecular;
+layout (binding = 4) uniform LightData
+{
+	vec3 Ambient;
+	vec3 Light;
+	float Exposure;
+	float Contrast;
+	bool ShowIBLDiffuse;
+	bool ShowIBLSpecular;
+	int ShowGBuffer;
+};
 
 vec3 TexRead(vec3 w,sampler2D tex, float level)
 {
@@ -90,15 +95,15 @@ void main()
 
 	vec3 diffuse = IrrAmbient * Kd / pi;
 	vec3 color = vec3(0);
-	if(showDiffuse)
+	if(ShowIBLDiffuse)
 	color += diffuse;
-	if(showSpecular)
+	if(ShowIBLSpecular)
 	color += specular;
 
 	vec4 OutColor = vec4(color,1.0);
 
 	// Tone Mapping and Gamma Correction
-	vec4 base = exposure * OutColor / (exposure * OutColor + vec4(1,1,1,1));
+	vec4 base = Exposure * OutColor / (Exposure * OutColor + vec4(1,1,1,1));
 
-	FragColor = pow(base,vec4(contrast/2.2));
+	FragColor = pow(base,vec4(Contrast/2.2));
 }

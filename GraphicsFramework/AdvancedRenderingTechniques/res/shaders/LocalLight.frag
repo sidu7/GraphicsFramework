@@ -18,10 +18,13 @@ layout (binding = 2) uniform sampler2D worldpostex;
 layout (binding = 3) uniform sampler2D diffusetex;
 layout (binding = 4) uniform sampler2D specularalpha;
 
-uniform vec3 lightPos;
-uniform vec3 Light;
-uniform int GBufferShow;
-uniform float lightRadius;
+layout (binding = 4) uniform LocalLightData
+{
+	mat4 model;
+	vec3 lightPos;
+	vec3 Light;
+	float lightRadius;
+};
 
 void main()
 {

@@ -20,6 +20,32 @@ struct AOParams
 	alignas(4) float AOContrast;
 };
 
+struct LightData
+{
+	glm::vec3 Ambient;
+	alignas(16) glm::vec3 Light;
+	alignas(4) float Exposure;
+	alignas(4) float Contrast;
+	alignas(4) bool ShowIBLDiffuse;
+	alignas(4) bool ShowIBLSpecular;
+	alignas(4) int32_t ShowGBuffer;
+	alignas(4) float BiasAlpha;
+};
+
+struct DynamicLightData
+{
+	glm::mat4 ShadowMatrix;
+	alignas(16) glm::vec3 LightPos;
+};
+
+struct LocalLightData
+{
+	glm::mat4 ModelMatrix;
+	alignas(16) glm::vec3 LightPos;
+	alignas(16) glm::vec3 Light;
+	alignas(4) float LightRadius;
+};
+
 class AllProjects : public Scene
 {
 public:
@@ -32,7 +58,7 @@ public:
 
 private:
 	void HammersleyRandomPoints();
-
+	void UpdateLightDataUbo();
 private:
 	Shader* baseShader;
 	Shader* lighting;
@@ -41,6 +67,10 @@ private:
 
 	// Ubos
 	UniformBuffer* globalMatrices;
+	UniformBuffer* shadowMatrices;
+	UniformBuffer* lightDataUbo;
+	UniformBuffer* lightDynamicDataUbo;
+	UniformBuffer* localLightDataUbo;
 	UniformBuffer* AoUbo;
 
 	// AO
@@ -71,7 +101,6 @@ private:
 	 */
 	FrameBuffer* G_Buffer;
 	FrameBuffer* ShadowMap;
-	int gBuffershow;
 	bool showLocalLights;
 	float angle;
 	glm::vec3 lightColors[40][40];
@@ -84,15 +113,17 @@ private:
 	Shader* skyDomeShader;
 	Texture* skyDomeTexture;
 	Texture* skyDomeIrradiance;
-	float exposure;
-	float contrast;
 	struct
 	{
 		float N;
 		float hammersley[2 * 100];
 	} Hblock;
 	UniformBuffer* HUniBlock;
-	bool IBLDiffuse, IBLSpecular;
+
+	// Ubo Data
+	LightData lightData;
+	DynamicLightData dynamicLightData;
+	LocalLightData localLightData;
 
 	//SSAO
 	Shader* AOShader;

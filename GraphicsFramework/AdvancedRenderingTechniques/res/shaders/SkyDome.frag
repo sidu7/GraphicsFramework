@@ -7,8 +7,17 @@ const float pi = 22.0f/7.0f;
 in vec3 fragPos;
 
 layout (binding = 1) uniform sampler2D skyDome;
-uniform float exposure;
-uniform float contrast;
+
+layout (binding = 4) uniform LightData
+{
+	vec3 Ambient;
+	vec3 Light;
+	float Exposure;
+	float Contrast;
+	bool ShowIBLDiffuse;
+	bool ShowIBLSpecular;
+	int ShowGBuffer;
+};
 
 void main()
 {
@@ -19,7 +28,7 @@ void main()
 	vec4 OutColor = vec4(texture(skyDome,uv).rgb,1.0);
 
 	// Tone Mapping and Gamma Correction
-	vec4 base = exposure * OutColor / (exposure * OutColor + vec4(1,1,1,1));
+	vec4 base = Exposure * OutColor / (Exposure * OutColor + vec4(1,1,1,1));
 
-	FragColor = pow(base,vec4(contrast/2.2));
+	FragColor = pow(base,vec4(Contrast/2.2));
 }

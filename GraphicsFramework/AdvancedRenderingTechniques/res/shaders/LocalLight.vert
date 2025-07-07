@@ -11,11 +11,12 @@ layout (binding = 2) uniform Matrices
 	mat4 inverseview;
 };
 
-layout (binding = 0) uniform ObjectMatrices
+layout (binding = 4) uniform LocalLightData
 {
-	mat4 normaltr;
 	mat4 model;
-	mat4 prevModel;
+	vec3 lightPos;
+	vec3 Light;
+	float lightRadius;
 };
 
 void main()

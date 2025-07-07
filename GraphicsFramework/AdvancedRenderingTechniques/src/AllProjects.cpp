@@ -59,6 +59,18 @@ void AllProjects::Init()
 	globalMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
 	globalMatrices->Init(sizeof(Matrices), 2);
 
+	shadowMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
+	shadowMatrices->Init(sizeof(Matrices), 2);
+
+	lightDataUbo = RenderingFactory::Instance()->CreateUniformBuffer();
+	lightDataUbo->Init(sizeof(LightData), 4);
+
+	lightDynamicDataUbo = RenderingFactory::Instance()->CreateUniformBuffer();
+	lightDynamicDataUbo->Init(sizeof(DynamicLightData), 6);
+	
+	localLightDataUbo = RenderingFactory::Instance()->CreateUniformBuffer();
+	localLightDataUbo->Init(sizeof(LocalLightData), 4);
+
 	blurHorizontal = RenderingFactory::Instance()->CreateComputeShader(); 
 	blurHorizontal->SetShader("res/shaders/BlurHorizontal.compute");
 	blurVertical = RenderingFactory::Instance()->CreateComputeShader(); 
@@ -71,14 +83,8 @@ void AllProjects::Init()
 	Engine::Instance()->GetCamera()->mCameraPos = glm::vec3(27.8f, 25.9f, -65.7f);
 	Engine::Instance()->GetCamera()->CalculateFront();
 
-	Renderer::Instance()->BindShader(lighting);
-	//lighting->SetUniform3f("Light", 1.0f, 1.0f, 1.0f);
-
-	Renderer::Instance()->BindShader(ambient);
-	//ambient->SetUniform3f("Ambient", 0.1f, 0.1f, 0.1f);
-
-	Renderer::Instance()->BindShader(ambientNoAO);
-	//ambientNoAO->SetUniform3f("Ambient", 0.1f, 0.1f, 0.1f);
+	lightData.Light = glm::vec3(1.f);
+	lightData.Ambient = glm::vec3(0.1f);
 
 	showAO = true;
 
@@ -87,7 +93,7 @@ void AllProjects::Init()
 	ShadowMap = RenderingFactory::Instance()->CreateFrameBuffer(); 
 	ShadowMap->Init(1024, 1024, ImageFormat::RGBA32F);
 
-	gBuffershow = 0;
+	lightData.ShowGBuffer = 0;
 
 	srand(time(NULL));
 
@@ -119,7 +125,7 @@ void AllProjects::Init()
 	block = RenderingFactory::Instance()->CreateUniformBuffer(); 
 	block->Init(MAX_BLUR_WEIGHTS_NUM * sizeof(float), 5);
 
-	biasAlpha = 0.057f;
+	lightData.BiasAlpha = 0.057f;
 
 	// Shadow blur
 	horizontalBlurred = RenderingFactory::Instance()->CreateTexture();
@@ -134,8 +140,8 @@ void AllProjects::Init()
 	skyDomeTexture->Init("res/Textures/popDome.hdr");
 	skyDomeIrradiance = RenderingFactory::Instance()->CreateTexture(); 
 	skyDomeIrradiance->Init("res/Textures/popDomeIrr.hdr");
-	exposure = 5.2f;
-	contrast = 1.0f;
+	lightData.Exposure = 5.2f;
+	lightData.Contrast = 1.0f;
 
 	// IBL
 	Hblock.N = HBlockSize;
@@ -143,8 +149,8 @@ void AllProjects::Init()
 	HUniBlock = RenderingFactory::Instance()->CreateUniformBuffer(); 
 	HUniBlock->Init(sizeof(Hblock), 5);
 	HUniBlock->AddData(sizeof(Hblock), &Hblock);
-	IBLDiffuse = true;
-	IBLSpecular = true;
+	lightData.ShowIBLDiffuse = true;
+	lightData.ShowIBLSpecular = true;
 
 	//SSAO
 	AOShader = RenderingFactory::Instance()->CreateShader(); 
@@ -182,6 +188,8 @@ void AllProjects::Init()
 	skyDome = ObjectManager::Instance()->ReadObject("res/JSON Data/SkyDome.json");
 	skyDome->GetComponent<Transform>()->mModelTransformation = glm::scale(glm::mat4(1.0f), skyDome->GetComponent<Transform>()->mScale);
 	showLocalLights = true;
+
+	UpdateLightDataUbo();
 }
 
 void AllProjects::Close()
@@ -193,6 +201,10 @@ void AllProjects::Close()
 	delete shadow;
 	delete locallight;
 	delete globalMatrices;
+	delete shadowMatrices;
+	delete lightDataUbo;
+	delete lightDynamicDataUbo;
+	delete localLightDataUbo;
 	delete blurHorizontal;
 	delete blurVertical;
 	delete light;
@@ -267,15 +279,15 @@ void AllProjects::Update()
 	ShadowMap->Clear();
 	pRenderer->BindShader(shadow);
 
-	glm::mat4 LightLookAt, shadowMatrix, LightProj;
+	glm::mat4 LightLookAt, LightProj;
 	LightLookAt = glm::lookAt(light->position, glm::vec3(0.0f,0.0f,0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	LightProj = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 2000.0f);
 
-	Matrices ShadowMatricesData{ LightLookAt , LightProj };
-	globalMatrices->AddData(sizeof(ShadowMatricesData), &ShadowMatricesData);
-	pRenderer->BindUniformBuffer(globalMatrices, globalMatrices->GetBinding());
+	Matrices ShadowMatricesData{ LightProj, LightLookAt , glm::inverse(LightLookAt)};
+	shadowMatrices->AddData(sizeof(ShadowMatricesData), &ShadowMatricesData);
+	pRenderer->BindUniformBuffer(shadowMatrices, shadowMatrices->GetBinding());
 
-	shadowMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)) * LightProj * LightLookAt;
+	dynamicLightData.ShadowMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.5f)) * glm::scale(glm::mat4(1.0f), glm::vec3(0.5f)) * LightProj * LightLookAt;
 
 	ObjectManager::Instance()->RenderObjects(shadow);
 
@@ -309,17 +321,6 @@ void AllProjects::Update()
 		pRenderer->UnbindUniformBuffer(block);
 	}
 
-	////IrradianceETerms->Bind(3);
-	////irradianceCompute->Bind();
-	//////irradianceCompute->SetInputUniformImage("skydome", skyDomeTexture->GetTextureID(), 0, skyDomeTexture->mBPP);
-	////skyDomeTexture->Bind();
-	////irradianceCompute->SetUniform1i("skydome", 0);
-	////irradianceCompute->SetUniform1i("width", skyDomeTexture->mWidth);
-	////irradianceCompute->SetUniform1i("height", skyDomeTexture->mHeight);
-	////irradianceCompute->Run(9, 1, 1);
-	////ShaderStorageBuffer::PutMemoryBarrier();
-	////IrradianceETerms->Bind(3);
-
 	pRenderer->SetDepthTest(false);
 	pRenderer->SetBlending(false);
 
@@ -330,10 +331,6 @@ void AllProjects::Update()
 	pRenderer->BindShader(AOShader);
 	pRenderer->BindTexture(G_Buffer->GetTexture(0), 2);
 	pRenderer->BindTexture(G_Buffer->GetTexture(1), 3);
-	//AOShader->SetUniform1f("contrast", AOContrast);
-	//AOShader->SetUniform1i("AOn", AONum);
-	//AOShader->SetUniform1f("AOR", AORadius);
-	//AOShader->SetUniform1f("AOscale", AOScale);
 	Renderer::Instance()->DrawQuad(AOShader);
 	pRenderer->UnbindShader(AOShader);
 	pRenderer->UnbindUniformBuffer(AoUbo);
@@ -389,17 +386,15 @@ void AllProjects::Update()
 	if (showAO)
 	{
 		pRenderer->BindTexture(ResultBlurredAO, 8);
-		//BlurredAO->TexBind(0, 8);
 	}
-	//ambientShader->SetUniform1f("exposure", exposure);
-	//ambientShader->SetUniform1f("contrast", contrast);
-	//ambientShader->SetUniform1i("showDiffuse", IBLDiffuse);
-	//ambientShader->SetUniform1i("showSpecular", IBLSpecular);
-	//ambientShader->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
+	pRenderer->BindUniformBuffer(globalMatrices, globalMatrices->GetBinding());
+	pRenderer->BindUniformBuffer(lightDataUbo, lightDataUbo->GetBinding());
 	Renderer::Instance()->BindUniformBuffer(HUniBlock, 5);
 	Renderer::Instance()->DrawQuad(ambientShader);
 	Renderer::Instance()->UnbindUniformBuffer(HUniBlock);
+	pRenderer->UnbindUniformBuffer(lightDataUbo);
 	pRenderer->UnbindShader(ambientShader);
+	pRenderer->UnbindUniformBuffer(globalMatrices);
 
 	pRenderer->UnbindTexture(G_Buffer->GetTexture(0), 2);
 	pRenderer->UnbindTexture(G_Buffer->GetTexture(1), 3);
@@ -407,11 +402,10 @@ void AllProjects::Update()
 	pRenderer->UnbindTexture(G_Buffer->GetTexture(3), 5);
 	pRenderer->UnbindTexture(skyDomeIrradiance, 6);
 	pRenderer->UnbindTexture(skyDomeTexture, 7);
-	//BlurredAO->TexUnbind(0, 8);
 	pRenderer->UnbindTexture(ResultBlurredAO, 8);
 
 	// Global Lighting pass
-	if (gBuffershow == 0)
+	if (lightData.ShowGBuffer == 0)
 	{
 		pRenderer->SetBlending(true);
 	}
@@ -431,52 +425,55 @@ void AllProjects::Update()
 		{
 			pRenderer->BindTexture(ShadowMap->GetTexture(), 5);
 		}
-		//lighting->SetUniformMat4f("shadowmat", shadowMatrix);
-		//lighting->SetUniform1f("biasAlpha", biasAlpha);
-		//lighting->SetUniform1f("exposure", exposure);
-		//lighting->SetUniform1f("contrast", contrast);
-		
-		//lighting->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
-		//lighting->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
-		//lighting->SetUniform1i("GBufferShow", gBuffershow);
+		dynamicLightData.LightPos = light->position;
+		lightDynamicDataUbo->AddData(sizeof(DynamicLightData), &dynamicLightData);
+		pRenderer->BindUniformBuffer(lightDynamicDataUbo, lightDynamicDataUbo->GetBinding());
+		pRenderer->BindUniformBuffer(globalMatrices, globalMatrices->GetBinding());
+		pRenderer->BindUniformBuffer(lightDataUbo, lightDataUbo->GetBinding());
 		Renderer::Instance()->DrawQuad(lighting);
 		pRenderer->UnbindShader(lighting);
 		pRenderer->UnbindTexture(G_Buffer->GetTexture(0), 1);
 		pRenderer->UnbindTexture(G_Buffer->GetTexture(1), 2);
 		pRenderer->UnbindTexture(G_Buffer->GetTexture(2), 3);
 		pRenderer->UnbindTexture(G_Buffer->GetTexture(3), 4);
+		pRenderer->UnbindUniformBuffer(lightDynamicDataUbo);
+		pRenderer->UnbindUniformBuffer(lightDataUbo);
+		pRenderer->UnbindUniformBuffer(globalMatrices);
 	}
 
 	// Local Lighting pass
-	if (gBuffershow == 0 && showLocalLights)
+	if (lightData.ShowGBuffer == 0 && showLocalLights)
 	{
 		pRenderer->SetCullingFace(CullFace::Front);
 
 		pRenderer->BindShader(locallight);
-		//locallight->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
-		//locallight->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
+		pRenderer->BindUniformBuffer(globalMatrices, globalMatrices->GetBinding());
 		pRenderer->BindTexture(G_Buffer->GetTexture(0), 1);
 		pRenderer->BindTexture(G_Buffer->GetTexture(1), 2);
 		pRenderer->BindTexture(G_Buffer->GetTexture(2), 3);
 		pRenderer->BindTexture(G_Buffer->GetTexture(3), 4);
-		//locallight->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
-		float lightRadius = 4.0f;
-		//locallight->SetUniform1f("lightRadius", lightRadius);
+		
+		float lightRadius = 4.f;
+		localLightData.LightRadius = lightRadius;
+		pRenderer->BindUniformBuffer(localLightDataUbo, localLightDataUbo->GetBinding());
+
 		for (unsigned int i = 0; i < 40; ++i)
 		{
 			for (unsigned int j = 0; j < 40; ++j)
 			{
-				glm::mat4 model = glm::mat4(1.0f);
-				model = glm::translate(model, glm::vec3(i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2, j * lightRadius * 2 - 40.0f * lightRadius));
-				model = glm::scale(model, glm::vec3(lightRadius));
-				//locallight->SetUniform3f("lightPos", i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2, j * lightRadius * 2 - 40.0f * lightRadius);
-				//locallight->SetUniformMat4f("model", model);
-				//locallight->SetUniform3f("Light", lightColors[i][j].x, lightColors[i][j].y, lightColors[i][j].z);				
+				localLightData.ModelMatrix = glm::mat4(1.0f);
+				localLightData.ModelMatrix = glm::translate(localLightData.ModelMatrix, glm::vec3(i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2, j * lightRadius * 2 - 40.0f * lightRadius));
+				localLightData.ModelMatrix = glm::scale(localLightData.ModelMatrix, glm::vec3(lightRadius));
+				localLightData.Light = lightColors[i][j];
+				localLightData.LightPos = glm::vec3(i * lightRadius * 2 - 40.0f * lightRadius, lightRadius / 2, j* lightRadius * 2 - 40.0f * lightRadius);
+
+				localLightDataUbo->AddData(sizeof(localLightData), &localLightData);
 				ShapeData& shape = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
 				Renderer::Instance()->Draw(shape.mVBO, shape.mIBO, locallight);
 			}
 		}
 
+		pRenderer->UnbindUniformBuffer(localLightDataUbo);
 		pRenderer->UnbindTexture(G_Buffer->GetTexture(0), 1);
 		pRenderer->UnbindTexture(G_Buffer->GetTexture(1), 2);
 		pRenderer->UnbindTexture(G_Buffer->GetTexture(2), 3);
@@ -491,16 +488,31 @@ void AllProjects::Update()
 	G_Buffer->CopyDepthTo(Renderer::Instance()->GetBackBuffer());
 
 	// Forward render Skydome
-	pRenderer->BindShader(skyDomeShader);
-	//skyDomeShader->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
-	//skyDomeShader->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
-	//skyDomeShader->SetUniformMat4f("model", skyDome->GetComponent<Transform>()->mModelTransformation);
-	pRenderer->BindTexture(skyDomeTexture, 1);
-	//skyDomeShader->SetUniform1f("exposure", exposure);
-	//skyDomeShader->SetUniform1f("contrast", contrast);
-	Renderer::Instance()->Draw(skyDome->GetComponent<Shape>()->mShapeData->mVBO, skyDome->GetComponent<Shape>()->mShapeData->mIBO, skyDomeShader);
-	pRenderer->UnbindShader(skyDomeShader);
-	pRenderer->UnbindTexture(skyDomeTexture, 1);
+	if (lightData.ShowGBuffer == 0)
+	{
+		pRenderer->BindShader(skyDomeShader);
+
+		Transform* skyDomeTr = skyDome->GetComponent<Transform>();
+		ObjectMatricesUBO SkyDomeUboData{
+			glm::inverse(skyDomeTr->mModelTransformation),
+			skyDomeTr->mModelTransformation,
+			skyDomeTr->mPrevModelTransformation };
+		skyDomeTr->mMatricesUBO->AddData(sizeof(SkyDomeUboData), &SkyDomeUboData);
+
+		pRenderer->BindUniformBuffer(globalMatrices, globalMatrices->GetBinding());
+		pRenderer->BindUniformBuffer(skyDomeTr->mMatricesUBO, skyDomeTr->mMatricesUBO->GetBinding());
+		pRenderer->BindUniformBuffer(lightDataUbo, lightDataUbo->GetBinding());
+		pRenderer->BindTexture(skyDomeTexture, 1);
+
+		Renderer::Instance()->Draw(skyDome->GetComponent<Shape>()->mShapeData->mVBO, skyDome->GetComponent<Shape>()->mShapeData->mIBO, skyDomeShader);
+		
+		pRenderer->UnbindShader(skyDomeShader);
+		pRenderer->UnbindTexture(skyDomeTexture, 1);
+		pRenderer->UnbindUniformBuffer(globalMatrices);
+		pRenderer->UnbindUniformBuffer(skyDomeTr->mMatricesUBO);
+		pRenderer->UnbindUniformBuffer(lightDataUbo);
+	}
+
 	Engine::Instance()->stopMoving = true;
 }
 
@@ -521,18 +533,24 @@ void AllProjects::DebugDisplay()
 	};
 
 	bool selected = true;
-	if (ImGui::BeginCombo("Select G-Buffer", bufferList[gBuffershow]))
+	if (ImGui::BeginCombo("Select G-Buffer", bufferList[lightData.ShowGBuffer]))
 	{
 		lighton = true;
 		for (int i = 0; i < ARRAY_SIZE(bufferList); ++i)
 		{
 			if (ImGui::Selectable(bufferList[i], selected))
-				gBuffershow = i;
+			{
+				lightData.ShowGBuffer = i;
+				UpdateLightDataUbo();
+			}
 		}
 		ImGui::EndCombo();
 	}
 	ImGui::DragFloat3("Light Position", &light->position[0], 2.0f, -300.0f, 300.0f);
-	ImGui::InputFloat("biasAlpha", &biasAlpha, 0.0005);
+	if (ImGui::InputFloat("biasAlpha", &lightData.BiasAlpha, 0.0005))
+	{
+		UpdateLightDataUbo();
+	}
 	if (ImGui::SliderInt("BlurSize", &blurSize, 2, MAX_BLUR_WEIGHTS_NUM / 2))
 	{
 		int s = blurSize / 2;
@@ -544,11 +562,23 @@ void AllProjects::DebugDisplay()
 			blurWeights.emplace_back(w);
 		}
 	}
-	ImGui::InputFloat("Exposure", &exposure, 0.2);
-	ImGui::InputFloat("Contrast", &contrast, 0.2);
+	if (ImGui::InputFloat("Exposure", &lightData.Exposure, 0.2))
+	{
+		UpdateLightDataUbo();
+	}
+	if (ImGui::InputFloat("Contrast", &lightData.Contrast, 0.2))
+	{
+		UpdateLightDataUbo();
+	}
 	ImGui::Checkbox("Pause Moving", &Engine::Instance()->stopMoving);
-	ImGui::Checkbox("Show IBL Diffuse", &IBLDiffuse);
-	ImGui::Checkbox("Show IBL Specular", &IBLSpecular);
+	if (ImGui::Checkbox("Show IBL Diffuse", &lightData.ShowIBLDiffuse))
+	{
+		UpdateLightDataUbo();
+	}
+	if (ImGui::Checkbox("Show IBL Specular", &lightData.ShowIBLSpecular))
+	{
+		UpdateLightDataUbo();
+	}
 	ImGui::InputInt("AONum", &AoParameters.AONum);
 	ImGui::InputFloat("AORadius", &AoParameters.AORadius, 1.0f);
 	ImGui::InputFloat("AOScale", &AoParameters.AOScale, 0.1f);
@@ -640,4 +670,9 @@ void AllProjects::HammersleyRandomPoints()
 		Hblock.hammersley[pos++] = u;
 		Hblock.hammersley[pos++] = v;
 	}
+}
+
+void AllProjects::UpdateLightDataUbo()
+{
+	lightDataUbo->AddData(sizeof(LightData), &lightData);
 }
