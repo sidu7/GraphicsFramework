@@ -64,8 +64,17 @@ public:
 	virtual CullFace GetCullingFace() override;
 
 	virtual const FrameBuffer* GetBackBuffer() override;
-	virtual void SetViewportSize(glm::vec2 Offset, glm::vec2 Size) override;
+
+	virtual void SetViewportSize(Rect3D viewport) override;
+	virtual void SetScissorSize(Rect2D scissor) override;
+
+	virtual Rect3D GetViewportSize() override { return ViewportSize; }
+	virtual Rect2D GetScissorSize() override { return ScissorSize; }
+
 protected:
 	FrameBuffer* BackBuffer;
 	CullFace CullingFace;
+
+	Rect3D ViewportSize;
+	Rect2D ScissorSize;
 };

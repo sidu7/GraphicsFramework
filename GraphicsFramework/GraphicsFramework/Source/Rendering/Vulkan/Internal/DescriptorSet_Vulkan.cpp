@@ -15,25 +15,24 @@ DescriptorSet_Vulkan::~DescriptorSet_Vulkan()
 	vkDestroyDescriptorSetLayout(Renderer_Vulkan::Get()->GetDevice(), DescLayout, nullptr);
 	if (mOwningPool)
 	{
-		mOwningPool->Count -= Count;
+		mOwningPool->FreeDescriptorSet(this);
 		vkFreeDescriptorSets(Renderer_Vulkan::Get()->GetDevice(), mOwningPool->DescPool, 1, &DescSet);
 	}
 }
 
-void DescriptorSet_Vulkan::Init(DescriptorPool_Vulkan* descPool, VkDescriptorType type, uint32_t count, uint32_t binding)
+void DescriptorSet_Vulkan::AddBinding(VkDescriptorSetLayoutBinding bindingInfo)
 {
-	mOwningPool = descPool;
-	Count = count;
+	LayoutBindings.push_back(bindingInfo);
+}
 
-	VkDescriptorSetLayoutBinding LayoutBindings = {};
-	LayoutBindings.binding = binding;
-	LayoutBindings.descriptorType = type;
-	LayoutBindings.descriptorCount = count;
-	LayoutBindings.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;	
+void DescriptorSet_Vulkan::Init(DescriptorPool_Vulkan* descPool)
+{
+	mOwningPool = descPool ? descPool : Renderer_Vulkan::Get()->GetDescriptorPool();
+	Count = LayoutBindings.size();
 
 	VkDescriptorSetLayoutCreateInfo UboDescLayoutInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO };
-	UboDescLayoutInfo.bindingCount = 1;
-	UboDescLayoutInfo.pBindings = &LayoutBindings;
+	UboDescLayoutInfo.bindingCount = LayoutBindings.size();
+	UboDescLayoutInfo.pBindings = LayoutBindings.data();
 
 	VKCall(vkCreateDescriptorSetLayout(Renderer_Vulkan::Get()->GetDevice(), &UboDescLayoutInfo, nullptr, &DescLayout), "Ubo Descriptor Set Layout creation Failed.");
 
@@ -44,5 +43,5 @@ void DescriptorSet_Vulkan::Init(DescriptorPool_Vulkan* descPool, VkDescriptorTyp
 
 	VKCall(vkAllocateDescriptorSets(Renderer_Vulkan::Get()->GetDevice(), &DescAllocInfo, &DescSet), "Descriptor Set allocation Failed.");
 
-	mOwningPool->Count += Count;
+	mOwningPool->AllocateDescriptorSet(this);
 }

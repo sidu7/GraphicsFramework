@@ -9,6 +9,7 @@ public:
 	void DestroyDebugMessenger(VkDebugUtilsMessengerEXT DebugMessenger);
 
 	static void FillSharingMode(VkSharingMode& sharingMode, uint32_t& queueFamilyIndicesCount, const uint32_t** queueFamilyIndices);
+	static uint32_t GetVkFormatSize(VkFormat format);
 
 protected:
 	bool AreLayersAvailable(std::vector<const char*> Layers);

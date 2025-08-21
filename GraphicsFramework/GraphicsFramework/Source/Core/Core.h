@@ -16,7 +16,8 @@
 // RapidJson
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
+#include <rapidjson/prettywriter.h>
+#include <rapidjson/filewritestream.h>
 
 // GLM
 #include <glm/gtc/matrix_transform.hpp>

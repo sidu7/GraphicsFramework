@@ -43,6 +43,7 @@ public:
 	inline Scene* GetScene() { return pScene; }
 
 	inline const Settings& GetSettings() { return mSettings; }
+	inline const std::string& GetSettingsFilePath() { return mSettingsFilePath; }
 
 protected:
 	void ClearScene();
@@ -55,6 +56,7 @@ protected:
 	std::vector<NextFrameFunc> EndFrameFuncs;
 
 	Settings mSettings;
+	std::string mSettingsFilePath;
 };
 
 template<typename Project>

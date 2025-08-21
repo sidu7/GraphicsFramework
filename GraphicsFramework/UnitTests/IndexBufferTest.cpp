@@ -35,8 +35,6 @@ void IndexBufferTest::Init()
 	IBuffer->AddData(Indices.data(), Indices.size(), IndexType::UInt16);
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Uses(VBuffer);
-	BasicShader->Uses(IBuffer);
 	BasicShader->Init("INDEXBUFFER_TEST");
 }
 

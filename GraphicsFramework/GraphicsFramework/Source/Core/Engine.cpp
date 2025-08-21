@@ -27,11 +27,12 @@
 
 void Engine::Start(const std::string& settingsFilePath)
 {
-	rapidjson::Document SettingsFile = JSONHelper::ParseFile(settingsFilePath);
+	mSettingsFilePath = settingsFilePath;
+	rapidjson::Document SettingsFile = JSONHelper::ParseFile(mSettingsFilePath);
 
 	if (SettingsFile.HasParseError())
 	{
-		std::cout << "Could not parse settings file: " << settingsFilePath << std::endl;
+		std::cout << "Could not parse settings file: " << mSettingsFilePath << std::endl;
 		return;
 	}
 
@@ -44,7 +45,6 @@ void Engine::Start(const std::string& settingsFilePath)
 	//Init Managers
 	Inputs::Instance()->Init();
 	Renderer::Instance()->Init();
-	RenderingFactory::Instance()->Init();
 	Time::Instance()->Init(60);
 	ShapeManager::Instance()->Init();
 	ImguiManager::Instance()->Init();
@@ -112,7 +112,6 @@ void Engine::Stop()
 	ShapeManager::Instance()->Close();
 	ComponentManager::Instance()->Close();
 	ImguiManager::Instance()->Close();
-	RenderingFactory::Instance()->Close();
 	Renderer::Instance()->Close();
 	std::cout << "Window closed" << std::endl;
 	Window::Instance()->Close();

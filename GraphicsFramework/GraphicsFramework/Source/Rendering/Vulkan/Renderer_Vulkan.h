@@ -36,6 +36,7 @@ class Semaphore_Vulkan;
 class Fence_Vulkan;
 struct BufferInfo;
 class SwapChain_Vulkan;
+class DescriptorPool_Vulkan;
 
 enum CommandQueueType
 {
@@ -121,7 +122,11 @@ public:
 	virtual CullFace GetCullingFace() override;
 
 	virtual const FrameBuffer* GetBackBuffer() override;
-	virtual void SetViewportSize(glm::vec2 Offset, glm::vec2 Size) override;
+	virtual void SetViewportSize(Rect3D viewport) override;
+	virtual void SetScissorSize(Rect2D scissor) override;
+
+	virtual Rect3D GetViewportSize() override;
+	virtual Rect2D GetScissorSize() override;
 
 	void ExecuteTransientCommandBuffers();
 
@@ -139,6 +144,7 @@ public:
 	inline const VkClearValue& GetClearValue() { return ClearValue; }
 	inline const uint32_t GetQueueFamilyIndex(CommandQueueType type) { return QueueFamilyData.QueueIndices[type]; }
 	inline const CommandQueue_Vulkan* GetQueue(CommandQueueType type) { return CommandQueues[type]; }
+	inline DescriptorPool_Vulkan* GetDescriptorPool() { return RendererDescPool; }
 
 	inline const RenderPass_Vulkan* GetScreenRenderPass() { return ScreenRenderPass; }
 
@@ -152,6 +158,8 @@ protected:
 
 
 protected:
+	void CreateDescriptorPools();
+
 	CullFace CullingFace;
 
 	// Core
@@ -174,6 +182,8 @@ protected:
 
 	QueueFamilyIndices QueueFamilyData;
 	CommandQueue_Vulkan* CommandQueues[CommandQueueType::Count];
+
+	DescriptorPool_Vulkan* RendererDescPool;
 
 	// SwapChain
 	SwapChain_Vulkan* SwapChain;

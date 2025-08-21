@@ -13,19 +13,6 @@
 #include "Rendering/Vulkan/Internal/DescriptorPool_Vulkan.h"
 #include "Rendering/Vulkan/Internal/DescriptorSet_Vulkan.h"
 
-void RenderingFactory_Vulkan::Init()
-{
-
-}
-
-void RenderingFactory_Vulkan::Close()
-{
-	for (DescriptorPool_Vulkan* Pool : DescriptorPools)
-	{
-		delete Pool;
-	}
-}
-
 ComputeShader* RenderingFactory_Vulkan::CreateComputeShader()
 {
 	return new ComputeShader_Vulkan();
@@ -140,25 +127,4 @@ ImageInfo RenderingFactory_Vulkan::CreateImage(uint32_t width, uint32_t height, 
 	VKCall(vkBindImageMemory(Renderer_Vulkan::Get()->GetDevice(), ImageData.Image, ImageData.ImageMemory, 0), "Failed to bind image memory.");
 
 	return ImageData;
-}
-
-DescriptorSet_Vulkan* RenderingFactory_Vulkan::AllocateDescriptorSet(VkDescriptorType type, uint16_t count, uint32_t binding)
-{
-	DescriptorPool_Vulkan* CompatiblePool = nullptr;
-	for (DescriptorPool_Vulkan* Pool : DescriptorPools)
-	{
-		if (Pool->Supports(type, count))
-		{
-			CompatiblePool = Pool;
-		}
-	}
-
-	if (!CompatiblePool)
-	{
-		CompatiblePool = new DescriptorPool_Vulkan();
-		CompatiblePool->Init({ type, NewPoolSize });
-		DescriptorPools.push_back(CompatiblePool);
-	}
-
-	return CompatiblePool->AllocateDescriptor(count, binding);
 }

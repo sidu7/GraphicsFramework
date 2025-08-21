@@ -15,13 +15,14 @@ Author: Sidhant Tumma
 #include "Rendering/Vulkan/UniformBuffer_Vulkan.h"
 #include "Rendering/Vulkan/Internal/RenderPass_Vulkan.h"
 #include "Rendering/Vulkan/Internal/DescriptorSet_Vulkan.h"
+#include "Rendering/Vulkan/Internal/VulkanHelper.h"
+
+#include <spirv_reflect\spirv_reflect.h>
 
 Shader_Vulkan::Shader_Vulkan() :
 	mPipeline(VK_NULL_HANDLE),
 	mPipelineLayout(VK_NULL_HANDLE),
 	mDescriptorSet(nullptr),
-	mViewPort{},
-	mScissorRect{},
 	mBoundFramebuffer(nullptr)
 {
 }
@@ -35,11 +36,20 @@ Shader_Vulkan::~Shader_Vulkan()
 
 void Shader_Vulkan::Init(std::string shaderId)
 {
-	ShaderSource shaders = ShaderManager::Instance()->GetShaderSource(shaderId);
+	mShaderId = shaderId;
+	ShaderSource shaders = ShaderManager::Instance()->GetShaderSource(mShaderId);
 
 	std::vector<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfos;
 	VkShaderModule VertexShaderModule = VK_NULL_HANDLE;
 	VkShaderModule FragmentShaderModule = VK_NULL_HANDLE;
+
+	mDescriptorSet = new DescriptorSet_Vulkan();
+
+	// Get Shader variables info using SPIRV-Reflect
+	GenerateShaderBindings(shaders.vertexSource);
+	GenerateShaderBindings(shaders.fragmentSource);
+
+	mDescriptorSet->Init();
 
 	// Programmable stages
 	VkShaderModuleCreateInfo VertexShaderModuleCreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
@@ -84,11 +94,27 @@ void Shader_Vulkan::Init(std::string shaderId)
 	InputAssemblyStateCreateInfo.topology = Topology;
 	InputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
+	VkViewport Viewport;
+	Rect3D RendererViewport = Renderer_Vulkan::Get()->GetViewportSize();
+	Viewport.x = RendererViewport.Offset.x;
+	Viewport.y = RendererViewport.Offset.y;
+	Viewport.width = RendererViewport.Size.x;
+	Viewport.height = RendererViewport.Size.y;
+	Viewport.minDepth = RendererViewport.Depth.x;
+	Viewport.maxDepth = RendererViewport.Depth.y;
+
+	VkRect2D Scissor;
+	Rect2D RendererScissor = Renderer_Vulkan::Get()->GetScissorSize();
+	Scissor.offset.x = RendererViewport.Offset.x;
+	Scissor.offset.y = RendererViewport.Offset.y;
+	Scissor.extent.width = RendererViewport.Size.x;
+	Scissor.extent.height = RendererViewport.Size.y;
+
 	VkPipelineViewportStateCreateInfo ViewportStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
 	ViewportStateCreateInfo.viewportCount = 1;
-	ViewportStateCreateInfo.pViewports = &mViewPort;
+	ViewportStateCreateInfo.pViewports = &Viewport;
 	ViewportStateCreateInfo.scissorCount = 1;
-	ViewportStateCreateInfo.pScissors = &mScissorRect;
+	ViewportStateCreateInfo.pScissors = &Scissor;
 
 	VkPipelineTessellationStateCreateInfo TessellationStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO };
 
@@ -202,7 +228,105 @@ void Shader_Vulkan::Init(std::string shaderId)
 	vkDestroyShaderModule(Renderer_Vulkan::Get()->GetDevice(), FragmentShaderModule, nullptr);
 }
 
-void Shader_Vulkan::Uses(const FrameBuffer* frameBuffer)
+void Shader_Vulkan::GenerateShaderBindings(const std::vector<char>& shaderSource)
+{
+	if (shaderSource.size() <= 0)
+	{
+		std::cout << "Shader source is empty" << std::endl;
+		return;
+	}
+
+	SpvReflectShaderModule ShaderModule;
+	SpvReflectResult SpvResult = spvReflectCreateShaderModule(shaderSource.size(), shaderSource.data(), &ShaderModule);
+	if (SpvResult != SPV_REFLECT_RESULT_SUCCESS)
+	{
+		std::cout << "Failed to create reflection module for " << string_VkShaderStageFlagBits(static_cast<VkShaderStageFlagBits>(ShaderModule.shader_stage)) << " shader " << mShaderId << std::endl;
+		return;
+	}
+
+	// Inputs
+	if (ShaderModule.shader_stage == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
+	{
+		uint32_t InputCount = 0;
+		spvReflectEnumerateInputVariables(&ShaderModule, &InputCount, nullptr);
+
+		std::vector<SpvReflectInterfaceVariable*> InputVars(InputCount);
+		if (spvReflectEnumerateInputVariables(&ShaderModule, &InputCount, InputVars.data()) == SPV_REFLECT_RESULT_SUCCESS)
+		{
+			for (size_t InputIdx = 0; InputIdx < InputVars.size(); ++InputIdx)
+			{
+				const SpvReflectInterfaceVariable& ReflectInputVar = *(InputVars[InputIdx]);
+
+				// ignore built-in variables
+				if (ReflectInputVar.decoration_flags & SPV_REFLECT_DECORATION_BUILT_IN)
+				{
+					continue;
+				}
+
+				VkVertexInputAttributeDescription VertexAttribDesc = {};
+				VertexAttribDesc.binding = 0;
+				VertexAttribDesc.location = ReflectInputVar.location;
+				VertexAttribDesc.format = static_cast<VkFormat>(ReflectInputVar.format);
+				VertexAttribDesc.offset = 0;
+
+				VertexAttribDescs.push_back(VertexAttribDesc);
+			}
+
+			if (VertexAttribDescs.size() > 0)
+			{
+				VertexBindingDescs.resize(1);
+				VertexBindingDescs[0].binding = 0;
+				VertexBindingDescs[0].stride = 0;
+				VertexBindingDescs[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+				// Sort attributes by location
+				std::sort(std::begin(VertexAttribDescs), std::end(VertexAttribDescs),
+						  [](const VkVertexInputAttributeDescription& a, const VkVertexInputAttributeDescription& b)
+				{
+					return a.location < b.location;
+				});
+
+				// Compute final offsets of each attribute, and total vertex stride.
+				for (auto& attribute : VertexAttribDescs)
+				{
+					uint32_t format_size = VulkanHelper::GetVkFormatSize(attribute.format);
+					attribute.offset = VertexBindingDescs[0].stride;
+					VertexBindingDescs[0].stride += format_size;
+				}
+			}
+		}
+	}
+
+	// Descriptor Sets
+	uint32_t DescCount = 0;
+	spvReflectEnumerateDescriptorSets(&ShaderModule, &DescCount, nullptr);
+
+	std::vector<SpvReflectDescriptorSet*> DescSets(DescCount);
+	if (spvReflectEnumerateDescriptorSets(&ShaderModule, &DescCount, DescSets.data()) == SPV_REFLECT_RESULT_SUCCESS)
+	{
+		for (size_t DescSetIdx = 0; DescSetIdx < DescSets.size(); ++DescSetIdx) {
+
+			const SpvReflectDescriptorSet& ReflectDescSet = *(DescSets[DescSetIdx]);
+
+			for (uint32_t BindingIdx = 0; BindingIdx < ReflectDescSet.binding_count; ++BindingIdx) {
+
+				const SpvReflectDescriptorBinding& ReflectBinding = *(ReflectDescSet.bindings[BindingIdx]);
+				VkDescriptorSetLayoutBinding DescBinding = {};
+				DescBinding.binding = ReflectBinding.binding;
+				DescBinding.descriptorType = static_cast<VkDescriptorType>(ReflectBinding.descriptor_type);
+				DescBinding.descriptorCount = 1;
+				for (uint32_t i_dim = 0; i_dim < ReflectBinding.array.dims_count; ++i_dim) {
+					DescBinding.descriptorCount *= ReflectBinding.array.dims[i_dim];
+				}
+				DescBinding.stageFlags = static_cast<VkShaderStageFlagBits>(ShaderModule.shader_stage);
+
+				mDescriptorSet->AddBinding(DescBinding);
+			}
+		}
+	}
+}
+
+/*void Shader_Vulkan::Uses(const FrameBuffer* frameBuffer)
 {
 	mViewPort.x = 0;
 	mViewPort.y = 0;
@@ -216,10 +340,6 @@ void Shader_Vulkan::Uses(const FrameBuffer* frameBuffer)
 	mScissorRect.extent.height = frameBuffer->GetHeight();
 
 	mBoundFramebuffer = static_cast<const FrameBuffer_Vulkan*>(frameBuffer);
-}
-
-void Shader_Vulkan::Uses(const Texture* texture, unsigned int slot)
-{
 }
 
 void Shader_Vulkan::Uses(const UniformBuffer* uniformBuffer, unsigned int binding)
@@ -248,34 +368,4 @@ void Shader_Vulkan::Uses(const UniformBuffer* uniformBuffer, unsigned int bindin
 		DescriptorSetLayouts.push_back(mDescriptorSet->DescLayout);
 		const_cast<UniformBuffer_Vulkan*>(VkUbo)->PipelineLayout = &mPipelineLayout;
 	}
-}
-
-void Shader_Vulkan::Uses(const VertexBuffer* vertexBuffer)
-{
-	struct Vertex
-	{
-		glm::vec2 Position;
-		glm::vec3 Color;
-	};
-
-	VertexBindingDescs.resize(1);
-	VertexBindingDescs[0].binding = 0;
-	VertexBindingDescs[0].stride = vertexBuffer->mStride;
-	VertexBindingDescs[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-	uint16_t Location = 0;
-	for (const VertexData& vertexData : vertexBuffer->mVertexLayouts)
-	{
-		VkVertexInputAttributeDescription VertexAttribDesc = {};
-		VertexAttribDesc.binding = 0;
-		VertexAttribDesc.location = Location++;
-		VertexAttribDesc.format = VertexBuffer_Vulkan::GetVertexFormat(vertexData.mFormat);
-		VertexAttribDesc.offset = vertexData.mOffset;
-
-		VertexAttribDescs.push_back(VertexAttribDesc);
-	}
-}
-
-void Shader_Vulkan::Uses(const IndexBuffer* indexBuffer)
-{
-}
+}*/

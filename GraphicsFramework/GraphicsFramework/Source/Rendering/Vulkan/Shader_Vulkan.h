@@ -19,12 +19,6 @@ public:
 	Shader_Vulkan();
 	virtual ~Shader_Vulkan();
 
-	virtual void Uses(const FrameBuffer* framebuffer) override;
-	virtual void Uses(const Texture* texture, unsigned int slot = 0) override;
-	virtual void Uses(const UniformBuffer* uniformBuffer, unsigned int binding = 0) override;
-	virtual void Uses(const VertexBuffer* vertexBuffer) override;
-	virtual void Uses(const IndexBuffer* indexBuffer) override;
-
 	virtual void Init(std::string shaderId) override;
 
 	VkPipeline mPipeline;
@@ -32,10 +26,11 @@ public:
 	DescriptorSet_Vulkan* mDescriptorSet;
 
 protected:
+	void GenerateShaderBindings(const std::vector<char>& shaderSource);
+
 	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
 	std::vector<VkVertexInputBindingDescription> VertexBindingDescs;
 	std::vector<VkVertexInputAttributeDescription> VertexAttribDescs;
-	VkViewport mViewPort;
-	VkRect2D mScissorRect;
 	const FrameBuffer_Vulkan* mBoundFramebuffer;
+	std::string mShaderId;
 };

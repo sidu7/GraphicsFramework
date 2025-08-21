@@ -33,9 +33,6 @@ class RenderingFactory_Vulkan : public RenderingFactory
 public:
 	virtual std::string GetApiName() { return "VULKAN"; }
 
-	virtual void Init() override;
-	virtual void Close() override;
-
 	virtual ComputeShader* CreateComputeShader();
 	virtual IndexBuffer* CreateIndexBuffer();
 	virtual FrameBuffer* CreateFrameBuffer();
@@ -48,11 +45,6 @@ public:
 	virtual BufferInfo CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags);
 	virtual ImageInfo CreateImage(uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags);
 
-	virtual DescriptorSet_Vulkan* AllocateDescriptorSet(VkDescriptorType type, uint16_t count, uint32_t binding);
-
 protected:
 	uint32_t FindMemoryType(uint32_t Type, VkMemoryPropertyFlags Properties);
-
-	std::vector<DescriptorPool_Vulkan*> DescriptorPools;
-	uint32_t NewPoolSize = 10;
 };

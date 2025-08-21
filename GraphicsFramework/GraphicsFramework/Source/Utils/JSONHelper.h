@@ -80,84 +80,84 @@ public:
 	}
 
 	//JSON deserialization
-	template<typename T>
-	static void Write(const char* key, const T& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		std::cout << "No specialized template for this value type" << std::endl;
-	}
+	 template<typename T>
+	 static void Write(const char* key, const T& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 std::cout << "No specialized template for this value type" << std::endl;
+	 }
 
-	template<>
-	 static void Write(const char* key, const int& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		writer.Key(key);
-		writer.Int(value);
-	}
+	 template<>
+	 static void Write(const char* key, const int& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 writer.Key(key);
+		 writer.Int(value);
+	 }
 
-	template<>
-	 static void Write(const char* key, const unsigned int& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		writer.Key(key);
-		writer.Uint(value);
-	}
+	 template<>
+	 static void Write(const char* key, const unsigned int& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 writer.Key(key);
+		 writer.Uint(value);
+	 }
 
-	template<>
-	 static void Write(const char* key, const bool& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		writer.Key(key);
-		writer.Bool(value);
-	}
+	 template<>
+	 static void Write(const char* key, const bool& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 writer.Key(key);
+		 writer.Bool(value);
+	 }
 
-	template<>
-	 static void Write(const char* key, const float& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		writer.Key(key);
-		writer.Double(value);
-	}
+	 template<>
+	 static void Write(const char* key, const float& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 writer.Key(key);
+		 writer.Double(value);
+	 }
 
-	template<>
-	 static void Write(const char* key, const double& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		writer.Key(key);
-		writer.Double(value);
-	}
+	 template<>
+	 static void Write(const char* key, const double& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 writer.Key(key);
+		 writer.Double(value);
+	 }
 
-	template<>
-	 static void Write(const char* key, const std::string& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		writer.Key(key);
-		writer.String(value.c_str());
-	}
+	 template<>
+	 static void Write(const char* key, const std::string& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 writer.Key(key);
+		 writer.String(value.c_str());
+	 }
 
-	template<>
-	 static void Write(const char* key, const glm::vec4& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		writer.Key(key);
-		writer.StartArray();
-		writer.Double(value.x);
-		writer.Double(value.y);
-		writer.Double(value.z);
-		writer.Double(value.w);
-		writer.EndArray();
-	}
+	 template<>
+	 static void Write(const char* key, const glm::vec4& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 writer.Key(key);
+		 writer.StartArray();
+		 writer.Double(value.x);
+		 writer.Double(value.y);
+		 writer.Double(value.z);
+		 writer.Double(value.w);
+		 writer.EndArray();
+	 }
 
-	template<>
-	 static void Write(const char* key, const glm::vec3& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		writer.Key(key);
-		writer.StartArray();
-		writer.Double(value.x);
-		writer.Double(value.y);
-		writer.Double(value.z);
-		writer.EndArray();
-	}
+	 template<>
+	 static void Write(const char* key, const glm::vec3& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 writer.Key(key);
+		 writer.StartArray();
+		 writer.Double(value.x);
+		 writer.Double(value.y);
+		 writer.Double(value.z);
+		 writer.EndArray();
+	 }
 
-	template<>
-	 static void Write(const char* key, const glm::vec2& value, rapidjson::Writer<rapidjson::StringBuffer>& writer)
-	{
-		writer.Key(key);
-		writer.StartArray();
-		writer.Double(value.x);
-		writer.Double(value.y);
-		writer.EndArray();
-	}
+	 template<>
+	 static void Write(const char* key, const glm::vec2& value, rapidjson::PrettyWriter<rapidjson::StringBuffer>& writer)
+	 {
+		 writer.Key(key);
+		 writer.StartArray();
+		 writer.Double(value.x);
+		 writer.Double(value.y);
+		 writer.EndArray();
+	 }
 };

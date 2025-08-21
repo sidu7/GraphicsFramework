@@ -345,7 +345,14 @@ const FrameBuffer* Renderer_OpenGL::GetBackBuffer()
 	return BackBuffer;
 }
 
-void Renderer_OpenGL::SetViewportSize(glm::vec2 Offset, glm::vec2 Size)
+void Renderer_OpenGL::SetViewportSize(Rect3D viewport)
 {
-	glViewport(Offset.x, Offset.y, Size.x, Size.y);
+	ViewportSize = viewport;
+	glViewport(ViewportSize.Offset.x, ViewportSize.Offset.y, ViewportSize.Size.x, ViewportSize.Size.y);
+}
+
+void Renderer_OpenGL::SetScissorSize(Rect2D scissor)
+{
+	ScissorSize = scissor;
+	glScissor(ViewportSize.Offset.x, ViewportSize.Offset.y, ViewportSize.Size.x, ViewportSize.Size.y);
 }

@@ -47,26 +47,6 @@ void Shader_OpenGL::Init(std::string shaderId)
 	GLCall(glDeleteShader(fs));
 }
 
-void Shader_OpenGL::Uses(const FrameBuffer* framebuffer)
-{
-}
-
-void Shader_OpenGL::Uses(const Texture* texture, unsigned int slot)
-{
-}
-
-void Shader_OpenGL::Uses(const UniformBuffer* uniformBuffer, unsigned int binding)
-{
-}
-
-void Shader_OpenGL::Uses(const VertexBuffer* vertexBuffer)
-{
-}
-
-void Shader_OpenGL::Uses(const IndexBuffer* indexBuffer)
-{
-}
-
 Shader_OpenGL::~Shader_OpenGL()
 {
 	GLCall(glDeleteProgram(m_RendererID));

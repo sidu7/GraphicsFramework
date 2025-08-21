@@ -29,7 +29,6 @@ void VertexBufferTest::Init()
 	VBuffer->AddData(Vertices.data(), Vertices.size() * sizeof(Vertex));
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Uses(VBuffer);
 	BasicShader->Init("VERTEXBUFFER_TEST");
 
 	TestTime = 0.0f;

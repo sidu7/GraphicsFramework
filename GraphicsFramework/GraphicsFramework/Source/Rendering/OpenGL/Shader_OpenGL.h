@@ -16,12 +16,6 @@ public:
 	virtual ~Shader_OpenGL();
 
 	virtual void Init(std::string shaderId) override;
-	
-	virtual void Uses(const FrameBuffer* framebuffer) override;
-	virtual void Uses(const Texture* texture, unsigned int slot = 0) override;
-	virtual void Uses(const UniformBuffer* uniformBuffer, unsigned int binding = 0) override;
-	virtual void Uses(const VertexBuffer* vertexBuffer) override;
-	virtual void Uses(const IndexBuffer* indexBuffer) override;
 
 	unsigned int m_RendererID;
 

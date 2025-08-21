@@ -40,6 +40,17 @@ enum class CullFace
 	Both
 };
 
+struct Rect2D
+{
+	glm::vec2 Offset;
+	glm::vec2 Size;
+};
+
+struct Rect3D : public Rect2D
+{
+	glm::vec2 Depth;
+};
+
 class Renderer : public SingletonByFactory<Renderer, RendererFactory>
 {
 public:
@@ -87,7 +98,13 @@ public:
 
 	virtual void SetClearColor(glm::vec3 color) { mClearColor = color; }
 	virtual const FrameBuffer* GetBackBuffer() = 0;
-	virtual void SetViewportSize(glm::vec2 Offset, glm::vec2 Size) = 0;
+
+	virtual void SetViewportSize(Rect3D viewport) = 0;
+	virtual void SetScissorSize(Rect2D scissor) = 0;
+
+	// x, y - Offset (X x Y) , z, w - Size (W x H)
+	virtual Rect3D GetViewportSize() = 0;
+	virtual Rect2D GetScissorSize() = 0;
 
 protected:
 	glm::vec3 mClearColor;

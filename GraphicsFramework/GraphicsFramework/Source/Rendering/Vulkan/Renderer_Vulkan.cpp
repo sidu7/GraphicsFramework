@@ -15,6 +15,8 @@ Author: Sidhant Tumma
 #include "Core/Components/Shape.h"
 #include "Core/Components/Material.h"
 #include "Core/Object.h"
+#include "Core/Engine.h"
+#include "Utils/JSONHelper.h"
 // Rendering base
 #include "Rendering/IndexBuffer.h"
 #include "Rendering/VertexBuffer.h"
@@ -30,6 +32,7 @@ Author: Sidhant Tumma
 #include "Rendering/Vulkan/ComputeShader_Vulkan.h"
 #include "Rendering/Vulkan/Texture_Vulkan.h"
 #include "Rendering/Vulkan/Internal/RenderPass_Vulkan.h"
+#include "Rendering/Vulkan/Internal/DescriptorPool_Vulkan.h"
 // Vulkan Helpers
 #include "Internal/VulkanHelper.h"
 #include "Internal/CommandBufferPool_Vulkan.h"
@@ -128,6 +131,9 @@ void Renderer_Vulkan::Init()
 		InFlightFences.push_back(new Fence_Vulkan(true));
 	}
 
+	// Create Descriptor Pools from settings
+	CreateDescriptorPools();
+
 	ClearValue.color = { 0.0f, 0.0f, 0.0f, 0.0f };
 	ClearValue.depthStencil = { 0.0f, 0 };
 
@@ -154,6 +160,10 @@ void Renderer_Vulkan::Close()
 {
 	VulkanHelper VkHelper;
 		
+	// Write out descriptor pool data to setting file
+
+	vkDestroyDescriptorPool(Device, RendererDescPool->DescPool, nullptr);
+
 	vkDestroyDescriptorPool(Device, ImGuiDescPool, nullptr);
 	delete ImGuiRenderPass;
 	delete ScreenRenderPass;
@@ -274,7 +284,7 @@ void Renderer_Vulkan::BindUniformBuffer(const UniformBuffer* uniformBuffer, unsi
 	const UniformBuffer_Vulkan* VkUbo = static_cast<const UniformBuffer_Vulkan*>(uniformBuffer);
 	if (VkUbo)
 	{
-		vkCmdBindDescriptorSets(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *VkUbo->PipelineLayout, 0, 1, &VkUbo->UboDescSet->DescSet, 0, nullptr);
+		//vkCmdBindDescriptorSets(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *VkUbo->PipelineLayout, 0, 1, &VkUbo->UboDescSet->DescSet, 0, nullptr);
 	}
 }
 
@@ -390,14 +400,39 @@ const FrameBuffer* Renderer_Vulkan::GetBackBuffer()
 	return SwapchainFrameBuffers[FrameIdx];
 }
 
-void Renderer_Vulkan::SetViewportSize(glm::vec2 Offset, glm::vec2 Size)
+void Renderer_Vulkan::SetViewportSize(Rect3D viewport)
 {
-	Viewport.x = Offset.x;
-	Viewport.y = Offset.y;
-	Viewport.width = Size.x;
-	Viewport.height = Size.y;
-	Viewport.minDepth = 0.0f;
-	Viewport.maxDepth = 1.0f;
+	Viewport.x = viewport.Offset.x;
+	Viewport.y = viewport.Offset.y;
+	Viewport.width = viewport.Size.x;
+	Viewport.height = viewport.Size.y;
+	Viewport.minDepth = viewport.Depth.x;
+	Viewport.maxDepth = viewport.Depth.y;
+}
+
+void Renderer_Vulkan::SetScissorSize(Rect2D scissor)
+{
+	ScissorRect.offset.x = scissor.Offset.x;
+	ScissorRect.offset.y = scissor.Offset.y;
+	ScissorRect.extent.width = scissor.Size.x;
+	ScissorRect.extent.height = scissor.Size.y;
+}
+
+Rect3D Renderer_Vulkan::GetViewportSize()
+{
+	Rect3D OutViewport;
+	OutViewport.Offset = glm::vec2(Viewport.x, Viewport.y);
+	OutViewport.Size = glm::vec2(Viewport.width, Viewport.height);
+	OutViewport.Depth = glm::vec2(Viewport.minDepth, Viewport.maxDepth);
+	return OutViewport;
+}
+
+Rect2D Renderer_Vulkan::GetScissorSize()
+{
+	Rect2D OutScissor;
+	OutScissor.Offset = glm::vec2(ScissorRect.offset.x, ScissorRect.offset.y);
+	OutScissor.Size = glm::vec2(ScissorRect.extent.width, ScissorRect.extent.height);
+	return OutScissor;
 }
 
 void Renderer_Vulkan::ExecuteTransientCommandBuffers()
@@ -467,4 +502,92 @@ CommandBuffer_Vulkan* Renderer_Vulkan::AllocateTransientCommandBuffer(CommandQue
 		break;
 	}
 	return nullptr;
+}
+
+void Renderer_Vulkan::CreateDescriptorPools()
+{
+	RendererDescPool = new DescriptorPool_Vulkan();
+
+	const std::string& SettingsFilePath = Engine::Instance()->GetSettingsFilePath();
+	rapidjson::Document SettingsFile = JSONHelper::ParseFile(SettingsFilePath);
+	if (!SettingsFile.HasParseError())
+	{
+		rapidjson::Value::Object Root = SettingsFile.GetObject();
+		if (Root.HasMember("RenderingSettings"))
+		{
+			rapidjson::Value::Object RenderingSettings = Root["RenderingSettings"].GetObject();
+			if (RenderingSettings.HasMember("DescriptorPools"))
+			{
+				rapidjson::Value::Array DescriptorPoolSettings = RenderingSettings["DescriptorPools"].GetArray();
+				for (uint32_t i = 0; i < DescriptorPoolSettings.Size(); ++i)
+				{
+					rapidjson::Value::Object DescTypeInfo = DescriptorPoolSettings[i].GetObject();
+					if (DescTypeInfo.HasMember("Type") && DescTypeInfo.HasMember("TypeId") && DescTypeInfo.HasMember("Count"))
+					{
+						std::string typeIdStr = string_VkDescriptorType(static_cast<VkDescriptorType>(DescTypeInfo["TypeId"].GetInt()));
+						std::string typeStr = DescTypeInfo["Type"].GetString();
+						if (typeIdStr == typeStr)
+						{
+							RendererDescPool->AddPoolType(static_cast<VkDescriptorType>(DescTypeInfo["TypeId"].GetInt()), DescTypeInfo["Count"].GetInt());
+						}
+					}
+				}
+			}
+		}
+		// Create data with basic pool info
+		else
+		{
+			const std::vector<std::pair<VkDescriptorType, uint32_t>> PoolData = {
+					{ VK_DESCRIPTOR_TYPE_SAMPLER, 10 },
+					{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 10 },
+					{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 10 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 10 },
+					{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 10 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 10 },
+					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10 },
+					{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 10 },
+					{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 10 },
+					{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 10 }
+			};
+
+			/*FILE* JsonFile = fopen(SettingsFilePath.c_str(), "w");
+			char buffer[1024];
+			rapidjson::FileWriteStream fileStream(JsonFile, buffer, sizeof(buffer));
+			rapidjson::PrettyWriter<rapidjson::FileWriteStream> writer = rapidjson::PrettyWriter<rapidjson::FileWriteStream>(fileStream);
+			rapidjson::Document::AllocatorType& Alloc = SettingsFile.GetAllocator();
+		
+			rapidjson::Value RendererSettings;
+			RendererSettings.SetObject();
+			SettingsFile.AddMember("RendererSettings", RendererSettings, Alloc);
+			rapidjson::Value DescriptorPools;
+			DescriptorPools.SetArray();
+			RendererSettings.AddMember("DescriptorPools", DescriptorPools, Alloc);*/
+		
+			for (uint32_t i = 0; i < PoolData.size(); ++i)
+			{
+				const std::pair<VkDescriptorType, uint32_t>& Pool = PoolData[i];
+
+				/*rapidjson::Value PoolInfo;
+				PoolInfo.SetObject();
+				rapidjson::Value DescType;
+				
+				DescType.SetString(string_VkDescriptorType(Pool.first), Alloc);
+				PoolInfo.AddMember("Type", DescType, Alloc);
+				
+				DescType.SetInt(static_cast<int>(Pool.first));
+				PoolInfo.AddMember("TypeId", DescType, Alloc);
+				DescType.SetInt(Pool.second);
+				PoolInfo.AddMember("Count", DescType, Alloc); 
+				DescriptorPools.PushBack(PoolInfo, Alloc);*/
+
+				RendererDescPool->AddPoolType(Pool.first, Pool.second);
+			}		
+			
+			/*SettingsFile.Accept(writer);
+			fclose(JsonFile);*/
+		}
+	}
+
+	RendererDescPool->Init();
 }

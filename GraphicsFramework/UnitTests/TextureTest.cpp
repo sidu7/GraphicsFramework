@@ -58,10 +58,6 @@ void TextureTest::Init()
 	pTexture->Init("res/Texture.jpg");
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Uses(pVBuffer);
-	BasicShader->Uses(pIBuffer);
-	BasicShader->Uses(pUBuffer, UboBinding);
-	BasicShader->Uses(pTexture, TexBinding);
 	BasicShader->Init("TEXTURE_TEST");
 
 	RunTime = 0.f;

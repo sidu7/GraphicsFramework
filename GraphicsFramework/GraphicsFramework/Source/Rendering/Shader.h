@@ -26,12 +26,5 @@ class Shader
 public:
 	virtual ~Shader() {}
 
-	// Must call all relevant of these calls before Init
-	virtual void Uses(const FrameBuffer* framebuffer) = 0;
-	virtual void Uses(const Texture* texture, unsigned int slot = 0) = 0;
-	virtual void Uses(const UniformBuffer* uniformBuffer, unsigned int binding = 0) = 0;
-	virtual void Uses(const VertexBuffer* vertexBuffer) = 0;
-	virtual void Uses(const IndexBuffer* indexBuffer) = 0;
-
 	virtual void Init(std::string shaderId) = 0;
 };

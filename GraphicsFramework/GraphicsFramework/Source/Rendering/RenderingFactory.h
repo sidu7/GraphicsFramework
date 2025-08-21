@@ -23,9 +23,6 @@ class RenderingFactory : public SingletonByFactory<RenderingFactory, RenderingFa
 public:
 	virtual std::string GetApiName() = 0;
 
-	virtual void Init() {}
-	virtual void Close() {}
-
 	virtual ComputeShader* CreateComputeShader() = 0;
 	virtual IndexBuffer* CreateIndexBuffer() = 0;
 	virtual FrameBuffer* CreateFrameBuffer() = 0;

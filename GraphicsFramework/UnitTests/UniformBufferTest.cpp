@@ -53,9 +53,6 @@ void UniformBufferTest::Init()
 	UBuffer->Init(sizeof(UniformBufferTestMatrices), UboBinding, &UboMatrixData);
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Uses(VBuffer);
-	BasicShader->Uses(IBuffer);
-	BasicShader->Uses(UBuffer, UboBinding);
 	BasicShader->Init("UNIFORMBUFFER_TEST");
 
 	RunTime = 0.f;
