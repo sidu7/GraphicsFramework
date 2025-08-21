@@ -11,6 +11,8 @@ Author: Sidhant Tumma
 
 #include "Rendering/Vulkan/Renderer_Vulkan.h"
 
+class DescriptorSet_Vulkan;
+
 class Shader_Vulkan : public Shader
 {
 public:
@@ -27,6 +29,7 @@ public:
 
 	VkPipeline mPipeline;
 	VkPipelineLayout mPipelineLayout;
+	DescriptorSet_Vulkan* mDescriptorSet;
 
 protected:
 	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;

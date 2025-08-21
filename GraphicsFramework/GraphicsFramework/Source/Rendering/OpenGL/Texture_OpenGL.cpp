@@ -48,6 +48,8 @@ void Texture_OpenGL::Init(const std::string& FilePath)
 
 		GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 
+		mFormat = GetImageFormat<float>(NumChannels);
+
 		if (data)
 		{
 			stbi_image_free(data);
@@ -57,7 +59,7 @@ void Texture_OpenGL::Init(const std::string& FilePath)
 	
 	mLocalBuffer = stbi_load(mFilePath.c_str(), &mWidth, &mHeight, &NumChannels, 0);
 	
-	mFormat = GetImageFormat(NumChannels);
+	mFormat = GetImageFormat<uint8_t>(NumChannels);
 
 	ReadBufferToTexture();
 
@@ -67,6 +69,7 @@ void Texture_OpenGL::Init(const std::string& FilePath)
 
 void Texture_OpenGL::Init(ImageFormat format, int width, int height)
 {	
+	mFormat = format;
 	mWidth = width;
 	mHeight = height;
 
@@ -88,7 +91,7 @@ void Texture_OpenGL::Init(void* buffer, int size)
 	int NumChannels;
 	mLocalBuffer = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buffer), size, &mWidth, &mHeight, &NumChannels, 0);
 	
-	mFormat = GetImageFormat(NumChannels);
+	mFormat = GetImageFormat<uint8_t>(NumChannels);
 	
 	ReadBufferToTexture();
 }
@@ -108,15 +111,19 @@ void Texture_OpenGL::EnableTiling() const
 GLenum Texture_OpenGL::GetGlFormat()
 {
 	switch (mFormat) {
+		case ImageFormat::R8:
 		case ImageFormat::R16F:
 		case ImageFormat::R32F:
 			return GL_RED;
+		case ImageFormat::RG8:
 		case ImageFormat::RG16F:
 		case ImageFormat::RG32F:
 			return GL_RG;
+		case ImageFormat::RGB8:
 		case ImageFormat::RGB16F:
 		case ImageFormat::RGB32F:
 			return GL_RGB;
+		case ImageFormat::RGBA8:
 		case ImageFormat::RGBA16F:
 		case ImageFormat::RGBA32F:
 			return GL_RGBA;
@@ -128,6 +135,14 @@ GLenum Texture_OpenGL::GetGlFormat()
 GLenum Texture_OpenGL::GetGlInternalFormat()
 {
 	switch (mFormat) {
+		case ImageFormat::R8:
+			return GL_R8;
+		case ImageFormat::RG8:
+			return GL_RG8;
+		case ImageFormat::RGB8:
+			return GL_RGB8;
+		case ImageFormat::RGBA8:
+			return GL_RGBA8;
 		case ImageFormat::R16F:
 			return GL_R16F;
 		case ImageFormat::RG16F:

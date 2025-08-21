@@ -7,6 +7,7 @@ Author: Sidhant Tumma
 
 #pragma once
 #include "Rendering/Texture.h"
+#include "Rendering/Vulkan/RenderingFactory_Vulkan.h"
 
 class Texture_Vulkan : public Texture
 {
@@ -26,6 +27,12 @@ public:
 	unsigned int mRendererID;
 
 	static enum VkFormat GetVkFormat(ImageFormat format);
+
+	ImageInfo TexImageInfo;
+	VkImageView TexImageView;
+	VkSampler TexSampler;
+
+	BufferInfo StagingImageBuffer;
 
 protected:
 	void ReadBufferToTexture();

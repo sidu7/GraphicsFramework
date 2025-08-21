@@ -373,6 +373,7 @@
   <ItemGroup>
     <ClCompile Include="IndexBufferTest.cpp" />
     <ClCompile Include="ShaderTest.cpp" />
+    <ClCompile Include="TextureTest.cpp" />
     <ClCompile Include="UniformBufferTest.cpp" />
     <ClCompile Include="UnitTestApplication.cpp" />
     <ClCompile Include="VertexBufferTest.cpp" />
@@ -380,6 +381,7 @@
   <ItemGroup>
     <ClInclude Include="IndexBufferTest.h" />
     <ClInclude Include="ShaderTest.h" />
+    <ClInclude Include="TextureTest.h" />
     <ClInclude Include="UniformBufferTest.h" />
     <ClInclude Include="UnitTestApplication.h" />
     <ClInclude Include="VertexBufferTest.h" />
@@ -435,6 +437,20 @@
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
     <CustomBuild Include="res\UniformBufferTest.vert">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">$(VULKAN_SDK)\Bin\glslc.exe %(FullPath) -o %(FullPath).spv</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">%(FullPath).spv</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">$(VULKAN_SDK)\Bin\glslc.exe %(FullPath) -o %(FullPath).spv</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">%(FullPath).spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="res\TextureTest.frag">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">$(VULKAN_SDK)\Bin\glslc.exe %(FullPath) -o %(FullPath).spv</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">%(FullPath).spv</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">$(VULKAN_SDK)\Bin\glslc.exe %(FullPath) -o %(FullPath).spv</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">%(FullPath).spv</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="res\TextureTest.vert">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">$(VULKAN_SDK)\Bin\glslc.exe %(FullPath) -o %(FullPath).spv</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">%(FullPath).spv</Outputs>

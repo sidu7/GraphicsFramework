@@ -14,10 +14,12 @@ Author: Sidhant Tumma
 #include "Rendering/Vulkan/FrameBuffer_Vulkan.h"
 #include "Rendering/Vulkan/UniformBuffer_Vulkan.h"
 #include "Rendering/Vulkan/Internal/RenderPass_Vulkan.h"
+#include "Rendering/Vulkan/Internal/DescriptorSet_Vulkan.h"
 
 Shader_Vulkan::Shader_Vulkan() :
 	mPipeline(VK_NULL_HANDLE),
 	mPipelineLayout(VK_NULL_HANDLE),
+	mDescriptorSet(nullptr),
 	mViewPort{},
 	mScissorRect{},
 	mBoundFramebuffer(nullptr)
@@ -28,6 +30,7 @@ Shader_Vulkan::~Shader_Vulkan()
 {
 	vkDestroyPipelineLayout(Renderer_Vulkan::Get()->GetDevice(), mPipelineLayout, nullptr);
 	vkDestroyPipeline(Renderer_Vulkan::Get()->GetDevice(), mPipeline, nullptr);
+	delete mDescriptorSet;
 }
 
 void Shader_Vulkan::Init(std::string shaderId)
@@ -222,9 +225,27 @@ void Shader_Vulkan::Uses(const Texture* texture, unsigned int slot)
 void Shader_Vulkan::Uses(const UniformBuffer* uniformBuffer, unsigned int binding)
 {
 	const UniformBuffer_Vulkan* VkUbo = static_cast<const UniformBuffer_Vulkan*>(uniformBuffer);
-	if (VkUbo)
+	RenderingFactory_Vulkan* VkFactory = static_cast<RenderingFactory_Vulkan*>(RenderingFactory::Instance());
+	if (VkUbo && VkFactory)
 	{
-		DescriptorSetLayouts.push_back(VkUbo->UboDescSet->DescLayout);
+		mDescriptorSet = VkFactory->AllocateDescriptorSet(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, binding);
+
+		VkDescriptorBufferInfo UboDescBufferInfo = {};
+		UboDescBufferInfo.buffer = VkUbo->UboInfo.Buffer;
+		UboDescBufferInfo.offset = 0;
+		UboDescBufferInfo.range = VkUbo->UboInfo.Size;
+
+		VkWriteDescriptorSet UboWriteDesc = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
+		UboWriteDesc.dstSet = mDescriptorSet->DescSet;
+		UboWriteDesc.dstBinding = binding;
+		UboWriteDesc.dstArrayElement = 0;
+		UboWriteDesc.descriptorCount = 1;
+		UboWriteDesc.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		UboWriteDesc.pBufferInfo = &UboDescBufferInfo;
+
+		vkUpdateDescriptorSets(Renderer_Vulkan::Get()->GetDevice(), 1, &UboWriteDesc, 0, nullptr);
+
+		DescriptorSetLayouts.push_back(mDescriptorSet->DescLayout);
 		const_cast<UniformBuffer_Vulkan*>(VkUbo)->PipelineLayout = &mPipelineLayout;
 	}
 }

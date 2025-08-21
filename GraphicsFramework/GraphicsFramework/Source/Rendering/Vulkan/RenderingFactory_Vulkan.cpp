@@ -9,6 +9,7 @@
 #include "Rendering/Vulkan/UniformBuffer_Vulkan.h"
 #include "Rendering/Vulkan/VertexBuffer_Vulkan.h"
 
+#include "Rendering/Vulkan/Internal/VulkanHelper.h"
 #include "Rendering/Vulkan/Internal/DescriptorPool_Vulkan.h"
 #include "Rendering/Vulkan/Internal/DescriptorSet_Vulkan.h"
 
@@ -87,7 +88,7 @@ BufferInfo RenderingFactory_Vulkan::CreateBuffer(VkDeviceSize bufferSize, VkBuff
 	VkBufferCreateInfo BufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	BufferInfo.size = bufferSize;
 	BufferInfo.usage = usageFlags;
-	BufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+	VulkanHelper::FillSharingMode(BufferInfo.sharingMode, BufferInfo.queueFamilyIndexCount, &BufferInfo.pQueueFamilyIndices);
 
 	uint32_t QueueIndices[] = { Renderer_Vulkan::Get()->GetQueueFamilyIndex(CommandQueueType::Graphics), Renderer_Vulkan::Get()->GetQueueFamilyIndex(CommandQueueType::Transfer) };
 	BufferInfo.queueFamilyIndexCount = ARRAY_SIZE(QueueIndices);
@@ -107,6 +108,38 @@ BufferInfo RenderingFactory_Vulkan::CreateBuffer(VkDeviceSize bufferSize, VkBuff
 	VKCall(vkBindBufferMemory(Renderer_Vulkan::Get()->GetDevice(), BufferData.Buffer, BufferData.BufferMemory, 0), "Buffer memory binding Failed.");
 
 	return BufferData;
+}
+
+ImageInfo RenderingFactory_Vulkan::CreateImage(uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags)
+{
+	ImageInfo ImageData;
+
+	VkImageCreateInfo TexImageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+	TexImageInfo.imageType = VK_IMAGE_TYPE_2D;
+	TexImageInfo.format = imageFormat;
+	TexImageInfo.extent.width = width;
+	TexImageInfo.extent.height = height;
+	TexImageInfo.extent.depth = 1;
+	TexImageInfo.mipLevels = 1;
+	TexImageInfo.arrayLayers = 1;
+	TexImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	TexImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	TexImageInfo.usage = usageFlags;
+	VulkanHelper::FillSharingMode(TexImageInfo.sharingMode, TexImageInfo.queueFamilyIndexCount, &TexImageInfo.pQueueFamilyIndices);
+	TexImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+	VKCall(vkCreateImage(Renderer_Vulkan::Get()->GetDevice(), &TexImageInfo, nullptr, &ImageData.Image), "Failed to create Image.");
+
+	VkMemoryRequirements TexImageMemReq;
+	vkGetImageMemoryRequirements(Renderer_Vulkan::Get()->GetDevice(), ImageData.Image, &TexImageMemReq);
+
+	VkMemoryAllocateInfo TexImageAllocInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+	TexImageAllocInfo.allocationSize = TexImageMemReq.size;
+	TexImageAllocInfo.memoryTypeIndex = FindMemoryType(TexImageMemReq.memoryTypeBits, memoryPropertyFlags);
+	VKCall(vkAllocateMemory(Renderer_Vulkan::Get()->GetDevice(), &TexImageAllocInfo, nullptr, &ImageData.ImageMemory), "Failed to allocate image memory.");
+	VKCall(vkBindImageMemory(Renderer_Vulkan::Get()->GetDevice(), ImageData.Image, ImageData.ImageMemory, 0), "Failed to bind image memory.");
+
+	return ImageData;
 }
 
 DescriptorSet_Vulkan* RenderingFactory_Vulkan::AllocateDescriptorSet(VkDescriptorType type, uint16_t count, uint32_t binding)

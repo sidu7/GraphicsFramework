@@ -7,6 +7,7 @@
 #include "VertexBufferTest.h"
 #include "IndexBufferTest.h"
 #include "UniformBufferTest.h"
+#include "TextureTest.h"
 
 Application* CreateApplication()
 {
@@ -37,7 +38,8 @@ void UnitTestApplication::UnitTestSelector()
 		"ShaderTest",
 		"VertexBufferTest",
 		"IndexBufferTest",
-		"UniformBufferTest"
+		"UniformBufferTest",
+		"TextureTest"
 	};
 
 	bool selected = true;
@@ -63,6 +65,9 @@ void UnitTestApplication::UnitTestSelector()
 							break;
 						case 3:
 							Engine::Instance()->SetScene<UniformBufferTest>();
+							break;
+						case 4:
+							Engine::Instance()->SetScene<TextureTest>();
 							break;
 					}
 				}

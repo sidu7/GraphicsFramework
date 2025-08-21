@@ -96,7 +96,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\ThirdParty;$(SolutionDir)GraphicsFramework\Source;$(SolutionDir)GraphicsFramework\ThirdParty\Imgui;$(SolutionDir)GraphicsFramework\ThirdParty\SDL\include;$(SolutionDir)GraphicsFramework\ThirdParty\vulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WINDOWS_IGNORE_PACKING_MISMATCH;RENDERER_VULKAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WINDOWS_IGNORE_PACKING_MISMATCH;RENDERER_VULKAN;SPIRV_REFLECT_USE_SYSTEM_SPIRV_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>
@@ -183,7 +183,7 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)GraphicsFramework\ThirdParty;$(SolutionDir)GraphicsFramework\Source;$(SolutionDir)GraphicsFramework\ThirdParty\Imgui;$(SolutionDir)GraphicsFramework\ThirdParty\SDL\include;$(SolutionDir)GraphicsFramework\ThirdParty\vulkan\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WINDOWS_IGNORE_PACKING_MISMATCH;RENDERER_VULKAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WINDOWS_IGNORE_PACKING_MISMATCH;RENDERER_VULKAN;SPIRV_REFLECT_USE_SYSTEM_SPIRV_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Lib>
@@ -469,6 +469,12 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
     <ClCompile Include="ThirdParty\Imgui\imgui_tables.cpp" />
     <ClCompile Include="ThirdParty\Imgui\imgui_widgets.cpp" />
     <ClCompile Include="ThirdParty\stbi_image\stbi_image.cpp" />
+    <ClCompile Include="ThirdParty\vulkan\include\spirv_reflect\spirv_reflect.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_DX12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_OpenGL|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DX12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_OpenGL|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="ThirdParty\vulkan\include\Volk\volk.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_DX12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_OpenGL|x64'">true</ExcludedFromBuild>
@@ -935,6 +941,18 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
     <ClInclude Include="ThirdParty\SDL\include\SDL_video.h" />
     <ClInclude Include="ThirdParty\SDL\include\SDL_vulkan.h" />
     <ClInclude Include="ThirdParty\stbi_image\stbi_image.h" />
+    <ClInclude Include="ThirdParty\vulkan\include\spirv\unified1\spirv.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_DX12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_OpenGL|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DX12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_OpenGL|x64'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\spirv_reflect\spirv_reflect.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_DX12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_OpenGL|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_DX12|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_OpenGL|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="ThirdParty\vulkan\include\vk_video\vulkan_video_codecs_common.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug_DX12|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release_OpenGL|x64'">true</ExcludedFromBuild>

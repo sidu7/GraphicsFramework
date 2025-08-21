@@ -28,6 +28,11 @@
       "Id": "UNIFORMBUFFER_TEST",
       "VertexShader": "res/UniformBufferTest.vert",
       "FragmentShader": "res/UniformBufferTest.frag"
+    },
+    {
+      "Id": "TEXTURE_TEST",
+      "VertexShader": "res/TextureTest.vert",
+      "FragmentShader": "res/TextureTest.frag"
     }
   ]
 }

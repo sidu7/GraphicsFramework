@@ -8,6 +8,8 @@ public:
 
 	void DestroyDebugMessenger(VkDebugUtilsMessengerEXT DebugMessenger);
 
+	static void FillSharingMode(VkSharingMode& sharingMode, uint32_t& queueFamilyIndicesCount, const uint32_t** queueFamilyIndices);
+
 protected:
 	bool AreLayersAvailable(std::vector<const char*> Layers);
 	bool AreExtensionsAvailable(std::vector<const char*> Extensions);

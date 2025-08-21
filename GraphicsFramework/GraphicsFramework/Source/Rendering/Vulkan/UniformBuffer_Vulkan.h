@@ -17,7 +17,6 @@ public:
 	virtual uint32_t GetBinding() const override { return mBinding; }
 
 	BufferInfo UboInfo;
-	DescriptorSet_Vulkan* UboDescSet;
 	VkPipelineLayout* PipelineLayout;
 	uint32_t mBinding;
 };

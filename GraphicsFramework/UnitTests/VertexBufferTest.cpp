@@ -45,7 +45,7 @@ void VertexBufferTest::Update()
 {
 	TestTime += Time::Instance()->deltaTime;
 
-	if (TestTime > 2.0f)
+	if (TestTime > 0.5f)
 	{
 		TestTime = 0.0f;
 		for (Vertex& Vert : Vertices)

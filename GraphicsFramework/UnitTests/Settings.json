@@ -1,6 +1,6 @@
 {
   "WindowSize": [ 1280.0, 720.0 ],
   "ShadersListFile": "res/ShadersList.json",
-  "TransformBindingPoint" :  0,
-  "MaterialBindingPoint" :  1
+  "TransformBindingPoint": 0,
+  "MaterialBindingPoint": 1
 }

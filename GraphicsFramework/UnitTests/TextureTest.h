@@ -2,14 +2,15 @@
 #include "Core/Core.h"
 
 class VertexBuffer;
-class IndexBuffer;
+class Texture;
 class Shader;
+class IndexBuffer;
 class UniformBuffer;
 
-class UniformBufferTest : public Scene
+class TextureTest : public Scene
 {
 public:
-	virtual ~UniformBufferTest() {}
+	virtual ~TextureTest() {}
 	virtual void Init() override;
 	virtual void Close() override;
 	virtual void Update() override;
@@ -18,10 +19,12 @@ public:
 
 protected:
 	Shader* BasicShader;
-	VertexBuffer* VBuffer;
-	IndexBuffer* IBuffer;
-	UniformBuffer* UBuffer;
+	VertexBuffer* pVBuffer;
+	IndexBuffer* pIBuffer;
+	UniformBuffer* pUBuffer;
 	uint32_t UboBinding = 2;
+	Texture* pTexture;
+	uint32_t TexBinding = 0;
 
 	float RunTime;
 	bool RotateX;

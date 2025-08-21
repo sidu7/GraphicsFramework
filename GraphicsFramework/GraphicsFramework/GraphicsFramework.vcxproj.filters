@@ -330,6 +330,9 @@
     <ClCompile Include="Source\Rendering\Vulkan\Internal\SwapChain_Vulkan.cpp">
       <Filter>Source\Rendering\Vulkan\Internal</Filter>
     </ClCompile>
+    <ClCompile Include="ThirdParty\vulkan\include\spirv_reflect\spirv_reflect.c">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Source\Core\Camera.h">
@@ -1330,6 +1333,12 @@
     </ClInclude>
     <ClInclude Include="Source\Rendering\Vulkan\Internal\SwapChain_Vulkan.h">
       <Filter>Source\Rendering\Vulkan\Internal</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\spirv_reflect\spirv_reflect.h">
+      <Filter>ThirdParty\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\vulkan\include\spirv\unified1\spirv.h">
+      <Filter>ThirdParty\vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

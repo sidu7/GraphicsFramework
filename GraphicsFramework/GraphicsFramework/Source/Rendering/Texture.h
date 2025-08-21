@@ -9,8 +9,15 @@ Author: Sidhant Tumma
 #include "Rendering/Renderer.h"
 #include <string>
 
+typedef uint16_t half_float;
+
 enum class ImageFormat
 {
+	Invalid,
+	R8,
+	RG8,
+	RGB8,
+	RGBA8,
 	R16F,
 	RG16F,
 	RGB16F,
@@ -24,7 +31,7 @@ enum class ImageFormat
 class Texture
 {
 public:
-	Texture() : mFormat(ImageFormat::RGBA32F) {}
+	Texture() : mFormat(ImageFormat::Invalid) {}
 	virtual ~Texture() {}
 
 	virtual void Init(ImageFormat format, int width, int height) = 0;
@@ -34,7 +41,47 @@ public:
 	virtual void EnableTiling() const = 0;
 	virtual inline std::string GetSourcePath() const = 0;
 
+	template<typename ColorBitsType>
 	ImageFormat GetImageFormat(int NumChannels)
+	{
+		std::cout << "Invalid ImageFormat: Unsupported TexelType specified." << std::endl;
+		return ImageFormat::Invalid;
+	}
+
+	template<>
+	ImageFormat GetImageFormat<uint8_t>(int NumChannels)
+	{
+		switch (NumChannels) {
+
+			case 1:
+				return ImageFormat::R8;
+			case 2:
+				return ImageFormat::RG8;
+			case 3:
+				return ImageFormat::RGB8;
+			case 4:
+				return ImageFormat::RGBA8;
+		}
+	}
+
+	template<>
+	ImageFormat GetImageFormat<half_float>(int NumChannels)
+	{
+		switch (NumChannels) {
+
+			case 1:
+				return ImageFormat::R16F;
+			case 2:
+				return ImageFormat::RG16F;
+			case 3:
+				return ImageFormat::RGB16F;
+			case 4:
+				return ImageFormat::RGBA16F;
+		}
+	}
+
+	template<>
+	ImageFormat GetImageFormat<float>(int NumChannels)
 	{
 		switch (NumChannels) {
 
@@ -52,15 +99,19 @@ public:
 	int GetNumChannels() const
 	{
 		switch (mFormat) {
+			case ImageFormat::R8:
 			case ImageFormat::R16F:
 			case ImageFormat::R32F:
 				return 1;
+			case ImageFormat::RG8:
 			case ImageFormat::RG16F:
 			case ImageFormat::RG32F:
 				return 2;
+			case ImageFormat::RGB8:
 			case ImageFormat::RGB16F:
 			case ImageFormat::RGB32F:
 				return 3;
+			case ImageFormat::RGBA8:
 			case ImageFormat::RGBA16F:
 			case ImageFormat::RGBA32F:
 				return 4;

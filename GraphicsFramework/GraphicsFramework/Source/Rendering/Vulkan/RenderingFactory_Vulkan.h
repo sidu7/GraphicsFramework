@@ -19,6 +19,15 @@ struct BufferInfo
 	void* MappedMemory;
 };
 
+struct ImageInfo
+{
+	ImageInfo() : Image(VK_NULL_HANDLE), ImageMemory(VK_NULL_HANDLE), Size(0) {}
+
+	VkImage Image;
+	VkDeviceMemory ImageMemory;
+	uint32_t Size;
+};
+
 class RenderingFactory_Vulkan : public RenderingFactory
 {
 public:
@@ -37,6 +46,8 @@ public:
 	virtual VertexBuffer* CreateVertexBuffer();
 
 	virtual BufferInfo CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags);
+	virtual ImageInfo CreateImage(uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags);
+
 	virtual DescriptorSet_Vulkan* AllocateDescriptorSet(VkDescriptorType type, uint16_t count, uint32_t binding);
 
 protected:

@@ -31,5 +31,5 @@ public:
 protected:
 	void ReadBufferToTexture();
 
-	unsigned char* mLocalBuffer;
+	uint8_t* mLocalBuffer;
 };

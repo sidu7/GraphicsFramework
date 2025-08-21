@@ -217,6 +217,26 @@ void VulkanHelper::DestroyDebugMessenger(VkDebugUtilsMessengerEXT DebugMessenger
 	}
 }
 
+void VulkanHelper::FillSharingMode(VkSharingMode& sharingMode, uint32_t& queueFamilyIndicesCount, const uint32_t** queueFamilyIndices)
+{
+	uint32_t GraphicsQueueIdx = Renderer_Vulkan::Get()->GetQueueFamilyIndex(CommandQueueType::Graphics);
+	uint32_t TransferQueueIdx = Renderer_Vulkan::Get()->GetQueueFamilyIndex(CommandQueueType::Transfer);
+	if (GraphicsQueueIdx != TransferQueueIdx)
+	{
+		static const std::vector<uint32_t> Queues = { GraphicsQueueIdx, TransferQueueIdx };
+
+		sharingMode = VK_SHARING_MODE_CONCURRENT;
+		queueFamilyIndicesCount = Queues.size();
+		*queueFamilyIndices = Queues.data();
+	}
+	else
+	{
+		sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		queueFamilyIndicesCount = 0;
+		*queueFamilyIndices = nullptr;
+	}
+}
+
 void VulkanHelper::InitVulkan()
 {
 	Renderer_Vulkan* VkRenderer = static_cast<Renderer_Vulkan*>(Renderer::Instance());
