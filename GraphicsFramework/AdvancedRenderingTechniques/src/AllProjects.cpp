@@ -368,7 +368,9 @@ void AllProjects::Update()
 	pRenderer->UnbindUniformBuffer(block);
 
 	//Ambient light pass
-	pRenderer->SetViewportSize(glm::vec2(0, 0), glm::vec2(Window::Instance()->GetWidth(), Window::Instance()->GetHeight()));
+	Rect3D Viewport;
+	Viewport.Size = glm::vec2(Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
+	pRenderer->SetViewportSize(Viewport);
 	pRenderer->Clear();
 
 	pRenderer->SetDepthTest(false);

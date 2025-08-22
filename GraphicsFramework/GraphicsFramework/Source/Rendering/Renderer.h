@@ -42,12 +42,15 @@ enum class CullFace
 
 struct Rect2D
 {
+	Rect2D() : Offset(0.f), Size(0.f) {}
+
 	glm::vec2 Offset;
 	glm::vec2 Size;
 };
 
 struct Rect3D : public Rect2D
 {
+	Rect3D() : Depth(0.0f, 1.0f) {}
 	glm::vec2 Depth;
 };
 

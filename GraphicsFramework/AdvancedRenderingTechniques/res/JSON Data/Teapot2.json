@@ -10,7 +10,7 @@
       "Type": "Material",
       "Diffuse": [ 0.0, 0.0, 0.0 ],
       "Specular": [ 0.8, 0.4, 0.0 ],
-      "Shininess": 1500.0
+      "Shininess": 15000.0
     },
     {
       "Type": "Shape",
