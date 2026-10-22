@@ -194,7 +194,16 @@ function(add_framework_app target_name source_dir)
 
 	add_executable(${target_name} EXCLUDE_FROM_ALL ${app_sources})
 	target_link_libraries(${target_name} PRIVATE GraphicsFramework SDL2::SDL2main)
-	set_property(TARGET ${target_name} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${GF_PROJECT_DIR}/${target_name}")
+	
+	# Copy the entire res folder to output directory to ensure resources are accessible
+	# This ensures that files like Settings.json are available regardless of working directory
+	add_custom_command(TARGET ${target_name} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${source_dir}/../res"
+			"$<TARGET_FILE_DIR:${target_name}>/res"
+		VERBATIM
+	)
+	
 	foreach(runtime_dll IN LISTS GF_RUNTIME_DLLS)
 		add_custom_command(TARGET ${target_name} POST_BUILD
 			COMMAND ${CMAKE_COMMAND} -E copy_if_different
