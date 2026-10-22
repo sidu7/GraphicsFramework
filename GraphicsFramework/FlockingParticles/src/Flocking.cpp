@@ -4,13 +4,16 @@
 #include "Core/Camera.h"
 #include "Core/Light.h"
 #include "Core/Object.h"
+#include "Core/ShapeManager.h"
 #include "Core/Time.h"
 #include "Core/ObjectManager.h"
 #include "Core/Components/Transform.h"
 #include "Core/Components/Material.h"
+#include "Core/Components/Shape.h"
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
+#include "Rendering/UniformBuffer.h"
 #include "Utils/Random.h"
 #include "Utils/JSONHelper.h"
 
@@ -23,6 +26,12 @@ const float PI = 22.0f / 7.0f;
 Flocking::~Flocking()
 {
 	std::for_each(mObstacles.begin(), mObstacles.end(), [](Obstacle* x) { delete x; });
+}
+
+void Flocking::Close()
+{
+	delete mLight;
+	delete mShader;
 }
 
 void Flocking::Init()
@@ -38,7 +47,7 @@ void Flocking::Init()
 	Engine::Instance()->GetCamera()->CalculateFront();
 
 	mShader = RenderingFactory::Instance()->CreateShader();
-	mShader->Init("res/shaders/Drawing.vert", "res/shaders/Drawing.frag");
+	mShader->Init("DRAWING");
 
 	mAvoidDistance = 2.0f;
 	
@@ -137,16 +146,8 @@ void Flocking::Init()
 
 void Flocking::Update()
 {	
-	mShader->Bind();
-	mShader->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
-	mShader->SetUniformMat4f("prevview", Engine::Instance()->GetCamera()->mPrevView);
-	mShader->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
-	mShader->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
-	mShader->SetUniform3f("lightPos", mLight->position);
-	mShader->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
-	
 	ObjectManager::Instance()->UpdateObjects();
-	Renderer::Instance()->DrawAllObjects(mShader);
+	ObjectManager::Instance()->RenderObjects(mShader);
 	if (!Engine::Instance()->mPause)
 	{
 #pragma omp parallel for schedule(dynamic, 1) // Magic: Multi-thread y loop
@@ -173,6 +174,47 @@ void Flocking::Update()
 				flock->mAcceleration += accels[3];
 			}
 		}
+	}
+}
+
+void Flocking::RenderObject(Object* object, Shader* shader)
+{
+	Transform* transform = object->GetComponent<Transform>();
+	if (transform && transform->mMatricesUBO)
+	{
+		Renderer::Instance()->BindUniformBuffer(transform->mMatricesUBO, transform->mMatricesUBO->GetBinding());
+	}
+
+	Material* material = object->GetComponent<Material>();
+	if (material && material->mMaterialUBO)
+	{
+		Renderer::Instance()->BindUniformBuffer(material->mMaterialUBO, material->mMaterialUBO->GetBinding());
+	}
+
+	Shape* shape = object->GetComponent<Shape>();
+	if (shape)
+	{
+		if (shape->mMesh)
+		{
+			Renderer::Instance()->Draw(shape->mShapeData->mVBO, shape->mShapeData->mIBO, shader);
+		}
+		if (shape->mWireMesh)
+		{
+			Renderer::Instance()->DebugDrawLines(shape->mShapeData->mVBO, shape->mShapeData->mIBO, shader);
+		}
+		if (shape->mDebugMesh)
+		{
+			Renderer::Instance()->DebugDraw(shape->mShapeData->mVBO, shape->mShapeData->mIBO, shader);
+		}
+	}
+
+	if (transform)
+	{
+		Renderer::Instance()->UnbindUniformBuffer(transform->mMatricesUBO);
+	}
+	if (material)
+	{
+		Renderer::Instance()->UnbindUniformBuffer(material->mMaterialUBO);
 	}
 }
 

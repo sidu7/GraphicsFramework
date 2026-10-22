@@ -24,7 +24,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(GF_BUILD_SAMPLES "Build the existing sample applications and tests" OFF)
+option(GF_BUILD_SAMPLES "Add the existing sample application and test targets" ON)
 
 if(NOT WIN32 OR NOT MSVC OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 	message(FATAL_ERROR "GraphicsFramework currently requires 64-bit Windows and MSVC.")
@@ -192,7 +192,7 @@ function(add_framework_app target_name source_dir)
 		message(FATAL_ERROR "No C++ sources found for ${target_name} in ${source_dir}")
 	endif()
 
-	add_executable(${target_name} ${app_sources})
+	add_executable(${target_name} EXCLUDE_FROM_ALL ${app_sources})
 	target_link_libraries(${target_name} PRIVATE GraphicsFramework SDL2::SDL2main)
 	set_property(TARGET ${target_name} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${GF_PROJECT_DIR}/${target_name}")
 	foreach(runtime_dll IN LISTS GF_RUNTIME_DLLS)

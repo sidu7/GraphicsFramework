@@ -15,7 +15,9 @@ class Flocking : public Scene
 public:
 	~Flocking();
 	void Init() override;
+	void Close() override;
 	void Update() override;
+	void RenderObject(Object* object, Shader* shader) override;
 	void DebugDisplay() override;
 
 private:

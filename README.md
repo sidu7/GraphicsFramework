@@ -45,7 +45,7 @@ cmake --build --preset Vulkan-Debug --target GraphicsFramework --parallel
 
 Use the `OpenGL-Release` or `Vulkan-Release` build preset for Release builds. The renderer-specific source files, compile definitions, and libraries are selected automatically from the configuration name.
 
-The sample applications and graphics tests are optional because some legacy sample sources still use framework APIs that have since changed. To include their targets, configure with `cmake --preset Ninja-Multi -DGF_BUILD_SAMPLES=ON`. Update any affected sample source to the current framework API before building those targets.
+The sample applications and graphics tests are available as executable targets by default, so they appear as selectable startup items in Visual Studio. They are excluded from the default build because some legacy sample sources still use framework APIs that have since changed. Build an individual target with `cmake --build --preset OpenGL-Debug --target FlockingParticles --parallel` (replace the target with `AdvancedRenderingTechniques`, `AnimationTechniques`, `RealTimeRayTracing`, `WaveSimulation`, or `UnitTests`). Configure with `-DGF_BUILD_SAMPLES=OFF` to omit these targets. Update any affected sample source to the current framework API before building it.
 
 ## Projects
 

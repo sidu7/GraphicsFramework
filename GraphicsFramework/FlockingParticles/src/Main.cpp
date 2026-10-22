@@ -6,9 +6,8 @@ int main(int argc, char* args[])
 {
 	std::cout << "Graphics Framework" << std::endl;
 
-	Flocking proj;
-	
-	Engine::Instance()->Start(&proj,1280,720);
+	Engine::Instance()->Start("res/Settings.json");
+	Engine::Instance()->SetScene<Flocking>();
 	Engine::Instance()->Run();
 	Engine::Instance()->Stop();
 

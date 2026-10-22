@@ -11,8 +11,6 @@
 
 #include <glm/gtx/quaternion.hpp>
 
-Flock Flock::instance;
-
 NeighboursData::NeighboursData() : mFlockHeading(glm::vec3(0.0f)), mFlockCenter(glm::vec3(0.0f)), mAvoidanceDirection(glm::vec3(0.0f))
 {
 }
