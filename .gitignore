@@ -20,3 +20,4 @@ out/build/
 *.cmake.user
 CMakeUserPresets.json
 .aider*
+/out

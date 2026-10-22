@@ -1,0 +1,36 @@
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/assimp"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/assimp
+	url = https://github.com/assimp/assimp.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/glm"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/vulkan"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/vulkan
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/SDL"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/SDL
+	url = https://github.com/libsdl-org/SDL.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/GLEW"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/GLEW
+	url = https://github.com/Perlmint/glew-cmake.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/Imgui"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/Imgui
+	url = https://github.com/ocornut/imgui.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/rapidjson"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/rapidjson
+	url = https://github.com/Tencent/rapidjson.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/stbi_image"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/stbi_image
+	url = https://github.com/nothings/stb.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/SPIRV-Headers"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/SPIRV-Headers
+	url = https://github.com/KhronosGroup/SPIRV-Headers.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/spirv_reflect"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/spirv_reflect
+	url = https://github.com/KhronosGroup/SPIRV-Reflect.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/volk"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/volk
+	url = https://github.com/zeux/volk.git
+[submodule "GraphicsFramework/GraphicsFramework/ThirdParty/vma"]
+	path = GraphicsFramework/GraphicsFramework/ThirdParty/vma
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
