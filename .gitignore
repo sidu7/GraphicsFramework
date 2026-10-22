@@ -14,3 +14,4 @@ Intermediate/
 *.user
 *.obj
 *.spv
+.aider*
