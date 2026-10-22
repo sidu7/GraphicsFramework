@@ -39,10 +39,10 @@ void UniformBufferTest::Init()
 		VertexFormat::Vec3  // Color
 						   });
 
-	VBuffer->AddData(Vertices.data(), Vertices.size() * sizeof(UniformBufferTestVertex));
+	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(UniformBufferTestVertex)));
 
 	IBuffer = RenderingFactory::Instance()->CreateIndexBuffer();
-	IBuffer->AddData(Indices.data(), Indices.size(), IndexType::UInt16);
+	IBuffer->AddData(Indices.data(), static_cast<unsigned int>(Indices.size()), IndexType::UInt16);
 
 	glm::vec2 WindowSize = Window::Instance()->GetWindowSize();
 	UboMatrixData.Perspective = glm::perspective(glm::radians(45.f), WindowSize.x / WindowSize.y, 0.1f, 100.f);

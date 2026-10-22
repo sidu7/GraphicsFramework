@@ -29,10 +29,10 @@ void IndexBufferTest::Init()
 		VertexFormat::Vec3  // Color
 						   });
 
-	VBuffer->AddData(Vertices.data(), Vertices.size() * sizeof(Vertex));
+	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(Vertex)));
 
 	IBuffer = RenderingFactory::Instance()->CreateIndexBuffer();
-	IBuffer->AddData(Indices.data(), Indices.size(), IndexType::UInt16);
+	IBuffer->AddData(Indices.data(), static_cast<unsigned int>(Indices.size()), IndexType::UInt16);
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
 	BasicShader->Init("INDEXBUFFER_TEST");

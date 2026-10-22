@@ -39,13 +39,17 @@ VkFormat Texture_Vulkan::GetVkFormat(ImageFormat format)
 		case ImageFormat::RGBA32F:
 			return VK_FORMAT_R32G32B32A32_SFLOAT;
 	}
+
+	return VK_FORMAT_UNDEFINED;
 }
 
 Texture_Vulkan::Texture_Vulkan() : 
 	mRendererID(0),
 	mLocalBuffer(nullptr), 
 	mWidth(0), 
-	mHeight(0)
+	mHeight(0),
+	TexImageView(VK_NULL_HANDLE),
+	TexSampler(VK_NULL_HANDLE)
 {
 }
 

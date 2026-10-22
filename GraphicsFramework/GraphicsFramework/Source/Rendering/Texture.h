@@ -62,6 +62,8 @@ public:
 			case 4:
 				return ImageFormat::RGBA8;
 		}
+
+		return ImageFormat::Invalid;
 	}
 
 	template<>
@@ -78,6 +80,8 @@ public:
 			case 4:
 				return ImageFormat::RGBA16F;
 		}
+
+		return ImageFormat::Invalid;
 	}
 
 	template<>
@@ -94,6 +98,8 @@ public:
 			case 4: 
 				return ImageFormat::RGBA32F;
 		}
+
+		return ImageFormat::Invalid;
 	}
 
 	int GetNumChannels() const
@@ -116,6 +122,8 @@ public:
 			case ImageFormat::RGBA32F:
 				return 4;
 		}
+
+		return 0;
 	}
 
 	ImageFormat mFormat;

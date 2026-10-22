@@ -41,10 +41,10 @@ void TextureTest::Init()
 		VertexFormat::Vec2  // Tex Coords
 						   });
 
-	pVBuffer->AddData(Vertices.data(), Vertices.size() * sizeof(TextureTestVertex));
+	pVBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(TextureTestVertex)));
 
 	pIBuffer = RenderingFactory::Instance()->CreateIndexBuffer();
-	pIBuffer->AddData(Indices.data(), Indices.size(), IndexType::UInt16);
+	pIBuffer->AddData(Indices.data(), static_cast<unsigned int>(Indices.size()), IndexType::UInt16);
 
 	glm::vec2 WindowSize = Window::Instance()->GetWindowSize();
 	TexTestMatrixData.Perspective = glm::perspective(glm::radians(45.f), WindowSize.x / WindowSize.y, 0.1f, 100.f);

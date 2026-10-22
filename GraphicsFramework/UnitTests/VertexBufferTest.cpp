@@ -26,7 +26,7 @@ void VertexBufferTest::Init()
 		VertexFormat::Vec3  // Color
 						   });
 
-	VBuffer->AddData(Vertices.data(), Vertices.size() * sizeof(Vertex));
+	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(Vertex)));
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
 	BasicShader->Init("VERTEXBUFFER_TEST");
@@ -51,9 +51,9 @@ void VertexBufferTest::Update()
 		{
 			Vert.Color = glm::vec3(glm::linearRand(0.0f, 1.0f), glm::linearRand(0.0f, 1.0f), glm::linearRand(0.0f, 1.0f));
 		}
-		VBuffer->AddData(Vertices.data(), Vertices.size() * sizeof(Vertex));
+		VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(Vertex)));
 	}
-	Renderer::Instance()->Draw(BasicShader, VBuffer, Vertices.size(), 0);
+	Renderer::Instance()->Draw(BasicShader, VBuffer, static_cast<int32_t>(Vertices.size()), 0);
 }
 
 void VertexBufferTest::RenderObject(class Object* object, class Shader* shader)
