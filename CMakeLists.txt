@@ -2,26 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 
 project(GraphicsFramework LANGUAGES C CXX)
 
-set(CMAKE_CONFIGURATION_TYPES "Debug_OpenGL;Release_OpenGL;Debug_Vulkan;Release_Vulkan"
-	CACHE STRING "Available renderer and build configurations" FORCE)
-set_property(GLOBAL PROPERTY DEBUG_CONFIGURATIONS "Debug_OpenGL;Debug_Vulkan")
-set(CMAKE_MSVC_RUNTIME_LIBRARY
-	"MultiThreaded$<$<OR:$<CONFIG:Debug_OpenGL>,$<CONFIG:Debug_Vulkan>>:Debug>DLL")
-foreach(configuration IN ITEMS Debug_OpenGL Debug_Vulkan Release_OpenGL Release_Vulkan)
-	string(TOUPPER "${configuration}" configuration_upper)
-	if(configuration MATCHES "^Debug")
-		set(base_configuration DEBUG)
-	else()
-		set(base_configuration RELEASE)
-	endif()
-	set(CMAKE_C_FLAGS_${configuration_upper} "${CMAKE_C_FLAGS_${base_configuration}}"
-		CACHE STRING "C compiler flags for ${configuration}" FORCE)
-	set(CMAKE_CXX_FLAGS_${configuration_upper} "${CMAKE_CXX_FLAGS_${base_configuration}}"
-		CACHE STRING "C++ compiler flags for ${configuration}" FORCE)
-	set(CMAKE_EXE_LINKER_FLAGS_${configuration_upper} "${CMAKE_EXE_LINKER_FLAGS_${base_configuration}}"
-		CACHE STRING "Executable linker flags for ${configuration}" FORCE)
-endforeach()
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
