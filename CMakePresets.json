@@ -2,36 +2,33 @@
   "version": 3,
   "configurePresets": [
     {
+      "name": "Ninja-Multi",
+      "displayName": "Ninja Multi-Config",
+      "description": "Multi-configuration Ninja build",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/build/ninja-multi"
+    }
+  ],
+  "buildPresets": [
+    {
       "name": "OpenGL-Debug",
-      "displayName": "OpenGL Debug",
-      "description": "OpenGL Debug configuration",
-      "configuration": "Debug_OpenGL",
-      "generator": "Visual Studio 16 2019",
-      "architecture": "x64"
+      "configurePreset": "Ninja-Multi",
+      "configuration": "Debug_OpenGL"
     },
     {
       "name": "OpenGL-Release",
-      "displayName": "OpenGL Release",
-      "description": "OpenGL Release configuration",
-      "configuration": "Release_OpenGL",
-      "generator": "Visual Studio 16 2019",
-      "architecture": "x64"
+      "configurePreset": "Ninja-Multi",
+      "configuration": "Release_OpenGL"
     },
     {
       "name": "Vulkan-Debug",
-      "displayName": "Vulkan Debug",
-      "description": "Vulkan Debug configuration",
-      "configuration": "Debug_Vulkan",
-      "generator": "Visual Studio 16 2019",
-      "architecture": "x64"
+      "configurePreset": "Ninja-Multi",
+      "configuration": "Debug_Vulkan"
     },
     {
       "name": "Vulkan-Release",
-      "displayName": "Vulkan Release",
-      "description": "Vulkan Release configuration",
-      "configuration": "Release_Vulkan",
-      "generator": "Visual Studio 16 2019",
-      "architecture": "x64"
+      "configurePreset": "Ninja-Multi",
+      "configuration": "Release_Vulkan"
     }
   ]
 }

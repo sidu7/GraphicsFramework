@@ -5,8 +5,9 @@ GraphicsFramework is a C++17 rendering framework with OpenGL and Vulkan backends
 ## Requirements
 
 - Windows x64 and Microsoft Visual C++ (MSVC)
-- CMake 4.2 or newer for the Visual Studio 2026 generator (the project itself requires CMake 3.22 or newer)
-- Visual Studio 2026 (or another CMake-supported Visual Studio generator)
+- CMake 3.22 or newer
+- Ninja 1.10 or newer, including the `ninja` executable on `PATH`
+- MSVC build tools
 - Git submodules initialized under `GraphicsFramework/GraphicsFramework/ThirdParty`
 - The Vulkan SDK when building the Vulkan renderer (its Vulkan loader is provided by the SDK)
 
@@ -16,41 +17,35 @@ The source dependencies are pinned as Git submodules. After cloning without `--r
 git submodule update --init --recursive
 ```
 
-## Generate a Visual Studio solution
+## Configure with Ninja Multi-Config
 
 From the repository root, run:
 
 ```powershell
-cmake -S . -B build-vs -G "Visual Studio 18 2026" -A x64
+cmake --preset Ninja-Multi
 ```
 
-With the Visual Studio 2026 generator, CMake generates `build-vs/GraphicsFramework.slnx`. Open that solution in Visual Studio. The solution configuration selector provides:
+This configures a multi-configuration Ninja build in `out/build/ninja-multi`. Select the renderer and build mode with one of the build presets:
 
-- `Debug_OpenGL`
-- `Release_OpenGL`
-- `Debug_Vulkan`
-- `Release_Vulkan`
+- `OpenGL-Debug` (`Debug_OpenGL`)
+- `OpenGL-Release` (`Release_OpenGL`)
+- `Vulkan-Debug` (`Debug_Vulkan`)
+- `Vulkan-Release` (`Release_Vulkan`)
 
-Select a configuration to choose both the build mode and renderer. The generated solution and build output are local build artifacts and are not checked into the repository.
-
-To generate a traditional `.sln` with a Visual Studio 2022 generator, when that generator is installed, use:
-
-```powershell
-cmake -S . -B build-vs2022 -G "Visual Studio 17 2022" -A x64
-```
+The build directory and generated files are local artifacts and are not checked into the repository.
 
 ## Build with CMake
 
 Build the framework library in a selected configuration:
 
 ```powershell
-cmake --build build-vs --config Debug_OpenGL --target GraphicsFramework --parallel
-cmake --build build-vs --config Debug_Vulkan --target GraphicsFramework --parallel
+cmake --build --preset OpenGL-Debug --target GraphicsFramework --parallel
+cmake --build --preset Vulkan-Debug --target GraphicsFramework --parallel
 ```
 
-Use `Release_OpenGL` or `Release_Vulkan` in place of the Debug configuration for Release builds. The renderer-specific source files, compile definitions, and libraries are selected automatically from the configuration name.
+Use the `OpenGL-Release` or `Vulkan-Release` build preset for Release builds. The renderer-specific source files, compile definitions, and libraries are selected automatically from the configuration name.
 
-The sample applications and graphics tests are optional because some legacy sample sources still use framework APIs that have since changed. To include their targets when generating the solution, add `-DGF_BUILD_SAMPLES=ON` to the configure command. Update any affected sample source to the current framework API before building those targets.
+The sample applications and graphics tests are optional because some legacy sample sources still use framework APIs that have since changed. To include their targets, configure with `cmake --preset Ninja-Multi -DGF_BUILD_SAMPLES=ON`. Update any affected sample source to the current framework API before building those targets.
 
 ## Projects
 
