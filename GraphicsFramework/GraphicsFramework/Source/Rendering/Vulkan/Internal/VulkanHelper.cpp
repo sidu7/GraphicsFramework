@@ -188,8 +188,10 @@ void VulkanHelper::CreateDebugMessenger()
 			VkDebugUtilsMessengerCreateInfoEXT DebugMessengerInfo = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
 			DebugMessengerInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
 			DebugMessengerInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+#if _DEBUG
 			DebugMessengerInfo.pfnUserCallback = Renderer_Vulkan::DebugMessageCallback;
 			DebugMessengerInfo.pUserData = VkRenderer;
+#endif
 
 			VKCall(Func(VkRenderer->VulkanInstance, &DebugMessengerInfo, nullptr, &VkRenderer->DebugMessenger), "Debug Messenger creation Failed");
 		}
@@ -645,19 +647,20 @@ void VulkanHelper::InitVulkan()
 			AppInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 			AppInfo.apiVersion = VK_API_VERSION_1_3;
 
-			VkDebugUtilsMessengerCreateInfoEXT DebugMessengerInfo = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
-			DebugMessengerInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
-			DebugMessengerInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
-			DebugMessengerInfo.pfnUserCallback = Renderer_Vulkan::DebugMessageCallback;
-			DebugMessengerInfo.pUserData = VkRenderer;
-
 			VkInstanceCreateInfo InstanceInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
 			InstanceInfo.pApplicationInfo = &AppInfo;
 			InstanceInfo.enabledLayerCount = Layers.size();
 			InstanceInfo.ppEnabledLayerNames = Layers.data();
 			InstanceInfo.enabledExtensionCount = VkRenderer->InstanceExtensions.size();
 			InstanceInfo.ppEnabledExtensionNames = VkRenderer->InstanceExtensions.data();
+#if _DEBUG
+            VkDebugUtilsMessengerCreateInfoEXT DebugMessengerInfo = { VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT };
+            DebugMessengerInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;
+            DebugMessengerInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+            DebugMessengerInfo.pfnUserCallback = Renderer_Vulkan::DebugMessageCallback;
+            DebugMessengerInfo.pUserData = VkRenderer;
 			InstanceInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&DebugMessengerInfo;
+#endif
 
 			VKCall(vkCreateInstance(&InstanceInfo, nullptr, &VkRenderer->VulkanInstance), "Vulkan Instance creation Failed.");
 

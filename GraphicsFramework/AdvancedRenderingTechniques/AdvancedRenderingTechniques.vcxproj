@@ -229,6 +229,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="res\JSON Data\Circle Teapot1.json" />
     <None Include="res\JSON Data\Circle Teapot2.json" />
     <None Include="res\JSON Data\ControlPoints.json" />

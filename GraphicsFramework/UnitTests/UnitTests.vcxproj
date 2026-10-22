@@ -408,6 +408,7 @@
       <Command Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">$(VULKAN_SDK)\Bin\glslc.exe %(FullPath) -o %(FullPath).spv</Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">%(FullPath).spv</Outputs>
     </CustomBuild>
+    <None Include="README.md" />
     <None Include="res\ShaderTest.vert">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">$(VULKAN_SDK)\Bin\glslc.exe %(FullPath) -o %(FullPath).spv</Command>

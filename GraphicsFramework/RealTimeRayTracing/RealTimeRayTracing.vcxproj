@@ -201,6 +201,7 @@
     <ClInclude Include="src\Shapes.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="res\data\ball.json" />
     <None Include="res\shaders\Drawing.frag" />
     <None Include="res\shaders\Drawing.vert" />

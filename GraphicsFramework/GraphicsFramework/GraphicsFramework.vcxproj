@@ -209,6 +209,7 @@ copy /y "DLLs\*.dll" "$(Configuration)\$(Platform)\"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+    <None Include="README.md" />
     <None Include="res\crysis-nano-suit-2\scene.fbx" />
     <None Include="res\gh_sample_animation.fbx" />
     <None Include="res\JSON Data\ControlPoints.json" />

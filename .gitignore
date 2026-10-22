@@ -9,9 +9,14 @@ Release_OpenGL/
 Release_Vulkan/
 Release_DX12/
 Intermediate/
+build/
+build-*/
+out/build/
 
 #files
 *.user
 *.obj
 *.spv
+*.cmake.user
+CMakeUserPresets.json
 .aider*

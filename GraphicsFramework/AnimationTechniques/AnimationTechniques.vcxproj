@@ -210,6 +210,7 @@
     <ClInclude Include="src\Mechanics.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="README.md" />
     <None Include="res\Shaders\Drawing.frag" />
     <None Include="res\Shaders\Drawing.vert" />
     <None Include="res\Shaders\ModelDraw.frag" />
