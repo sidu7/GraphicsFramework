@@ -3,8 +3,8 @@
 #include "Model.h"
 #include "Core/Core.h"
 #include "Rendering/RenderingFactory.h"
-#include "assimp/include/assimp/cimport.h"
-#include "assimp/include/assimp/version.h"
+#include <assimp/cimport.h>
+#include <assimp/version.h>
 
 void Model::Draw(Shader* shader)
 {

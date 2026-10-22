@@ -5,9 +5,9 @@
 #include "Camera.h"
 #include "Window.h"
 #include "Imgui/imgui.h"
-#include "Imgui/imgui_impl_sdl.h"
+#include "Imgui/backends/imgui_impl_sdl2.h"
 #if defined(RENDERER_OPENGL)
-#include "Imgui/imgui_impl_opengl3.h"
+#include "Imgui/backends/imgui_impl_opengl3.h"
 #include "Rendering/OpenGL/Window_OpenGL.h"
 #elif defined(RENDERER_VULKAN)
 #include "Rendering/Vulkan/Renderer_Vulkan.h"
@@ -16,7 +16,7 @@
 #include "Rendering/Vulkan/Internal/CommandBuffer_Vulkan.h"
 #include "Rendering/Vulkan/Internal/CommandQueue_Vulkan.h"
 #include "Rendering/Vulkan/Internal/RenderPass_Vulkan.h"
-#include "Imgui/imgui_impl_vulkan.h"
+	#include "Imgui/backends/imgui_impl_vulkan.h"
 #elif defined(RENDERER_DX12)
 #endif
 

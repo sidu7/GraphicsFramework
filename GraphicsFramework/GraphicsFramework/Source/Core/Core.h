@@ -37,7 +37,7 @@
 #include <Imgui/imgui.h>
 
 // Stbi
-#include <stbi_image\stbi_image.h>
+#include <stb_image.h>
 
 // Graphics Framework
 #include "GlobalDefines.h"

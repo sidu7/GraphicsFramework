@@ -5,11 +5,16 @@ GraphicsFramework is a C++17 rendering framework with OpenGL and Vulkan backends
 ## Requirements
 
 - Windows x64 and Microsoft Visual C++ (MSVC)
-- CMake 4.2 or newer for the Visual Studio 2026 generator (the project itself requires CMake 3.20 or newer)
+- CMake 4.2 or newer for the Visual Studio 2026 generator (the project itself requires CMake 3.22 or newer)
 - Visual Studio 2026 (or another CMake-supported Visual Studio generator)
-- The third-party libraries and import libraries bundled under `GraphicsFramework/GraphicsFramework/ThirdParty`
+- Git submodules initialized under `GraphicsFramework/GraphicsFramework/ThirdParty`
+- The Vulkan SDK when building the Vulkan renderer (its Vulkan loader is provided by the SDK)
 
-The CMake project is configured for the bundled Windows x64 dependencies.
+The source dependencies are pinned as Git submodules. After cloning without `--recurse-submodules`, initialize them from the repository root:
+
+```powershell
+git submodule update --init --recursive
+```
 
 ## Generate a Visual Studio solution
 
