@@ -37,13 +37,76 @@ endif()
 
 # Set project directories
 set(GF_PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(GF_SOURCE_DIR "${GF_PROJECT_DIR}/GraphicsFramework/Source")
 
-# Include ThirdParty subdirectory
-add_subdirectory("${GF_PROJECT_DIR}/ThirdParty" "${CMAKE_BINARY_DIR}/ThirdParty" EXCLUDE_FROM_ALL)
+# Define source files manually
+set(GF_SOURCE_FILES
+    # Core Components
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Core/Components/Component.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Core/Components/Transform.cpp"
+    
+    # Rendering
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Renderer.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Texture.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/VertexBuffer.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/IndexBuffer.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/UniformBuffer.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/ComputeShader.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/FrameBuffer.cpp"
+    
+    # OpenGL Rendering
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/OpenGL/Renderer_OpenGL.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/OpenGL/Texture_OpenGL.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/OpenGL/VertexBuffer_OpenGL.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/OpenGL/IndexBuffer_OpenGL.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/OpenGL/UniformBuffer_OpenGL.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/OpenGL/ComputeShader_OpenGL.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/OpenGL/FrameBuffer_OpenGL.cpp"
+    
+    # Vulkan Rendering
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/Renderer_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/Texture_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/VertexBuffer_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/IndexBuffer_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/UniformBuffer_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/ComputeShader_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/FrameBuffer_Vulkan.cpp"
+    
+    # Vulkan Internal
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/Internal/CommandBufferPool_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/Internal/CommandBuffer_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/Internal/DescriptorPool_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/Internal/DescriptorSet_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/Internal/Fence_Vulkan.cpp"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/Internal/Semaphore_Vulkan.cpp"
+    
+    # Utils
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Utils/JSONHelper.cpp"
+)
 
-# Include Source subdirectory
-add_subdirectory("${GF_PROJECT_DIR}/GraphicsFramework/Source" "${CMAKE_BINARY_DIR}/GraphicsFramework/Source" EXCLUDE_FROM_ALL)
+# Create the GraphicsFramework library
+add_library(GraphicsFramework STATIC ${GF_SOURCE_FILES})
+
+# Set properties for the library
+set_target_properties(GraphicsFramework PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+# Include directories
+target_include_directories(GraphicsFramework PUBLIC
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Core"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Core/Components"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/OpenGL"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Rendering/Vulkan/Internal"
+    "${GF_PROJECT_DIR}/GraphicsFramework/Source/Utils"
+)
+
+# Add the library to the main project
+add_library(GraphicsFramework::GraphicsFramework ALIAS GraphicsFramework)
 
 # Define a function to add framework apps
 file(GLOB GF_RUNTIME_DLLS CONFIGURE_DEPENDS "${GF_PROJECT_DIR}/DLLs/*.dll")
