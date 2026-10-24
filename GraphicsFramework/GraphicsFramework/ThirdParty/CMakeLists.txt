@@ -66,3 +66,27 @@ target_include_directories(vulkan_headers INTERFACE
 target_link_libraries(spirv-reflect-static PUBLIC vulkan_headers)
 target_link_libraries(volk PUBLIC vulkan_headers)
 target_link_libraries(VulkanMemoryAllocator INTERFACE vulkan_headers)
+
+# Imgui
+add_library(imgui STATIC
+    ${GF_THIRD_PARTY}/Imgui/imgui.cpp
+    ${GF_THIRD_PARTY}/Imgui/imgui_draw.cpp
+    ${GF_THIRD_PARTY}/Imgui/imgui_tables.cpp
+    ${GF_THIRD_PARTY}/Imgui/imgui_widgets.cpp
+    ${GF_THIRD_PARTY}/Imgui/backends/imgui_impl_win32.cpp
+    ${GF_THIRD_PARTY}/Imgui/backends/imgui_impl_dx12.cpp
+    $<$<OR:$<CONFIG:Debug_OpenGL>,$<CONFIG:Release_OpenGL>>:${GF_THIRD_PARTY}/Imgui/backends/imgui_impl_sdl2.cpp>
+    $<$<OR:$<CONFIG:Debug_OpenGL>,$<CONFIG:Release_OpenGL>>:${GF_THIRD_PARTY}/Imgui/backends/imgui_impl_opengl3.cpp>
+    $<$<OR:$<CONFIG:Debug_Vulkan>,$<CONFIG:Release_Vulkan>>:${GF_THIRD_PARTY}/Imgui/backends/imgui_impl_sdl2.cpp>
+    $<$<OR:$<CONFIG:Debug_Vulkan>,$<CONFIG:Release_Vulkan>>:${GF_THIRD_PARTY}/Imgui/backends/imgui_impl_vulkan.cpp>
+)
+
+target_include_directories(imgui PUBLIC
+    ${GF_THIRD_PARTY}/Imgui
+    ${GF_THIRD_PARTY}/Imgui/backends
+    ${GF_THIRD_PARTY}/SDL/include
+)
+
+# STB Image
+add_library(stb_image STATIC ${GF_THIRD_PARTY}/stbi_image_impl.cpp)
+target_include_directories(stb_image PUBLIC ${GF_THIRD_PARTY}/stbi_image)
