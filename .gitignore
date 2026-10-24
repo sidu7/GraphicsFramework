@@ -19,5 +19,4 @@ out/build/
 *.spv
 *.cmake.user
 CMakeUserPresets.json
-.aider*
 /out
