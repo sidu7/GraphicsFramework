@@ -1,5 +1,8 @@
 #include "Mechanics.h"
 
+// Application-local shader IDs (shared across all scenes in this project)
+#include "ProjectShaderIDs.h"
+
 #include "core/Engine.h"
 #include "core/Camera.h"
 #include "core/Light.h"
@@ -9,6 +12,7 @@
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
+#include "Rendering/ShaderRegistry.h"
 #include "Core/Components/Transform.h"
 #include "Core/Components/Material.h"
 #include "Core/Components/Shape.h"
@@ -24,12 +28,22 @@ void Mechanics::Init()
 {
 	mLight = new Light(glm::vec3(10.0, 100.0, 40.0));
 
+	// Initialize shader registry
+	ShaderRegistry::Instance()->Init("res/Shaders/", [](ShaderRegistry* reg) {
+		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::MODEL_DRAW),
+							"ModelDraw.vert", "ModelDraw.frag",
+							"", "");
+		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::DRAWING),
+							"Drawing.vert", "Drawing.frag",
+							"", "");
+	});
+
 	Engine::Instance()->GetCamera()->mCameraPos = glm::vec3(20.0f, 23.0f, 60.0f);
 	Engine::Instance()->GetCamera()->pitch = -20.0f;
 	Engine::Instance()->GetCamera()->CalculateFront();
 
 	Drawing = RenderingFactory::Instance()->CreateShader();
-	Drawing->Init("src/animshaders/Drawing.vert", "src/animshaders/Drawing.frag");
+	Drawing->Init(static_cast<int32_t>(AnimationShaderID::DRAWING));
 
 	NodeCount = 80;
 	Time = 0.0f;

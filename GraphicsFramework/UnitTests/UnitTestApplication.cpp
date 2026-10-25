@@ -1,6 +1,8 @@
 #include "UnitTestApplication.h"
 
 #include <GraphicsFramework.h>
+#include "Rendering/ShaderRegistry.h"
+#include "UnitTestShaderID.h"
 
 // Projects
 #include "ShaderTest.h"
@@ -21,6 +23,24 @@ std::string UnitTestApplication::GetSettingsFilePath()
 
 void UnitTestApplication::Init()
 {
+	ShaderRegistry::Instance()->Init("res/", [](ShaderRegistry* reg) {
+		reg->RegisterShader(static_cast<int32_t>(UnitTestShaderID::SHADER_TEST),
+			"ShaderTest.vert", "ShaderTest.frag",
+			"spirv/ShaderTest.vert.spv", "spirv/ShaderTest.frag.spv");
+		reg->RegisterShader(static_cast<int32_t>(UnitTestShaderID::VERTEXBUFFER_TEST),
+			"VertexBufferTest.vert", "VertexBufferTest.frag",
+			"spirv/VertexBufferTest.vert.spv", "spirv/VertexBufferTest.frag.spv");
+		reg->RegisterShader(static_cast<int32_t>(UnitTestShaderID::INDEXBUFFER_TEST),
+			"IndexBufferTest.vert", "IndexBufferTest.frag",
+			"spirv/IndexBufferTest.vert.spv", "spirv/IndexBufferTest.frag.spv");
+		reg->RegisterShader(static_cast<int32_t>(UnitTestShaderID::UNIFORMBUFFER_TEST),
+			"UniformBufferTest.vert", "UniformBufferTest.frag",
+			"spirv/UniformBufferTest.vert.spv", "spirv/UniformBufferTest.frag.spv");
+		reg->RegisterShader(static_cast<int32_t>(UnitTestShaderID::TEXTURE_TEST),
+			"TextureTest.vert", "TextureTest.frag",
+			"spirv/TextureTest.vert.spv", "spirv/TextureTest.frag.spv");
+	});
+
 	Engine::Instance()->AddCustomDebugFunction(std::bind(&UnitTestApplication::UnitTestSelector, this));
 	Engine::Instance()->SetScene<ShaderTest>();
 }

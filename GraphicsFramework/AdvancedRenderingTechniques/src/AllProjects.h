@@ -1,6 +1,33 @@
 #include <Core/Scene.h>
 #include <vector>
 #include <glm/glm.hpp>
+#include <cstdint>
+
+// Application-local shader IDs — defined here so the registry is decoupled from the framework
+enum class AppShaderID : int32_t
+{
+    NONE = 0,
+    DRAWING,
+    LIGHTING,
+    AMBIENT,
+    AMBIENT_NO_AO,
+    SHADOW,
+    LOCAL_LIGHT,
+    SKYDOME,
+    AMBIENT_OCCLUSION,
+    BLUR,
+    COUNT
+};
+
+enum class AppComputeID : int32_t
+{
+    NONE = 0,
+    BLUR_HORIZONTAL,
+    BLUR_VERTICAL,
+    BILATERAL_HORIZONTAL,
+    BILATERAL_VERTICAL,
+    COUNT
+};
 
 #define HBlockSize 30
 

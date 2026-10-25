@@ -1,5 +1,21 @@
 #pragma once
 #include "Core/Scene.h"
+#include <cstdint>
+
+// Application-local shader IDs for MotionBlur
+enum class MotionBlurShaderID : int32_t
+{
+    NONE = 0,
+    GBUFFER,
+    MOTIONBLUR_AMBIENT,
+    MOTIONBLUR_LIGHTING,
+    SKYDOME,
+    TILE_MAX,
+    NEIGHBOUR_MAX,
+    RECONSTRUCTION,
+    MOTION_BLUR,
+    COUNT
+};
 
 class Shader;
 class Light;

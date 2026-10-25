@@ -8,6 +8,7 @@ Author: Sidhant Tumma
 #pragma once
 
 #include "Rendering/Shader.h"
+#include "Rendering/ShaderRegistry.h"
 
 class Shader_OpenGL : public Shader
 {
@@ -15,7 +16,8 @@ public:
 	Shader_OpenGL();
 	virtual ~Shader_OpenGL();
 
-	virtual void Init(std::string shaderId) override;
+	virtual void Init(int32_t shaderId) override;
+	virtual void Init(const std::string& vertexPath, const std::string& fragmentPath) override;
 
 	unsigned int m_RendererID;
 

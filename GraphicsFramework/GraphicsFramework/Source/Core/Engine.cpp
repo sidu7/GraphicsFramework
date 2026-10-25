@@ -22,7 +22,6 @@
 #include "ImguiManager.h"
 #include "ObjectManager.h"
 #include "ComponentManager.h"
-#include "Rendering/ShaderManager.h"
 #include "Utils/JSONHelper.h"
 
 void Engine::Start(const std::string& settingsFilePath)
@@ -49,7 +48,6 @@ void Engine::Start(const std::string& settingsFilePath)
 	ShapeManager::Instance()->Init();
 	ImguiManager::Instance()->Init();
 	ComponentManager::Instance()->Init();
-	ShaderManager::Instance()->Init(mSettings.mShadersListPath);
 
 	pCamera = new Camera();
 	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
@@ -156,10 +154,6 @@ void Settings::Parse(rapidjson::Document& settingsFile)
 	if (Root.HasMember("WindowSize"))
 	{
 		mWindowSize = JSONHelper::GetVec2F(Root["WindowSize"].GetArray());
-	}
-	if (Root.HasMember("ShadersListFile"))
-	{
-		mShadersListPath = Root["ShadersListFile"].GetString();
 	}
 	if (Root.HasMember("TransformBindingPoint"))
 	{

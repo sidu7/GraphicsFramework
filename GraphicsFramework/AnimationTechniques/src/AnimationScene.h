@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+// Application-local shader IDs (shared across all scenes in this project)
+#include "ProjectShaderIDs.h"
+
 #define MAKE_TUPLE(x,y,z) std::make_pair(x,std::make_pair(y,z))
 #define TABLE_ENTRY std::pair<float, std::pair<float, int>>
 

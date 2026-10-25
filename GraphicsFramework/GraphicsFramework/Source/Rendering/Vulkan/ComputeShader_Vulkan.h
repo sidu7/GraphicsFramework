@@ -1,14 +1,25 @@
+/* Start Header -------------------------------------------------------
+Copyright (C) 2018-2019 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the prior
+written consent of DigiPen Institute of Technology is prohibited.
+Author: Sidhant Tumma
+- End Header --------------------------------------------------------*/
+
 #pragma once
 
 #include "Rendering/ComputeShader.h"
+#include "Rendering/ShaderRegistry.h"
+
+#include "Rendering/Vulkan/Renderer_Vulkan.h"
 
 class ComputeShader_Vulkan : public ComputeShader
 {
 public:
 	ComputeShader_Vulkan();
-	~ComputeShader_Vulkan();
+	virtual ~ComputeShader_Vulkan();
 
-	virtual void SetShader(std::string path) override;
+	virtual void Init(int32_t shaderId) override;
+	virtual void Init(const std::string& filePath) override;
 	virtual void Run(unsigned int groupX, unsigned int groupY, unsigned int groupZ) const override;
 
 	virtual void SetInputUniformImage(std::string name, const Texture* texture, unsigned int imageUnit, unsigned int channels) const override;
@@ -22,8 +33,10 @@ public:
 	virtual void SetUniform3f(const std::string& name, glm::vec3 v) override;
 	virtual int GetUniformLocation(const std::string& name) override;
 
-	unsigned int m_RendererID;
-	std::string m_ShaderFilePath;	
+	VkPipeline mPipeline;
+	VkPipelineLayout mPipelineLayout;
+
 protected:
-	unsigned int CompileShader(unsigned int type, std::string& Source);
+	void LoadShaderModule(const std::string& path, VkShaderModule& outModule);
+	std::string mShaderId;
 };

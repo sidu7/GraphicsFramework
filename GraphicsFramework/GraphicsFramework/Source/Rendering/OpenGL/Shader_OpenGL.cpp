@@ -7,8 +7,6 @@ Author: Sidhant Tumma
 
 #include "Shader_OpenGL.h"
 #include "Rendering/OpenGL/Renderer_OpenGL.h"
-#include "Rendering/ShaderManager.h"
-#include "Core/Core.h"
 #include "Utils/FileHelper.h"
 
 Shader_OpenGL::Shader_OpenGL()
@@ -17,12 +15,30 @@ Shader_OpenGL::Shader_OpenGL()
 	GLCall(m_RendererID = glCreateProgram());
 }
 
-void Shader_OpenGL::Init(std::string shaderId)
+void Shader_OpenGL::Init(int32_t shaderId)
 {
-	ShaderSource shaders = ShaderManager::Instance()->GetShaderSource(shaderId);
+	const auto& vertPath = ShaderRegistry::Instance()->GetGLSLPath(shaderId, ShaderRegistry::ShaderStage::Vertex);
+	const auto& fragPath = ShaderRegistry::Instance()->GetGLSLPath(shaderId, ShaderRegistry::ShaderStage::Fragment);
 
-	unsigned int vs = CompileShader(GL_VERTEX_SHADER, shaders.vertexSource);
-	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, shaders.fragmentSource);
+	auto vertSource = FileHelper::ReadFile(vertPath);
+	auto fragSource = FileHelper::ReadFile(fragPath);
+
+	if (vertSource.empty() || fragSource.empty())
+	{
+		std::cout << "Failed to load shader source for ID: " << shaderId << std::endl;
+		return;
+	}
+
+	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertSource);
+	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragSource);
+
+	if (vs == 0 || fs == 0)
+	{
+		std::cout << "Shader compilation failed for ID: " << shaderId << std::endl;
+		if (vs) glDeleteShader(vs);
+		if (fs) glDeleteShader(fs);
+		return;
+	}
 
 	GLCall(glAttachShader(m_RendererID, vs));
 	GLCall(glAttachShader(m_RendererID, fs));
@@ -36,12 +52,59 @@ void Shader_OpenGL::Init(std::string shaderId)
 		GLCall(glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &length));
 		char* message = (char*)alloca(length * sizeof(char));
 		GLCall(glGetProgramInfoLog(m_RendererID, length, &length, message));
-		std::cout << "Failed to link " << std::endl;
+		std::cout << "Failed to link shader: " << vertPath << std::endl;
 		std::cout << message << std::endl;
+	}
+	else
+	{
+		GLCall(glValidateProgram(m_RendererID));
+	}
+
+	GLCall(glDeleteShader(vs));
+	GLCall(glDeleteShader(fs));
+}
+
+void Shader_OpenGL::Init(const std::string& vertexPath, const std::string& fragmentPath)
+{
+	auto vertSource = FileHelper::ReadFile(vertexPath);
+	auto fragSource = FileHelper::ReadFile(fragmentPath);
+
+	if (vertSource.empty() || fragSource.empty())
+	{
+		std::cout << "Failed to load shader source from paths: " << vertexPath << ", " << fragmentPath << std::endl;
 		return;
 	}
 
-	GLCall(glValidateProgram(m_RendererID));
+	unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertSource);
+	unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragSource);
+
+	if (vs == 0 || fs == 0)
+	{
+		std::cout << "Shader compilation failed for paths: " << vertexPath << ", " << fragmentPath << std::endl;
+		if (vs) glDeleteShader(vs);
+		if (fs) glDeleteShader(fs);
+		return;
+	}
+
+	GLCall(glAttachShader(m_RendererID, vs));
+	GLCall(glAttachShader(m_RendererID, fs));
+	GLCall(glLinkProgram(m_RendererID));
+
+	int result;
+	GLCall(glGetProgramiv(m_RendererID, GL_LINK_STATUS, &result));
+	if (result == GL_FALSE)
+	{
+		int length;
+		GLCall(glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &length));
+		char* message = (char*)alloca(length * sizeof(char));
+		GLCall(glGetProgramInfoLog(m_RendererID, length, &length, message));
+		std::cout << "Failed to link shader: " << vertexPath << std::endl;
+		std::cout << message << std::endl;
+	}
+	else
+	{
+		GLCall(glValidateProgram(m_RendererID));
+	}
 
 	GLCall(glDeleteShader(vs));
 	GLCall(glDeleteShader(fs));
@@ -64,11 +127,12 @@ unsigned int Shader_OpenGL::CompileShader(unsigned int type, const std::vector<c
 	if (result == GL_FALSE)
 	{
 		int length;
-		GLCall(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
+		GLCall(glGetShaderiv(id, GL_COMPILE_STATUS, &length));
 		char* message = (char*)alloca(length * sizeof(char));
 		GLCall(glGetShaderInfoLog(id, length, &length, message));
 		std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex " : "fragment ") << "shader" << std::endl;
 		std::cout << message << std::endl;
+		glDeleteShader(id);
 		return 0;
 	}
 

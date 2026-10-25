@@ -3,7 +3,7 @@
 #include "Core/Core.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
-#include "Rendering/ShaderManager.h"
+#include "UnitTestShaderID.h"
 #include "Core/Window.h"
 
 struct TextureTestMatrices
@@ -58,7 +58,7 @@ void TextureTest::Init()
 	pTexture->Init("res/Texture.jpg");
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Init("TEXTURE_TEST");
+	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::TEXTURE_TEST));
 
 	RunTime = 0.f;
 	RotateX = false;

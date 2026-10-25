@@ -34,13 +34,13 @@ MotionBlur::~MotionBlur()
 void MotionBlur::Init()
 {
 	baseShader = RenderingFactory::Instance()->CreateShader();
-	baseShader->Init("GBUFFER");
+	baseShader->Init(static_cast<int32_t>(MotionBlurShaderID::GBUFFER));
 
 	lighting = RenderingFactory::Instance()->CreateShader(); 
-	lighting->Init("MOTIONBLUR_LIGHTING");
+	lighting->Init(static_cast<int32_t>(MotionBlurShaderID::MOTIONBLUR_LIGHTING));
 
 	ambient = RenderingFactory::Instance()->CreateShader(); 
-	ambient->Init("MOTIONBLUR_AMBIENT");
+	ambient->Init(static_cast<int32_t>(MotionBlurShaderID::MOTIONBLUR_AMBIENT));
 
 	light = new Light(glm::vec3(100.0f, 200.0f, 10.0f));
 
@@ -69,7 +69,7 @@ void MotionBlur::Init()
 
 	//SkyDome shaders
 	skyDomeShader = RenderingFactory::Instance()->CreateShader(); 
-	skyDomeShader->Init("SKYDOME");
+	skyDomeShader->Init(static_cast<int32_t>(MotionBlurShaderID::SKYDOME));
 
 	skyDomeTexture = RenderingFactory::Instance()->CreateTexture(); 
 	skyDomeTexture->Init("res/Textures/popDome.hdr");
@@ -96,15 +96,15 @@ void MotionBlur::Init()
 	NeighbourMax->Init(Window::Instance()->GetWidth() / k, Window::Instance()->GetHeight() / k, ImageFormat::RGBA32F);
 
 	TileMaxShader = RenderingFactory::Instance()->CreateShader(); 
-	TileMaxShader->Init("TILE_MAX");
+	TileMaxShader->Init(static_cast<int32_t>(MotionBlurShaderID::TILE_MAX));
 	NeighbourMaxShader = RenderingFactory::Instance()->CreateShader(); 
-	NeighbourMaxShader->Init("NEIGHBOUR_MAX");
+	NeighbourMaxShader->Init(static_cast<int32_t>(MotionBlurShaderID::NEIGHBOUR_MAX));
 
 	ReconstructionShader = RenderingFactory::Instance()->CreateShader(); 
-	ReconstructionShader->Init("RECONSTRUCTION");
+	ReconstructionShader->Init(static_cast<int32_t>(MotionBlurShaderID::RECONSTRUCTION));
 	MotionBlurOn = true;
 	MotionBlurShader = RenderingFactory::Instance()->CreateShader(); 
-	MotionBlurShader->Init("MOTIONBLUR");
+	MotionBlurShader->Init(static_cast<int32_t>(MotionBlurShaderID::MOTION_BLUR));
 	ReconBlur = false;
 	PerPixel = true;
 

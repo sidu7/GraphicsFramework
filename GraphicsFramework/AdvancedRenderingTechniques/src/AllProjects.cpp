@@ -39,22 +39,22 @@ AllProjects::~AllProjects()
 void AllProjects::Init()
 {
 	baseShader = RenderingFactory::Instance()->CreateShader();
-	baseShader->Init("DRAWING");
+	baseShader->Init(static_cast<int32_t>(AppShaderID::DRAWING));
 
 	lighting = RenderingFactory::Instance()->CreateShader(); 
-	lighting->Init("LIGHTING");
+	lighting->Init(static_cast<int32_t>(AppShaderID::LIGHTING));
 
 	ambient = RenderingFactory::Instance()->CreateShader(); 
-	ambient->Init("AMBIENT");
+	ambient->Init(static_cast<int32_t>(AppShaderID::AMBIENT));
 
 	ambientNoAO = RenderingFactory::Instance()->CreateShader();
-	ambientNoAO->Init("AMBIENT_NO_AO");
+	ambientNoAO->Init(static_cast<int32_t>(AppShaderID::AMBIENT_NO_AO));
 
 	shadow = RenderingFactory::Instance()->CreateShader(); 
-	shadow->Init("SHADOW");
+	shadow->Init(static_cast<int32_t>(AppShaderID::SHADOW));
 
 	locallight = RenderingFactory::Instance()->CreateShader(); 
-	locallight->Init("LOCAL_LIGHT");
+	locallight->Init(static_cast<int32_t>(AppShaderID::LOCAL_LIGHT));
 
 	globalMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
 	globalMatrices->Init(sizeof(Matrices), 2);
@@ -72,9 +72,9 @@ void AllProjects::Init()
 	localLightDataUbo->Init(sizeof(LocalLightData), 4);
 
 	blurHorizontal = RenderingFactory::Instance()->CreateComputeShader(); 
-	blurHorizontal->SetShader("res/shaders/BlurHorizontal.compute");
+	blurHorizontal->Init(static_cast<int32_t>(AppComputeID::BLUR_HORIZONTAL));
 	blurVertical = RenderingFactory::Instance()->CreateComputeShader(); 
-	blurVertical->SetShader("res/shaders/BlurVertical.compute");
+	blurVertical->Init(static_cast<int32_t>(AppComputeID::BLUR_VERTICAL));
 
 	light = new Light(glm::vec3(100.0f, 200.0f, 10.0f));
 
@@ -135,7 +135,7 @@ void AllProjects::Init()
 
 	//SkyDome shaders
 	skyDomeShader = RenderingFactory::Instance()->CreateShader(); 
-	skyDomeShader->Init("SKYDOME");
+	skyDomeShader->Init(static_cast<int32_t>(AppShaderID::SKYDOME));
 	skyDomeTexture = RenderingFactory::Instance()->CreateTexture(); 
 	skyDomeTexture->Init("res/Textures/popDome.hdr");
 	skyDomeIrradiance = RenderingFactory::Instance()->CreateTexture(); 
@@ -154,13 +154,13 @@ void AllProjects::Init()
 
 	//SSAO
 	AOShader = RenderingFactory::Instance()->CreateShader(); 
-	AOShader->Init("AMBIENT_OCCLUSION");
+	AOShader->Init(static_cast<int32_t>(AppShaderID::AMBIENT_OCCLUSION));
 	BlurredAO = RenderingFactory::Instance()->CreateFrameBuffer(); 
 	BlurredAO->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), ImageFormat::RGBA32F);
 	BilateralHorizontal = RenderingFactory::Instance()->CreateComputeShader(); 
-	BilateralHorizontal->SetShader("res/shaders/BilateralHorizontal.compute");
+	BilateralHorizontal->Init(static_cast<int32_t>(AppComputeID::BILATERAL_HORIZONTAL));
 	BilateralVertical = RenderingFactory::Instance()->CreateComputeShader(); 
-	BilateralVertical->SetShader("res/shaders/BilateralVertical.compute");
+	BilateralVertical->Init(static_cast<int32_t>(AppComputeID::BILATERAL_VERTICAL));
 	HorizontalBlurredAO = RenderingFactory::Instance()->CreateTexture(); 
 	HorizontalBlurredAO->Init(ImageFormat::RGBA32F, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
 	ResultBlurredAO = RenderingFactory::Instance()->CreateTexture(); 

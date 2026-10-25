@@ -18,6 +18,9 @@ public:
 	void Update() override;
 	void Serialize(rapidjson::Value::Object data) override;
 
+	Flock();
+	virtual ~Flock();
+
 	glm::vec3 mNormal;
 	glm::vec3 mVelocity;
 	glm::vec3 mPreviousVelocity;

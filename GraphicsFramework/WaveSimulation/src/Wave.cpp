@@ -1,5 +1,14 @@
 #include "Wave.h"
 
+#include <cstdint>
+
+// Application-local shader IDs
+enum class WaveShaderID : int32_t
+{
+    NONE = 0,
+    DRAWING,
+};
+
 #include "Core/Engine.h"
 #include "Core/Camera.h"
 #include "Core/Light.h"
@@ -10,6 +19,7 @@
 #include "Rendering/RenderingFactory.h"
 #include "Rendering/Shader.h"
 #include "Rendering/VertexArray.h"
+#include "Rendering/ShaderRegistry.h"
 #include "Rendering/VertexBuffer.h"
 #include "Rendering/IndexBuffer.h"
 #include "glm/gtc/matrix_transform.hpp"
@@ -27,6 +37,15 @@ Wave::~Wave()
 
 void Wave::Init()
 {
+	std::cout << "Wave Simulation" << std::endl;
+
+	// Initialize shader registry
+	ShaderRegistry::Instance()->Init("res/shaders/", [](ShaderRegistry* reg) {
+		reg->RegisterShader(static_cast<int32_t>(WaveShaderID::DRAWING),
+							"Drawing.vert", "Drawing.frag",
+							"", "");
+	});
+
 	mLight = new Light(glm::vec3(1.0, -0.3, -0.1));
 
 	Engine::Instance()->GetCamera()->mCameraPos = glm::vec3(0.1f, 2.0f, 2.2f);
@@ -36,7 +55,7 @@ void Wave::Init()
 	Engine::Instance()->GetCamera()->CalculateFront();
 
 	mShader = RenderingFactory::Instance()->CreateShader();
-	mShader->Init("res/shaders/Drawing.vert", "res/shaders/Drawing.frag");
+	mShader->Init(static_cast<int32_t>(WaveShaderID::DRAWING));
 
 	mHeightMap.initialize();
 

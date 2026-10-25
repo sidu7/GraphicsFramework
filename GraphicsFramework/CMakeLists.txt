@@ -52,7 +52,6 @@ set_target_properties(GraphicsFramework PROPERTIES
 add_library(GraphicsFramework::GraphicsFramework ALIAS GraphicsFramework)
 
 # Define a function to add framework apps
-file(GLOB GF_RUNTIME_DLLS CONFIGURE_DEPENDS "${GF_PROJECT_DIR}/DLLs/*.dll")
 function(add_framework_app target_name source_dir)
     file(GLOB_RECURSE app_sources CONFIGURE_DEPENDS "${source_dir}/*.cpp")
     if(NOT app_sources)
@@ -62,22 +61,34 @@ function(add_framework_app target_name source_dir)
     add_executable(${target_name} EXCLUDE_FROM_ALL ${app_sources})
     target_link_libraries(${target_name} PRIVATE GraphicsFramework SDL2::SDL2main)
     
-    # Copy the entire res folder to output directory
-    add_custom_command(TARGET ${target_name} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-            "${source_dir}/../res"
-            "$<TARGET_FILE_DIR:${target_name}>/res"
-        VERBATIM
-    )
-    
-    # Copy runtime DLLs
-    foreach(runtime_dll IN LISTS GF_RUNTIME_DLLS)
+    # Copy the res folder to output directory (UnitTests has res/ alongside sources, others have res/ alongside src/)
+    if(EXISTS "${source_dir}/res")
+        set(REsources_DIR "${source_dir}/res")
+    elseif(EXISTS "${source_dir}/../res")
+        set(REsources_DIR "${source_dir}/../res")
+    else()
+        set(REsources_DIR "" CACHE STRING "No res directory found for ${target_name}" FORCE)
+    endif()
+    if(REsources_DIR)
         add_custom_command(TARGET ${target_name} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                "${runtime_dll}" "$<TARGET_FILE_DIR:${target_name}>"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${REsources_DIR}"
+                "$<TARGET_FILE_DIR:${target_name}>/res"
             VERBATIM
         )
-    endforeach()
+    endif()
+    
+    # Copy runtime DLLs (if DLLs directory exists)
+    if(EXISTS "${GF_PROJECT_DIR}/DLLs")
+        file(GLOB GF_RUNTIME_DLLS CONFIGURE_DEPENDS "${GF_PROJECT_DIR}/DLLs/*.dll")
+        foreach(runtime_dll IN LISTS GF_RUNTIME_DLLS)
+            add_custom_command(TARGET ${target_name} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${runtime_dll}" "$<TARGET_FILE_DIR:${target_name}>"
+                VERBATIM
+            )
+        endforeach()
+    endif()
 endfunction()
 
 # Add sample applications if enabled

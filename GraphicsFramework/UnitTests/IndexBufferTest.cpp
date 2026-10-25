@@ -3,7 +3,7 @@
 #include "Core/Core.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
-#include "Rendering/ShaderManager.h"
+#include "UnitTestShaderID.h"
 
 struct Vertex
 {
@@ -35,7 +35,7 @@ void IndexBufferTest::Init()
 	IBuffer->AddData(Indices.data(), static_cast<unsigned int>(Indices.size()), IndexType::UInt16);
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Init("INDEXBUFFER_TEST");
+	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::INDEXBUFFER_TEST));
 }
 
 void IndexBufferTest::Close()

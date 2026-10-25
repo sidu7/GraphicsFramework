@@ -22,6 +22,18 @@ void NeighboursData::Clear()
 	mAvoidanceDirection = glm::vec3(0.0f);
 }
 
+Flock::Flock() : 
+	mNormal(glm::vec3(0.0f, 1.0f, 0.0f)), 
+	mVelocity(glm::vec3(0.0f)), 
+	mPreviousVelocity(glm::vec3(0.0f)), 
+	mFront(glm::vec3(0.0f, 0.0f, 1.0f)), 
+	mMinSpeed(1.0f), mMaxSpeed(10.0f), 
+	mAcceleration(glm::vec3(0.0f))
+{}
+
+Flock::~Flock()
+{}
+
 void Flock::Update()
 {
 	const float PI = 22.0f / 7.0f;

@@ -10,6 +10,7 @@
 #include "Rendering/Model.h"
 #include "Rendering/Shader.h"
 #include "Rendering/RenderingFactory.h"
+#include "Rendering/ShaderRegistry.h"
 #include "Core/Components/Transform.h"
 #include "Core/Components/Shape.h"
 #include "Core/Components/Material.h"
@@ -24,6 +25,16 @@ AnimationScene::~AnimationScene()
 void AnimationScene::Init()
 {
 	mMode = Mode::Animation;
+
+	// Initialize shader registry
+	ShaderRegistry::Instance()->Init("res/Shaders/", [](ShaderRegistry* reg) {
+		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::MODEL_DRAW),
+							"ModelDraw.vert", "ModelDraw.frag",
+							"", "");
+		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::DRAWING),
+							"Drawing.vert", "Drawing.frag",
+							"", "");
+	});
 
 	demoModel = new Model();
 	demoModel->LoadModel("res/ArcherWalking.fbx");
@@ -68,9 +79,9 @@ void AnimationScene::Init()
 	light = new Light(glm::vec3(10.0, 100.0, 40.0));
 
 	modelDraw = RenderingFactory::Instance()->CreateShader();
-	modelDraw->Init("res/Shaders/ModelDraw.vert", "res/Shaders/ModelDraw.frag");
+	modelDraw->Init(static_cast<int32_t>(AnimationShaderID::MODEL_DRAW));
 	Drawing = RenderingFactory::Instance()->CreateShader(); 
-	Drawing->Init("res/Shaders/Drawing.vert", "res/Shaders/Drawing.frag");
+	Drawing->Init(static_cast<int32_t>(AnimationShaderID::DRAWING));
 
 	std::ifstream file("res/JSON Data/ControlPoints.json");
 	std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());

@@ -9,10 +9,8 @@ Author: Sidhant Tumma
 #include "Core/Core.h"
 #include "Utils/FileHelper.h"
 
-#include "Rendering/ShaderManager.h"
 #include "Rendering/Vulkan/VertexBuffer_Vulkan.h"
 #include "Rendering/Vulkan/FrameBuffer_Vulkan.h"
-#include "Rendering/Vulkan/UniformBuffer_Vulkan.h"
 #include "Rendering/Vulkan/Internal/RenderPass_Vulkan.h"
 #include "Rendering/Vulkan/Internal/DescriptorSet_Vulkan.h"
 #include "Rendering/Vulkan/Internal/VulkanHelper.h"
@@ -29,58 +27,66 @@ Shader_Vulkan::Shader_Vulkan() :
 
 Shader_Vulkan::~Shader_Vulkan()
 {
-	vkDestroyPipelineLayout(Renderer_Vulkan::Get()->GetDevice(), mPipelineLayout, nullptr);
-	vkDestroyPipeline(Renderer_Vulkan::Get()->GetDevice(), mPipeline, nullptr);
+	if (mPipelineLayout != VK_NULL_HANDLE)
+	{
+		vkDestroyPipelineLayout(Renderer_Vulkan::Get()->GetDevice(), mPipelineLayout, nullptr);
+	}
+	if (mPipeline != VK_NULL_HANDLE)
+	{
+		vkDestroyPipeline(Renderer_Vulkan::Get()->GetDevice(), mPipeline, nullptr);
+	}
 	delete mDescriptorSet;
 }
 
-void Shader_Vulkan::Init(std::string shaderId)
+void Shader_Vulkan::Init(int32_t shaderId)
 {
-	mShaderId = shaderId;
-	ShaderSource shaders = ShaderManager::Instance()->GetShaderSource(mShaderId);
+	mShaderId = std::to_string(shaderId);
+
+	const auto& vertPath = ShaderRegistry::Instance()->GetSPIRVPath(shaderId, ShaderRegistry::ShaderStage::Vertex);
+	const auto& fragPath = ShaderRegistry::Instance()->GetSPIRVPath(shaderId, ShaderRegistry::ShaderStage::Fragment);
+
+	std::vector<char> vertSource = FileHelper::ReadBinaryFile(vertPath);
+	std::vector<char> fragSource = FileHelper::ReadBinaryFile(fragPath);
+
+	if (vertSource.empty() || fragSource.empty())
+	{
+		std::cout << "Failed to load SPIR-V shader source for: " << mShaderId << std::endl;
+		return;
+	}
 
 	std::vector<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfos;
-	VkShaderModule VertexShaderModule = VK_NULL_HANDLE;
-	VkShaderModule FragmentShaderModule = VK_NULL_HANDLE;
 
 	mDescriptorSet = new DescriptorSet_Vulkan();
 
 	// Get Shader variables info using SPIRV-Reflect
-	GenerateShaderBindings(shaders.vertexSource);
-	GenerateShaderBindings(shaders.fragmentSource);
+	GenerateShaderBindings(vertSource, ShaderRegistry::ShaderStage::Vertex);
+	GenerateShaderBindings(fragSource, ShaderRegistry::ShaderStage::Fragment);
 
 	mDescriptorSet->Init();
 
-	// Programmable stages
-	VkShaderModuleCreateInfo VertexShaderModuleCreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-	VertexShaderModuleCreateInfo.codeSize = shaders.vertexSource.size();
-	VertexShaderModuleCreateInfo.pCode = (const uint32_t*)shaders.vertexSource.data();
+	// Create shader modules from SPIR-V
+	VkShaderModule VertexShaderModule = VK_NULL_HANDLE;
+	LoadShaderModule(vertSource, VertexShaderModule);
 
-	VKCall(vkCreateShaderModule(Renderer_Vulkan::Get()->GetDevice(), &VertexShaderModuleCreateInfo, nullptr, &VertexShaderModule), "Vertex Shader Module creation Failed.");
+	VkShaderModule FragmentShaderModule = VK_NULL_HANDLE;
+	LoadShaderModule(fragSource, FragmentShaderModule);
 
-	VkShaderModuleCreateInfo FragmentShaderModuleCreateInfo = { VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO };
-	FragmentShaderModuleCreateInfo.codeSize = shaders.fragmentSource.size();
-	FragmentShaderModuleCreateInfo.pCode = (const uint32_t*)shaders.fragmentSource.data();
-
-	VKCall(vkCreateShaderModule(Renderer_Vulkan::Get()->GetDevice(), &FragmentShaderModuleCreateInfo, nullptr, &FragmentShaderModule), "Fragment Shader Module creation Failed.");
-
+	// Vertex shader stage
 	VkPipelineShaderStageCreateInfo VertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
 	VertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
 	VertexShaderStageCreateInfo.module = VertexShaderModule;
 	VertexShaderStageCreateInfo.pName = "main";
-
 	ShaderStageCreateInfos.push_back(VertexShaderStageCreateInfo);
 
+	// Fragment shader stage
 	VkPipelineShaderStageCreateInfo FragmentShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
 	FragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
 	FragmentShaderStageCreateInfo.module = FragmentShaderModule;
 	FragmentShaderStageCreateInfo.pName = "main";
-
 	ShaderStageCreateInfos.push_back(FragmentShaderStageCreateInfo);
-	
+
 	VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;
 	VkFrontFace FrontFace = VK_FRONT_FACE_CLOCKWISE;
-	VkBool32 DepthTestEnable = VK_FALSE;
 
 	// Fixed pipeline stages
 	VkPipelineVertexInputStateCreateInfo VertexInputStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
@@ -228,11 +234,191 @@ void Shader_Vulkan::Init(std::string shaderId)
 	vkDestroyShaderModule(Renderer_Vulkan::Get()->GetDevice(), FragmentShaderModule, nullptr);
 }
 
-void Shader_Vulkan::GenerateShaderBindings(const std::vector<char>& shaderSource)
+void Shader_Vulkan::Init(const std::string& vertexPath, const std::string& fragmentPath)
+{
+	mShaderId = vertexPath;
+
+	auto vertSource = FileHelper::ReadBinaryFile(vertexPath + ".spv");
+	auto fragSource = FileHelper::ReadBinaryFile(fragmentPath + ".spv");
+
+	if (vertSource.empty() || fragSource.empty())
+	{
+		std::cout << "Failed to load SPIR-V shader from paths: " << vertexPath << ", " << fragmentPath << std::endl;
+		return;
+	}
+
+	std::vector<VkPipelineShaderStageCreateInfo> ShaderStageCreateInfos;
+
+	mDescriptorSet = new DescriptorSet_Vulkan();
+
+	GenerateShaderBindings(vertSource, ShaderRegistry::ShaderStage::Vertex);
+	GenerateShaderBindings(fragSource, ShaderRegistry::ShaderStage::Fragment);
+
+	mDescriptorSet->Init();
+
+	VkShaderModule VertexShaderModule = VK_NULL_HANDLE;
+	LoadShaderModule(vertSource, VertexShaderModule);
+
+	VkShaderModule FragmentShaderModule = VK_NULL_HANDLE;
+	LoadShaderModule(fragSource, FragmentShaderModule);
+
+	VkPipelineShaderStageCreateInfo VertexShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
+	VertexShaderStageCreateInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+	VertexShaderStageCreateInfo.module = VertexShaderModule;
+	VertexShaderStageCreateInfo.pName = "main";
+	ShaderStageCreateInfos.push_back(VertexShaderStageCreateInfo);
+
+	VkPipelineShaderStageCreateInfo FragmentShaderStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO };
+	FragmentShaderStageCreateInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+	FragmentShaderStageCreateInfo.module = FragmentShaderModule;
+	FragmentShaderStageCreateInfo.pName = "main";
+	ShaderStageCreateInfos.push_back(FragmentShaderStageCreateInfo);
+
+	VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;
+	VkFrontFace FrontFace = VK_FRONT_FACE_CLOCKWISE;
+
+	VkPipelineVertexInputStateCreateInfo VertexInputStageCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO };
+	VertexInputStageCreateInfo.vertexBindingDescriptionCount = VertexBindingDescs.size();
+	VertexInputStageCreateInfo.pVertexBindingDescriptions = VertexBindingDescs.data();
+	VertexInputStageCreateInfo.vertexAttributeDescriptionCount = VertexAttribDescs.size();
+	VertexInputStageCreateInfo.pVertexAttributeDescriptions = VertexAttribDescs.data();
+
+	VkPrimitiveTopology Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+	VkPipelineInputAssemblyStateCreateInfo InputAssemblyStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO };
+	InputAssemblyStateCreateInfo.topology = Topology;
+	InputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
+
+	VkViewport Viewport;
+	Rect3D RendererViewport = Renderer_Vulkan::Get()->GetViewportSize();
+	Viewport.x = RendererViewport.Offset.x;
+	Viewport.y = RendererViewport.Offset.y;
+	Viewport.width = RendererViewport.Size.x;
+	Viewport.height = RendererViewport.Size.y;
+	Viewport.minDepth = RendererViewport.Depth.x;
+	Viewport.maxDepth = RendererViewport.Depth.y;
+
+	VkRect2D Scissor;
+	Rect2D RendererScissor = Renderer_Vulkan::Get()->GetScissorSize();
+	Scissor.offset.x = RendererViewport.Offset.x;
+	Scissor.offset.y = RendererViewport.Offset.y;
+	Scissor.extent.width = RendererViewport.Size.x;
+	Scissor.extent.height = RendererViewport.Size.y;
+
+	VkPipelineViewportStateCreateInfo ViewportStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO };
+	ViewportStateCreateInfo.viewportCount = 1;
+	ViewportStateCreateInfo.pViewports = &Viewport;
+	ViewportStateCreateInfo.scissorCount = 1;
+	ViewportStateCreateInfo.pScissors = &Scissor;
+
+	VkPipelineTessellationStateCreateInfo TessellationStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO };
+
+	VkPipelineRasterizationStateCreateInfo RasterizationStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO };
+	RasterizationStateCreateInfo.depthClampEnable = VK_FALSE;
+	RasterizationStateCreateInfo.rasterizerDiscardEnable = VK_FALSE;
+	RasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+	RasterizationStateCreateInfo.cullMode = CullMode;
+	RasterizationStateCreateInfo.frontFace = FrontFace;
+	RasterizationStateCreateInfo.depthBiasEnable = VK_FALSE;
+	RasterizationStateCreateInfo.lineWidth = 1.f;
+
+	VkPipelineMultisampleStateCreateInfo MultisampleStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO };
+	MultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+	MultisampleStateCreateInfo.sampleShadingEnable = VK_FALSE;
+	MultisampleStateCreateInfo.minSampleShading = 1.f;
+	MultisampleStateCreateInfo.pSampleMask = nullptr;
+	MultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
+	MultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
+
+	VkPipelineDepthStencilStateCreateInfo DepthStencilStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
+	DepthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
+	DepthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
+	DepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+	DepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+	DepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+	DepthStencilStateCreateInfo.front = VkStencilOpState{};
+	DepthStencilStateCreateInfo.back = VkStencilOpState{};
+
+	VkPipelineColorBlendAttachmentState ColorBlendAttachmentState = {};
+	ColorBlendAttachmentState.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+	ColorBlendAttachmentState.blendEnable = VK_FALSE;
+
+	VkPipelineColorBlendStateCreateInfo ColorBlendStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO };
+	ColorBlendStateCreateInfo.logicOpEnable = VK_FALSE;
+	ColorBlendStateCreateInfo.logicOp = VK_LOGIC_OP_COPY;
+	ColorBlendStateCreateInfo.attachmentCount = 1;
+	ColorBlendStateCreateInfo.pAttachments = &ColorBlendAttachmentState;
+
+	const std::vector<VkDynamicState> DynamicState = {
+		VK_DYNAMIC_STATE_VIEWPORT,
+		VK_DYNAMIC_STATE_SCISSOR,
+		VK_DYNAMIC_STATE_CULL_MODE,
+		VK_DYNAMIC_STATE_FRONT_FACE,
+		VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY,
+		VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE,
+	};
+
+	VkPipelineDynamicStateCreateInfo DynamicStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO };
+	DynamicStateCreateInfo.dynamicStateCount = DynamicState.size();
+	DynamicStateCreateInfo.pDynamicStates = DynamicState.data();
+
+	VkPipelineLayoutCreateInfo PipelineCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+	PipelineCreateInfo.flags = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	PipelineCreateInfo.setLayoutCount = DescriptorSetLayouts.size();
+	PipelineCreateInfo.pSetLayouts = DescriptorSetLayouts.data();
+	PipelineCreateInfo.pushConstantRangeCount = 0;
+	PipelineCreateInfo.pPushConstantRanges = nullptr;
+
+	VKCall(vkCreatePipelineLayout(Renderer_Vulkan::Get()->GetDevice(), &PipelineCreateInfo, nullptr, &mPipelineLayout), "Pipeline Layout creation Failed.");
+
+	VkGraphicsPipelineCreateInfo GraphicsPipeLineCreateInfo = { VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO };
+	GraphicsPipeLineCreateInfo.stageCount = ShaderStageCreateInfos.size();
+	GraphicsPipeLineCreateInfo.pStages = ShaderStageCreateInfos.data();
+	GraphicsPipeLineCreateInfo.pVertexInputState = &VertexInputStageCreateInfo;
+	GraphicsPipeLineCreateInfo.pInputAssemblyState = &InputAssemblyStateCreateInfo;
+	GraphicsPipeLineCreateInfo.pTessellationState = &TessellationStateCreateInfo;
+	GraphicsPipeLineCreateInfo.pViewportState = &ViewportStateCreateInfo;
+	GraphicsPipeLineCreateInfo.pRasterizationState = &RasterizationStateCreateInfo;
+	GraphicsPipeLineCreateInfo.pMultisampleState = &MultisampleStateCreateInfo;
+	GraphicsPipeLineCreateInfo.pDepthStencilState = &DepthStencilStateCreateInfo;
+	GraphicsPipeLineCreateInfo.pColorBlendState = &ColorBlendStateCreateInfo;
+	GraphicsPipeLineCreateInfo.pDynamicState = &DynamicStateCreateInfo;
+	GraphicsPipeLineCreateInfo.layout = mPipelineLayout;
+
+	if (mBoundFramebuffer)
+	{
+		GraphicsPipeLineCreateInfo.renderPass = mBoundFramebuffer->mRenderPass->mRenderPass;
+	}
+	else
+	{
+		const FrameBuffer_Vulkan* VkframeBuffer = static_cast<const FrameBuffer_Vulkan*>(Renderer_Vulkan::Get()->GetBackBuffer());
+		GraphicsPipeLineCreateInfo.renderPass = VkframeBuffer->mRenderPass->mRenderPass;
+	}
+
+	GraphicsPipeLineCreateInfo.subpass = 0;
+	GraphicsPipeLineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
+	GraphicsPipeLineCreateInfo.basePipelineIndex = -1;
+
+	VKCall(vkCreateGraphicsPipelines(Renderer_Vulkan::Get()->GetDevice(), VK_NULL_HANDLE, 1, &GraphicsPipeLineCreateInfo, nullptr, &mPipeline), "Shader Pipeline creation Failed.");
+
+	vkDestroyShaderModule(Renderer_Vulkan::Get()->GetDevice(), VertexShaderModule, nullptr);
+	vkDestroyShaderModule(Renderer_Vulkan::Get()->GetDevice(), FragmentShaderModule, nullptr);
+}
+
+void Shader_Vulkan::LoadShaderModule(const std::vector<char>& shaderSource, VkShaderModule& outModule)
+{
+	VkShaderModuleCreateInfo createInfo = {};
+	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+	createInfo.codeSize = shaderSource.size();
+	createInfo.pCode = (const uint32_t*)shaderSource.data();
+
+	VKCall(vkCreateShaderModule(Renderer_Vulkan::Get()->GetDevice(), &createInfo, nullptr, &outModule), "Shader Module creation Failed.");
+}
+
+void Shader_Vulkan::GenerateShaderBindings(const std::vector<char>& shaderSource, ShaderRegistry::ShaderStage stage)
 {
 	if (shaderSource.size() <= 0)
 	{
-		std::cout << "Shader source is empty" << std::endl;
+		std::cout << "Shader source is empty for " << mShaderId << std::endl;
 		return;
 	}
 
@@ -240,12 +426,12 @@ void Shader_Vulkan::GenerateShaderBindings(const std::vector<char>& shaderSource
 	SpvReflectResult SpvResult = spvReflectCreateShaderModule(shaderSource.size(), shaderSource.data(), &ShaderModule);
 	if (SpvResult != SPV_REFLECT_RESULT_SUCCESS)
 	{
-		std::cout << "Failed to create reflection module for " << string_VkShaderStageFlagBits(static_cast<VkShaderStageFlagBits>(ShaderModule.shader_stage)) << " shader " << mShaderId << std::endl;
+		std::cout << "Failed to create reflection module for " << mShaderId << std::endl;
 		return;
 	}
 
-	// Inputs
-	if (ShaderModule.shader_stage == SPV_REFLECT_SHADER_STAGE_VERTEX_BIT)
+	// Inputs (only vertex shader has vertex inputs)
+	if (stage == ShaderRegistry::ShaderStage::Vertex)
 	{
 		uint32_t InputCount = 0;
 		spvReflectEnumerateInputVariables(&ShaderModule, &InputCount, nullptr);
@@ -281,10 +467,10 @@ void Shader_Vulkan::GenerateShaderBindings(const std::vector<char>& shaderSource
 
 				// Sort attributes by location
 				std::sort(std::begin(VertexAttribDescs), std::end(VertexAttribDescs),
-						  [](const VkVertexInputAttributeDescription& a, const VkVertexInputAttributeDescription& b)
-				{
-					return a.location < b.location;
-				});
+					[](const VkVertexInputAttributeDescription& a, const VkVertexInputAttributeDescription& b)
+					{
+						return a.location < b.location;
+					});
 
 				// Compute final offsets of each attribute, and total vertex stride.
 				for (auto& attribute : VertexAttribDescs)
@@ -322,50 +508,8 @@ void Shader_Vulkan::GenerateShaderBindings(const std::vector<char>& shaderSource
 
 				mDescriptorSet->AddBinding(DescBinding);
 			}
+
+			DescriptorSetLayouts.push_back(mDescriptorSet->DescLayout);
 		}
 	}
 }
-
-/*void Shader_Vulkan::Uses(const FrameBuffer* frameBuffer)
-{
-	mViewPort.x = 0;
-	mViewPort.y = 0;
-	mViewPort.width = frameBuffer->GetWidth();
-	mViewPort.height = frameBuffer->GetHeight();
-	mViewPort.minDepth = 0.0f;
-	mViewPort.maxDepth = 1.0f;
-
-	mScissorRect.offset = { 0,0 };
-	mScissorRect.extent.width = frameBuffer->GetWidth();
-	mScissorRect.extent.height = frameBuffer->GetHeight();
-
-	mBoundFramebuffer = static_cast<const FrameBuffer_Vulkan*>(frameBuffer);
-}
-
-void Shader_Vulkan::Uses(const UniformBuffer* uniformBuffer, unsigned int binding)
-{
-	const UniformBuffer_Vulkan* VkUbo = static_cast<const UniformBuffer_Vulkan*>(uniformBuffer);
-	RenderingFactory_Vulkan* VkFactory = static_cast<RenderingFactory_Vulkan*>(RenderingFactory::Instance());
-	if (VkUbo && VkFactory)
-	{
-		mDescriptorSet = VkFactory->AllocateDescriptorSet(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, binding);
-
-		VkDescriptorBufferInfo UboDescBufferInfo = {};
-		UboDescBufferInfo.buffer = VkUbo->UboInfo.Buffer;
-		UboDescBufferInfo.offset = 0;
-		UboDescBufferInfo.range = VkUbo->UboInfo.Size;
-
-		VkWriteDescriptorSet UboWriteDesc = { VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET };
-		UboWriteDesc.dstSet = mDescriptorSet->DescSet;
-		UboWriteDesc.dstBinding = binding;
-		UboWriteDesc.dstArrayElement = 0;
-		UboWriteDesc.descriptorCount = 1;
-		UboWriteDesc.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		UboWriteDesc.pBufferInfo = &UboDescBufferInfo;
-
-		vkUpdateDescriptorSets(Renderer_Vulkan::Get()->GetDevice(), 1, &UboWriteDesc, 0, nullptr);
-
-		DescriptorSetLayouts.push_back(mDescriptorSet->DescLayout);
-		const_cast<UniformBuffer_Vulkan*>(VkUbo)->PipelineLayout = &mPipelineLayout;
-	}
-}*/

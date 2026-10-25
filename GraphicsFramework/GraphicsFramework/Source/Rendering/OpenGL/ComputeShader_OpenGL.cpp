@@ -1,3 +1,10 @@
+/* Start Header -------------------------------------------------------
+Copyright (C) 2018-2019 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the prior
+written consent of DigiPen Institute of Technology is prohibited.
+Author: Sidhant Tumma
+- End Header --------------------------------------------------------*/
+
 #include "ComputeShader_OpenGL.h"
 
 #include "Core/Core.h"
@@ -5,7 +12,7 @@
 #include "Utils/FileHelper.h"
 #include "Rendering/OpenGL/Texture_OpenGL.h"
 
-ComputeShader_OpenGL::ComputeShader_OpenGL() 
+ComputeShader_OpenGL::ComputeShader_OpenGL()
 	: m_RendererID(0)
 {
 	GLCall(m_RendererID = glCreateProgram());
@@ -13,6 +20,7 @@ ComputeShader_OpenGL::ComputeShader_OpenGL()
 
 ComputeShader_OpenGL::~ComputeShader_OpenGL()
 {
+	GLCall(glDeleteProgram(m_RendererID));
 }
 
 unsigned int ComputeShader_OpenGL::CompileShader(unsigned int type, const std::vector<char>& Source)
@@ -27,22 +35,34 @@ unsigned int ComputeShader_OpenGL::CompileShader(unsigned int type, const std::v
 	if (result == GL_FALSE)
 	{
 		int length;
-		GLCall(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
+		GLCall(glGetShaderiv(id, GL_COMPILE_STATUS, &length));
 		char* message = (char*)alloca(length * sizeof(char));
 		GLCall(glGetShaderInfoLog(id, length, &length, message));
-		std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex " : "fragment ") << "shader" << std::endl;
+		std::cout << "Failed to compile compute shader" << std::endl;
 		std::cout << message << std::endl;
+		glDeleteShader(id);
 		return 0;
 	}
 
 	return id;
 }
 
-void ComputeShader_OpenGL::SetShader(std::string path)
+void ComputeShader_OpenGL::Init(int32_t shaderId)
 {
-	m_ShaderFilePath = path;
+	const auto& path = ShaderRegistry::Instance()->GetGLSLComputePath(shaderId);
 	std::vector<char> shaderSource = FileHelper::ReadFile(path);
-	unsigned int shader = CompileShader(GL_COMPUTE_SHADER,shaderSource);
+
+	if (shaderSource.empty())
+	{
+		std::cout << "Failed to load compute shader source for ID: " << shaderId << std::endl;
+		return;
+	}
+
+	unsigned int shader = CompileShader(GL_COMPUTE_SHADER, shaderSource);
+	if (shader == 0)
+	{
+		return;
+	}
 
 	GLCall(glAttachShader(m_RendererID, shader));
 	GLCall(glLinkProgram(m_RendererID));
@@ -55,19 +75,60 @@ void ComputeShader_OpenGL::SetShader(std::string path)
 		GLCall(glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &length));
 		char* message = (char*)alloca(length * sizeof(char));
 		GLCall(glGetProgramInfoLog(m_RendererID, length, &length, message));
-		std::cout << "Failed to link " << std::endl;
+		std::cout << "Failed to link compute shader: " << path << std::endl;
 		std::cout << message << std::endl;
+	}
+	else
+	{
+		GLCall(glValidateProgram(m_RendererID));
+	}
+
+	GLCall(glDeleteShader(shader));
+}
+
+void ComputeShader_OpenGL::Init(const std::string& filePath)
+{
+	std::vector<char> shaderSource = FileHelper::ReadFile(filePath);
+
+	if (shaderSource.empty())
+	{
+		std::cout << "Failed to load compute shader from path: " << filePath << std::endl;
 		return;
 	}
 
-	GLCall(glValidateProgram(m_RendererID));
+	unsigned int shader = CompileShader(GL_COMPUTE_SHADER, shaderSource);
+	if (shader == 0)
+	{
+		return;
+	}
+
+	GLCall(glAttachShader(m_RendererID, shader));
+	GLCall(glLinkProgram(m_RendererID));
+
+	int result;
+	GLCall(glGetProgramiv(m_RendererID, GL_LINK_STATUS, &result));
+	if (result == GL_FALSE)
+	{
+		int length;
+		GLCall(glGetProgramiv(m_RendererID, GL_INFO_LOG_LENGTH, &length));
+		char* message = (char*)alloca(length * sizeof(char));
+		GLCall(glGetProgramInfoLog(m_RendererID, length, &length, message));
+		std::cout << "Failed to link compute shader" << std::endl;
+		std::cout << message << std::endl;
+	}
+	else
+	{
+		GLCall(glValidateProgram(m_RendererID));
+	}
 
 	GLCall(glDeleteShader(shader));
 }
 
 void ComputeShader_OpenGL::Run(unsigned int groupX, unsigned int groupY, unsigned int groupZ) const
 {
+	GLCall(glUseProgram(m_RendererID));
 	GLCall(glDispatchCompute(groupX, groupY, groupZ));
+	GLCall(glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_COMMAND_BARRIER_BIT));
 }
 
 void ComputeShader_OpenGL::SetInputUniformImage(std::string name, const Texture* texture, unsigned int imageUnit, unsigned int channels) const

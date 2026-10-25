@@ -3,7 +3,7 @@
 #include "Core/Core.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
-#include "Rendering/ShaderManager.h"
+#include "UnitTestShaderID.h"
 #include "Core/Window.h"
 
 struct UniformBufferTestMatrices
@@ -53,7 +53,7 @@ void UniformBufferTest::Init()
 	UBuffer->Init(sizeof(UniformBufferTestMatrices), UboBinding, &UboMatrixData);
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Init("UNIFORMBUFFER_TEST");
+	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::UNIFORMBUFFER_TEST));
 
 	RunTime = 0.f;
 	RotateX = false;

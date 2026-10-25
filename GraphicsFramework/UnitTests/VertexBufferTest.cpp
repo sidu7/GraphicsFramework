@@ -3,7 +3,7 @@
 #include "Core/Core.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
-#include "Rendering/ShaderManager.h"
+#include "UnitTestShaderID.h"
 
 struct Vertex
 {
@@ -29,7 +29,7 @@ void VertexBufferTest::Init()
 	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(Vertex)));
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Init("VERTEXBUFFER_TEST");
+	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::VERTEXBUFFER_TEST));
 
 	TestTime = 0.0f;
 }

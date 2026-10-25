@@ -12,7 +12,6 @@ typedef std::function<void()> NextFrameFunc;
 struct Settings
 {
 	glm::ivec2 mWindowSize;
-	std::string mShadersListPath;
 
 	uint32_t mTransformBindingPoint;
 	uint32_t mMaterialBindingPoint;

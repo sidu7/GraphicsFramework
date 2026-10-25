@@ -3,12 +3,12 @@
 #include "Core/Core.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
-#include "Rendering/ShaderManager.h"
+#include "UnitTestShaderID.h"
 
 void ShaderTest::Init()
 {
 	BasicShader = RenderingFactory::Instance()->CreateShader();
-	BasicShader->Init("SHADER_TEST");
+	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::SHADER_TEST));
 }
 
 void ShaderTest::Close()

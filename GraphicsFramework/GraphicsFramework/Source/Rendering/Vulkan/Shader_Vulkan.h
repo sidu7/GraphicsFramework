@@ -8,6 +8,7 @@ Author: Sidhant Tumma
 #pragma once
 
 #include "Rendering/Shader.h"
+#include "Rendering/ShaderRegistry.h"
 
 #include "Rendering/Vulkan/Renderer_Vulkan.h"
 
@@ -19,14 +20,16 @@ public:
 	Shader_Vulkan();
 	virtual ~Shader_Vulkan();
 
-	virtual void Init(std::string shaderId) override;
+	virtual void Init(int32_t shaderId) override;
+	virtual void Init(const std::string& vertexPath, const std::string& fragmentPath) override;
 
 	VkPipeline mPipeline;
 	VkPipelineLayout mPipelineLayout;
 	DescriptorSet_Vulkan* mDescriptorSet;
 
 protected:
-	void GenerateShaderBindings(const std::vector<char>& shaderSource);
+	void GenerateShaderBindings(const std::vector<char>& shaderSource, ShaderRegistry::ShaderStage stage);
+	void LoadShaderModule(const std::vector<char>& shaderSource, VkShaderModule& outModule);
 
 	std::vector<VkDescriptorSetLayout> DescriptorSetLayouts;
 	std::vector<VkVertexInputBindingDescription> VertexBindingDescs;

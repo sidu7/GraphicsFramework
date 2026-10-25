@@ -15,16 +15,17 @@ class VertexBuffer;
 class IndexBuffer;
 class FrameBuffer;
 
-struct ShaderSource
-{
-	std::vector<char> vertexSource;
-	std::vector<char> fragmentSource;
-};
-
+// Shader base class.
+// Applications register shaders with an int32_t ID (typically from a local enum)
+// and pass that ID to Init(). The registry resolves paths for both OpenGL and Vulkan.
 class Shader
 {
 public:
 	virtual ~Shader() {}
 
-	virtual void Init(std::string shaderId) = 0;
+	// Initialize from ShaderRegistry by ID (preferred — enum-based in application)
+	virtual void Init(int32_t shaderId) = 0;
+
+	// Initialize from raw file paths (legacy/direct path, for projects that bypass registry)
+	virtual void Init(const std::string& vertexPath, const std::string& fragmentPath) = 0;
 };

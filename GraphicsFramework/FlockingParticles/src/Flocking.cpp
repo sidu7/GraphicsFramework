@@ -14,6 +14,7 @@
 #include "Rendering/Renderer.h"
 #include "Rendering/RenderingFactory.h"
 #include "Rendering/UniformBuffer.h"
+#include "Rendering/ShaderRegistry.h"
 #include "Utils/Random.h"
 #include "Utils/JSONHelper.h"
 
@@ -22,6 +23,13 @@
 #include "Obstacle.h"
 
 const float PI = 22.0f / 7.0f;
+
+// FlockingParticles project-local shader IDs
+enum class FlockingShaderID : int32_t
+{
+	NONE = 0,
+	DRAWING,
+};
 
 Flocking::~Flocking()
 {
@@ -36,6 +44,13 @@ void Flocking::Close()
 
 void Flocking::Init()
 {
+	// Initialize shader registry before creating shaders
+	ShaderRegistry::Instance()->Init("res/shaders/", [](ShaderRegistry* reg) {
+		reg->RegisterShader(static_cast<int32_t>(FlockingShaderID::DRAWING),
+							"Drawing.vert", "Drawing.frag",
+							"", "");
+	});
+
 	mLight = new Light(glm::vec3(10.0, 100.0, 40.0));
 
 	Renderer::Instance()->SetClearColor(glm::vec3(0.461305, 0.627375, 0.627375));
@@ -47,7 +62,7 @@ void Flocking::Init()
 	Engine::Instance()->GetCamera()->CalculateFront();
 
 	mShader = RenderingFactory::Instance()->CreateShader();
-	mShader->Init("DRAWING");
+	mShader->Init(static_cast<int32_t>(FlockingShaderID::DRAWING));
 
 	mAvoidDistance = 2.0f;
 	
@@ -359,11 +374,11 @@ void Flocking::AddBoxObstacle(Transform* transform,float avoidDistance, bool out
 	
 	mObstacles.push_back(new Wall(transform->mPosition + glm::vec3(0.0f, -scale.y, 0.0f), 
 		sign * glm::vec3(0.0f, 1.0f, 0.0f), avoidDistance, !outwardNormals,
-		outwardNormals ? glm::vec3(scale.x, 0.0f, scale.z) : glm::vec3(std::numeric_limits<float>::max())));
+		outwardNormals ? glm::vec3(scale.x, 0.0f, scale.z) : glm::vec3(0.0f)));
 	
 	mObstacles.push_back(new Wall(transform->mPosition + glm::vec3(0.0f, 0.0f, scale.z), 
 		sign * glm::vec3(0.0f, 0.0f, -1.0f), avoidDistance, !outwardNormals,
-		outwardNormals ? glm::vec3(scale.x, scale.y, 0.0f) : glm::vec3(std::numeric_limits<float>::max())));
+		outwardNormals ? glm::vec3(scale.x, scale.y, 0.0f) : glm::vec3(0.0f)));
 	
 	mObstacles.push_back(new Wall(transform->mPosition + glm::vec3(0.0f, 0.0f, -scale.z), 
 		sign * glm::vec3(0.0f, 0.0f, 1.0f), avoidDistance, !outwardNormals,
