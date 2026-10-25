@@ -1,5 +1,5 @@
 #include "Flock.h"
-
+#include "Core/ComponentFactory.h"
 #include "Core/Engine.h"
 #include "Core/ShapeManager.h"
 #include "Core/Object.h"
@@ -10,6 +10,17 @@
 #include "Utils/MathHelper.h"
 
 #include <glm/gtx/quaternion.hpp>
+
+void RegisterFlockComponent();
+
+static const bool g_FlockRegistrarDummy = []() { RegisterFlockComponent(); return true; }();
+
+static void RegisterFlockComponent()
+{
+    ComponentFactory::Instance()->Register("Flock",
+        []() { return new Flock(); },
+        std::type_index(typeid(Flock)));
+}
 
 NeighboursData::NeighboursData() : mFlockHeading(glm::vec3(0.0f)), mFlockCenter(glm::vec3(0.0f)), mAvoidanceDirection(glm::vec3(0.0f))
 {
@@ -22,17 +33,21 @@ void NeighboursData::Clear()
 	mAvoidanceDirection = glm::vec3(0.0f);
 }
 
-Flock::Flock() : 
-	mNormal(glm::vec3(0.0f, 1.0f, 0.0f)), 
-	mVelocity(glm::vec3(0.0f)), 
-	mPreviousVelocity(glm::vec3(0.0f)), 
-	mFront(glm::vec3(0.0f, 0.0f, 1.0f)), 
-	mMinSpeed(1.0f), mMaxSpeed(10.0f), 
-	mAcceleration(glm::vec3(0.0f))
-{}
+void Flock::Init(Object* owner)
+{
+	mOwner = owner;
+	mNormal = glm::vec3(0.0f, 1.0f, 0.0f);
+	mVelocity = glm::vec3(0.0f);
+	mPreviousVelocity = glm::vec3(0.0f);
+	mFront = glm::vec3(0.0f, 0.0f, 1.0f);
+	mMinSpeed = 1.0f;
+	mMaxSpeed = 10.0f;
+	mAcceleration = glm::vec3(0.0f);
+}
 
-Flock::~Flock()
-{}
+void Flock::Destroy()
+{
+}
 
 void Flock::Update()
 {

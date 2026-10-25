@@ -4,7 +4,6 @@
 
 class Move : public Component
 {
-	COMPONENT(Move);
 public:
 	float mTime;
 	float mSpeed;

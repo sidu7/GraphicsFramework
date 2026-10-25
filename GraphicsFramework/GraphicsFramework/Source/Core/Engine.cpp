@@ -21,7 +21,7 @@
 #include "Scene.h"
 #include "ImguiManager.h"
 #include "ObjectManager.h"
-#include "ComponentManager.h"
+#include "ComponentFactory.h"
 #include "Utils/JSONHelper.h"
 
 void Engine::Start(const std::string& settingsFilePath)
@@ -47,7 +47,7 @@ void Engine::Start(const std::string& settingsFilePath)
 	Time::Instance()->Init(60);
 	ShapeManager::Instance()->Init();
 	ImguiManager::Instance()->Init();
-	ComponentManager::Instance()->Init();
+	ComponentFactory::Instance()->Init();
 
 	pCamera = new Camera();
 	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
@@ -108,7 +108,6 @@ void Engine::Stop()
 	}
 	ObjectManager::Instance()->Close();
 	ShapeManager::Instance()->Close();
-	ComponentManager::Instance()->Close();
 	ImguiManager::Instance()->Close();
 	Renderer::Instance()->Close();
 	std::cout << "Window closed" << std::endl;

@@ -1,40 +1,37 @@
 #pragma once
 #include <rapidjson/document.h>
-#include "../ComponentManager.h"
 #include <glm/glm.hpp>
 #include <typeindex>
 #include <string>
 
 class Object;
-class Shader;
-
-#define COMPONENT(x) public:										\
-					std::type_index GetIndex()						\
-					{												\
-						return std::type_index(typeid(x));			\
-					}												\
-					private:										\
-					x* New()										\
-					{												\
-						return new x();								\
-					}
+class ComponentFactory;
 
 class Component
 {
+    friend class ComponentFactory;
+    friend class Object;
+
 public:
-	Object* mOwner;
+    Component() = default;
+    virtual ~Component() = default;
 
-	Component() : mOwner(nullptr) {}
-	Component(std::string name);
-	virtual ~Component() {}
-	
-	virtual void Update() {}
-	virtual void Serialize(rapidjson::Value::Object data) = 0;
-	virtual Component* New() = 0;
-	virtual std::type_index GetIndex() = 0;
+    // Lifecycle — called after engine is ready
+    virtual void Init(Object* owner) {}
+    virtual void Destroy() {}
+    virtual void Update() {}
+
+    // Serialization (reads JSON into component data)
+    virtual void Serialize(rapidjson::Value::Object data) = 0;
+
+    // Accessors
+    Object* GetOwner() const { return mOwner; }
+    std::type_index GetTypeInfo() const { return mTypeIndex; }
+    std::type_index GetIndex() { return mTypeIndex; }
+
+protected:
+    void SetTypeInfo(std::type_index typeInfo) { mTypeIndex = typeInfo; }
+
+    Object*  mOwner = nullptr;
+    std::type_index mTypeIndex{ std::type_index(typeid(void)) };
 };
-
-inline Component::Component(std::string name)
-{
-	ComponentManager::Instance()->mComponentsMap[name] = this;
-}

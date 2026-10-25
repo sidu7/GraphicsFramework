@@ -2,6 +2,7 @@
 #include "Utils/JSONHelper.h"
 #include "ShapeManager.h"
 #include "Components/Components.h"
+#include "ComponentFactory.h"
 #include "Rendering/Renderer.h"
 #include "Components/Transform.h"
 #include "Components/Material.h"
@@ -35,7 +36,7 @@ void Object::Serialize(const rapidjson::Value::Object& data)
 	for (unsigned int i = 0; i < components.Size(); ++i)
 	{
 		std::string type = components[i]["Type"].GetString();
-		Component* component = ComponentManager::Instance()->NewComponent(type);
+		Component* component = ComponentFactory::Instance()->Create(type);
 		component->Serialize(components[i].GetObject());
 		component->mOwner = this;
 		AddComponent(component);		

@@ -13,13 +13,16 @@ struct NeighboursData
 
 class Flock : public Component
 {
-	COMPONENT(Flock);
 public:
+	Flock() = default;
+	~Flock() = default;
+
+	void Init(Object* owner) override;
+	void Destroy() override;
+
 	void Update() override;
 	void Serialize(rapidjson::Value::Object data) override;
 
-	Flock();
-	virtual ~Flock();
 
 	glm::vec3 mNormal;
 	glm::vec3 mVelocity;

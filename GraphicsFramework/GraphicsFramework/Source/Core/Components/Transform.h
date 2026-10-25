@@ -13,7 +13,6 @@ struct ObjectMatricesUBO
 
 class Transform : public Component
 {
-	COMPONENT(Transform);
 public:
 	Transform();
 	~Transform();

@@ -8,7 +8,6 @@ struct ShapeData;
 
 class Shape : public Component
 {
-	COMPONENT(Shape);
 public:
 	Shape();
 

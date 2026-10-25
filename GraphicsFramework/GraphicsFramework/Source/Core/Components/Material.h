@@ -14,7 +14,6 @@ struct MaterialDataUBO
 
 class Material : public Component
 {
-	COMPONENT(Material);
 public:
 	glm::vec3 mDiffuse;
 	glm::vec3 mDebugColor;
