@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 	Application* App = CreateApplication();
 	
 	CommandLine::Instance()->Init(argc, argv);
-	Engine::Instance()->Start(App->GetSettingsFilePath());	
+	Engine::Instance()->Start(App->GetSettingsFilePath());
 	App->Init();
 	Engine::Instance()->Run();
 	App->Close();

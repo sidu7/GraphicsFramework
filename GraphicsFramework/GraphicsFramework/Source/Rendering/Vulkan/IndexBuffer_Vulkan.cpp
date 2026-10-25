@@ -10,12 +10,38 @@ IndexBuffer_Vulkan::IndexBuffer_Vulkan() :
 
 IndexBuffer_Vulkan::~IndexBuffer_Vulkan()
 {
-	vkFreeMemory(Renderer_Vulkan::Get()->GetDevice(), StagingBufferInfo.BufferMemory, nullptr);
-	vkDestroyBuffer(Renderer_Vulkan::Get()->GetDevice(), StagingBufferInfo.Buffer, nullptr);
+	Delete();
+}
+
+void IndexBuffer_Vulkan::Delete()
+{
+	RenderingFactory_Vulkan* VulkanFactory = static_cast<RenderingFactory_Vulkan*>(RenderingFactory::Instance());
+	if (!VulkanFactory) return;
+
+	VkDevice device = VulkanFactory->GetDevice();
+
+	if (StagingBufferInfo.Buffer != VK_NULL_HANDLE)
+	{
+		vkDestroyBuffer(device, StagingBufferInfo.Buffer, nullptr);
+		StagingBufferInfo.Buffer = VK_NULL_HANDLE;
+	}
+	if (StagingBufferInfo.BufferMemory != VK_NULL_HANDLE)
+	{
+		vkFreeMemory(device, StagingBufferInfo.BufferMemory, nullptr);
+		StagingBufferInfo.BufferMemory = VK_NULL_HANDLE;
+	}
 	StagingBufferInfo.MappedMemory = nullptr;
 
-	vkFreeMemory(Renderer_Vulkan::Get()->GetDevice(), MainBufferInfo.BufferMemory, nullptr);
-	vkDestroyBuffer(Renderer_Vulkan::Get()->GetDevice(), MainBufferInfo.Buffer, nullptr);
+	if (MainBufferInfo.Buffer != VK_NULL_HANDLE)
+	{
+		vkDestroyBuffer(device, MainBufferInfo.Buffer, nullptr);
+		MainBufferInfo.Buffer = VK_NULL_HANDLE;
+	}
+	if (MainBufferInfo.BufferMemory != VK_NULL_HANDLE)
+	{
+		vkFreeMemory(device, MainBufferInfo.BufferMemory, nullptr);
+		MainBufferInfo.BufferMemory = VK_NULL_HANDLE;
+	}
 	MainBufferInfo.MappedMemory = nullptr;
 }
 

@@ -13,6 +13,8 @@ class IndexBuffer
 public:
 	virtual ~IndexBuffer() {}
 
+	virtual void Delete() {}
+
 	virtual void AddData(const void* data, unsigned int count, IndexType type) = 0;
 	virtual inline unsigned int GetCount() const = 0;
 

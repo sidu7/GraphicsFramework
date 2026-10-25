@@ -10,7 +10,11 @@ IndexBuffer_OpenGL::IndexBuffer_OpenGL()
 
 IndexBuffer_OpenGL::~IndexBuffer_OpenGL()
 {
-	GLCall(glDeleteBuffers(1, &m_RendererID));
+	if (m_RendererID)
+	{
+		GLCall(glDeleteBuffers(1, &m_RendererID));
+	}
+	m_RendererID = 0;
 }
 
 void IndexBuffer_OpenGL::AddData(const void* data, unsigned int count, IndexType type)

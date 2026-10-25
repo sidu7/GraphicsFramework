@@ -18,7 +18,7 @@ Application* CreateApplication()
 
 std::string UnitTestApplication::GetSettingsFilePath()
 {
-	return "Settings.json";
+	return "res/Settings.json";
 }
 
 void UnitTestApplication::Init()

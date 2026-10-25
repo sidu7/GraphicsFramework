@@ -17,7 +17,7 @@ public:
 	virtual ~VertexBuffer_Vulkan();
 	
 	virtual void SetDataLayout(const std::vector<VertexFormat>& vertexFormats) override;
-	virtual void Delete() const override;
+	virtual void Delete() override;
 
 	virtual void AddData(const void* data,unsigned int size) override;
 	virtual void AddSubData(const void* data, unsigned int size, unsigned offset = 0) override;

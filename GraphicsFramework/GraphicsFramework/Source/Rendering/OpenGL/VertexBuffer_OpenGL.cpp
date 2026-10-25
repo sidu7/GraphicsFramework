@@ -45,6 +45,9 @@ void VertexBuffer_OpenGL::SetDataLayout(const std::vector<VertexFormat>& vertexF
 {
 	Renderer::Instance()->BindVertexBuffer(this);
 
+	mStride = 0;
+	mVertexLayouts.clear();
+
 	uint16_t Offset = 0;
 
 	for (VertexFormat format : vertexFormats)
@@ -110,8 +113,13 @@ void VertexBuffer_OpenGL::SetDataLayout(const std::vector<VertexFormat>& vertexF
 	Renderer::Instance()->UnbindVertexBuffer(this);
 }
 
-void VertexBuffer_OpenGL::Delete() const
+void VertexBuffer_OpenGL::Delete()
 {
-	GLCall(glDeleteVertexArrays(1, &m_VertexArrayID));
-	GLCall(glDeleteBuffers(1, &m_VertexBufferID));
+	if (m_VertexBufferID || m_VertexArrayID)
+	{
+		GLCall(glDeleteVertexArrays(1, &m_VertexArrayID));
+		GLCall(glDeleteBuffers(1, &m_VertexBufferID));
+	}
+	m_VertexBufferID = 0;
+	m_VertexArrayID = 0;
 }

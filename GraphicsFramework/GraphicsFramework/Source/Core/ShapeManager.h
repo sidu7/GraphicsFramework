@@ -33,11 +33,28 @@ struct ShapeData
 
 class ShapeManager : public Singleton<ShapeManager>
 {
-public:	
+public:
+	ShapeManager() = default;
+	~ShapeManager();
+
+	// Prevent double-initialization
 	void Init();
 	void Close();
+
 	std::vector<ShapeData> mShapes;
 
 private:
-	void MakeVAO(std::vector<Vertex> vertices, std::vector<uint16_t> indices, Shapes shape);
+	// Per-shape helpers
+	void CreateLine();
+	void CreateWireCube();
+	void CreatePyramid();
+	void CreateQuad();
+	void CreateCube();
+	void CreateSphere();
+	void CreateTeapot();
+
+	// Shared VAO creation (takes data by const reference to avoid copies)
+	void MakeVAO(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, Shapes shape);
+
+	bool mInitialized = false;
 };

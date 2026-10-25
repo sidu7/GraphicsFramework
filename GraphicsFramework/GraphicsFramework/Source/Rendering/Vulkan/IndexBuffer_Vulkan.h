@@ -7,7 +7,9 @@ class IndexBuffer_Vulkan : public IndexBuffer
 {
 public:
 	IndexBuffer_Vulkan();
-	~IndexBuffer_Vulkan();
+	~IndexBuffer_Vulkan() override;
+
+	virtual void Delete() override;
 
 	virtual void AddData(const void* data, unsigned int count, IndexType type) override;
 	virtual inline unsigned int GetCount() const override { return m_Count; }

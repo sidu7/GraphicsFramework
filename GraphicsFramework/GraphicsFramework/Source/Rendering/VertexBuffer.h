@@ -40,7 +40,7 @@ public:
 	virtual ~VertexBuffer() {}
 
 	virtual void SetDataLayout(const std::vector<VertexFormat>& vertexFormats) = 0;
-	virtual void Delete() const = 0;
+	virtual void Delete() = 0;
 
 	virtual void AddData(const void* data, unsigned int size) = 0;
 	virtual void AddSubData(const void* data, unsigned int size, unsigned offset = 0) = 0;
