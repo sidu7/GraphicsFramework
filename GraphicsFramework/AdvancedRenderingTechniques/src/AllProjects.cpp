@@ -5,7 +5,6 @@
 #include "Rendering/FrameBuffer.h"
 #include "Rendering/UniformBuffer.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 
 #include "Core/Light.h"
 #include "Core/Engine.h"
@@ -38,42 +37,42 @@ AllProjects::~AllProjects()
 
 void AllProjects::Init()
 {
-	baseShader = RenderingFactory::Instance()->CreateShader();
+	baseShader = Renderer::Instance()->CreateShader();
 	baseShader->Init(static_cast<int32_t>(AppShaderID::DRAWING));
 
-	lighting = RenderingFactory::Instance()->CreateShader(); 
+	lighting = Renderer::Instance()->CreateShader(); 
 	lighting->Init(static_cast<int32_t>(AppShaderID::LIGHTING));
 
-	ambient = RenderingFactory::Instance()->CreateShader(); 
+	ambient = Renderer::Instance()->CreateShader(); 
 	ambient->Init(static_cast<int32_t>(AppShaderID::AMBIENT));
 
-	ambientNoAO = RenderingFactory::Instance()->CreateShader();
+	ambientNoAO = Renderer::Instance()->CreateShader();
 	ambientNoAO->Init(static_cast<int32_t>(AppShaderID::AMBIENT_NO_AO));
 
-	shadow = RenderingFactory::Instance()->CreateShader(); 
+	shadow = Renderer::Instance()->CreateShader(); 
 	shadow->Init(static_cast<int32_t>(AppShaderID::SHADOW));
 
-	locallight = RenderingFactory::Instance()->CreateShader(); 
+	locallight = Renderer::Instance()->CreateShader(); 
 	locallight->Init(static_cast<int32_t>(AppShaderID::LOCAL_LIGHT));
 
-	globalMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
+	globalMatrices = Renderer::Instance()->CreateUniformBuffer();
 	globalMatrices->Init(sizeof(Matrices), 2);
 
-	shadowMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
+	shadowMatrices = Renderer::Instance()->CreateUniformBuffer();
 	shadowMatrices->Init(sizeof(Matrices), 2);
 
-	lightDataUbo = RenderingFactory::Instance()->CreateUniformBuffer();
+	lightDataUbo = Renderer::Instance()->CreateUniformBuffer();
 	lightDataUbo->Init(sizeof(LightData), 4);
 
-	lightDynamicDataUbo = RenderingFactory::Instance()->CreateUniformBuffer();
+	lightDynamicDataUbo = Renderer::Instance()->CreateUniformBuffer();
 	lightDynamicDataUbo->Init(sizeof(DynamicLightData), 6);
 	
-	localLightDataUbo = RenderingFactory::Instance()->CreateUniformBuffer();
+	localLightDataUbo = Renderer::Instance()->CreateUniformBuffer();
 	localLightDataUbo->Init(sizeof(LocalLightData), 4);
 
-	blurHorizontal = RenderingFactory::Instance()->CreateComputeShader(); 
+	blurHorizontal = Renderer::Instance()->CreateComputeShader(); 
 	blurHorizontal->Init(static_cast<int32_t>(AppComputeID::BLUR_HORIZONTAL));
-	blurVertical = RenderingFactory::Instance()->CreateComputeShader(); 
+	blurVertical = Renderer::Instance()->CreateComputeShader(); 
 	blurVertical->Init(static_cast<int32_t>(AppComputeID::BLUR_VERTICAL));
 
 	light = new Light(glm::vec3(100.0f, 200.0f, 10.0f));
@@ -88,9 +87,9 @@ void AllProjects::Init()
 
 	showAO = true;
 
-	G_Buffer = RenderingFactory::Instance()->CreateFrameBuffer(); 
+	G_Buffer = Renderer::Instance()->CreateFrameBuffer(); 
 	G_Buffer->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), ImageFormat::RGBA32F, 4);
-	ShadowMap = RenderingFactory::Instance()->CreateFrameBuffer(); 
+	ShadowMap = Renderer::Instance()->CreateFrameBuffer(); 
 	ShadowMap->Init(1024, 1024, ImageFormat::RGBA32F);
 
 	lightData.ShowGBuffer = 0;
@@ -122,23 +121,23 @@ void AllProjects::Init()
 	}
 	std::cout << "Weights total:" << sum << std::endl;
 
-	block = RenderingFactory::Instance()->CreateUniformBuffer(); 
+	block = Renderer::Instance()->CreateUniformBuffer(); 
 	block->Init(MAX_BLUR_WEIGHTS_NUM * sizeof(float), 5);
 
 	lightData.BiasAlpha = 0.057f;
 
 	// Shadow blur
-	horizontalBlurred = RenderingFactory::Instance()->CreateTexture();
+	horizontalBlurred = Renderer::Instance()->CreateTexture();
 	horizontalBlurred->Init(ImageFormat::RGBA32F, ShadowMap->GetWidth(), ShadowMap->GetHeight());
-	blurredShadowMap = RenderingFactory::Instance()->CreateTexture(); 
+	blurredShadowMap = Renderer::Instance()->CreateTexture(); 
 	blurredShadowMap->Init(ImageFormat::RGBA32F, ShadowMap->GetWidth(), ShadowMap->GetHeight());
 
 	//SkyDome shaders
-	skyDomeShader = RenderingFactory::Instance()->CreateShader(); 
+	skyDomeShader = Renderer::Instance()->CreateShader(); 
 	skyDomeShader->Init(static_cast<int32_t>(AppShaderID::SKYDOME));
-	skyDomeTexture = RenderingFactory::Instance()->CreateTexture(); 
+	skyDomeTexture = Renderer::Instance()->CreateTexture(); 
 	skyDomeTexture->Init("res/Textures/popDome.hdr");
-	skyDomeIrradiance = RenderingFactory::Instance()->CreateTexture(); 
+	skyDomeIrradiance = Renderer::Instance()->CreateTexture(); 
 	skyDomeIrradiance->Init("res/Textures/popDomeIrr.hdr");
 	lightData.Exposure = 5.2f;
 	lightData.Contrast = 1.0f;
@@ -146,24 +145,24 @@ void AllProjects::Init()
 	// IBL
 	Hblock.N = HBlockSize;
 	HammersleyRandomPoints();
-	HUniBlock = RenderingFactory::Instance()->CreateUniformBuffer(); 
+	HUniBlock = Renderer::Instance()->CreateUniformBuffer(); 
 	HUniBlock->Init(sizeof(Hblock), 5);
 	HUniBlock->AddData(sizeof(Hblock), &Hblock);
 	lightData.ShowIBLDiffuse = true;
 	lightData.ShowIBLSpecular = true;
 
 	//SSAO
-	AOShader = RenderingFactory::Instance()->CreateShader(); 
+	AOShader = Renderer::Instance()->CreateShader(); 
 	AOShader->Init(static_cast<int32_t>(AppShaderID::AMBIENT_OCCLUSION));
-	BlurredAO = RenderingFactory::Instance()->CreateFrameBuffer(); 
+	BlurredAO = Renderer::Instance()->CreateFrameBuffer(); 
 	BlurredAO->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), ImageFormat::RGBA32F);
-	BilateralHorizontal = RenderingFactory::Instance()->CreateComputeShader(); 
+	BilateralHorizontal = Renderer::Instance()->CreateComputeShader(); 
 	BilateralHorizontal->Init(static_cast<int32_t>(AppComputeID::BILATERAL_HORIZONTAL));
-	BilateralVertical = RenderingFactory::Instance()->CreateComputeShader(); 
+	BilateralVertical = Renderer::Instance()->CreateComputeShader(); 
 	BilateralVertical->Init(static_cast<int32_t>(AppComputeID::BILATERAL_VERTICAL));
-	HorizontalBlurredAO = RenderingFactory::Instance()->CreateTexture(); 
+	HorizontalBlurredAO = Renderer::Instance()->CreateTexture(); 
 	HorizontalBlurredAO->Init(ImageFormat::RGBA32F, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
-	ResultBlurredAO = RenderingFactory::Instance()->CreateTexture(); 
+	ResultBlurredAO = Renderer::Instance()->CreateTexture(); 
 	ResultBlurredAO->Init(ImageFormat::RGBA32F, Window::Instance()->GetWidth(), Window::Instance()->GetHeight());
 
 	AoParameters.AONum = 115;
@@ -171,7 +170,7 @@ void AllProjects::Init()
 	AoParameters.AOScale = 3.0f;
 	AoParameters.AOContrast = 1.0f;
 
-	AoUbo = RenderingFactory::Instance()->CreateUniformBuffer();
+	AoUbo = Renderer::Instance()->CreateUniformBuffer();
 	AoUbo->Init(sizeof(AOParams), 3, &AoParameters);
 
 	// Load Objects in Scene

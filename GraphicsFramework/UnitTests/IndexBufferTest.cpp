@@ -1,8 +1,10 @@
 #include "IndexBufferTest.h"
 
 #include "Core/Core.h"
+#include "Rendering/IndexBuffer.h"
+#include "Rendering/Shader.h"
+#include "Rendering/VertexBuffer.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 #include "UnitTestShaderID.h"
 
 namespace
@@ -28,7 +30,7 @@ namespace
 
 void IndexBufferTest::Init()
 {
-	VBuffer = RenderingFactory::Instance()->CreateVertexBuffer();
+	VBuffer = Renderer::Instance()->CreateVertexBuffer();
 
 	VBuffer->SetDataLayout({
 		VertexFormat::Vec2, // NDC Coords 
@@ -37,10 +39,10 @@ void IndexBufferTest::Init()
 
 	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(IndexBufferTestVertex)));
 
-	IBuffer = RenderingFactory::Instance()->CreateIndexBuffer();
+	IBuffer = Renderer::Instance()->CreateIndexBuffer();
 	IBuffer->AddData(Indices.data(), static_cast<unsigned int>(Indices.size()), IndexType::UInt16);
 
-	BasicShader = RenderingFactory::Instance()->CreateShader();
+	BasicShader = Renderer::Instance()->CreateShader();
 	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::INDEXBUFFER_TEST));
 }
 

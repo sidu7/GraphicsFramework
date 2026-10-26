@@ -1,21 +1,11 @@
 #include "Window.h"
 
-#if defined(RENDERER_OPENGL)
-#include "Rendering/OpenGL/Window_OpenGL.h"
-#elif defined(RENDERER_VULKAN)
-#include "Rendering/Vulkan/Window_Vulkan.h"
-#elif defined(RENDERER_DX12)
-#endif
+#include "RHI/Backend.h"
 
-Window* WindowFactory::Create()
+Window* Window::Instance()
 {
-#if defined(RENDERER_OPENGL)
-	return new Window_OpenGL();
-#elif defined(RENDERER_VULKAN)
-	return new Window_Vulkan();
-#elif defined(RENDERER_DX12)
-#endif
-	return nullptr;
+	static Window* instance = rhi::CreateWindow();
+	return instance;
 }
 
 SDL_Window* Window::GetWindow() const

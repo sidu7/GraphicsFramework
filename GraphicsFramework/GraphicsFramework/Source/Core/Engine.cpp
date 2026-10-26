@@ -3,16 +3,12 @@
 // External
 #include <iostream>
 #include "glm/gtc/matrix_transform.hpp"
-#ifdef RENDERER_VULKAN
-#include <SDL_vulkan.h>
-#endif
 #include <rapidjson/rapidjson.h>
 
 // Internal
 #include "Window.h"
 #include "Inputs.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 #include "Time.h"
 #include "Engine.h"
 #include "Camera.h"

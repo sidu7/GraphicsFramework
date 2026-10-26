@@ -2,7 +2,6 @@
 #include "Rendering/Shader.h"
 #include "Rendering/Texture.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 #include "Utils/JSONHelper.h"
 #include "Rendering/UniformBuffer.h"
 #include "Shape.h"
@@ -17,7 +16,7 @@ Material::Material() :
 	mLighting(true),
 	mMaterialUBO(nullptr)
 {
-	mMaterialUBO = RenderingFactory::Instance()->CreateUniformBuffer();
+	mMaterialUBO = Renderer::Instance()->CreateUniformBuffer();
 	mMaterialUBO->Init(sizeof(MaterialDataUBO), Engine::Instance()->GetSettings().mMaterialBindingPoint);
 }
 
@@ -54,7 +53,7 @@ void Material::Serialize(rapidjson::Value::Object data)
 	}
 	if(data.HasMember("Texture"))
 	{
-		pTexture = RenderingFactory::Instance()->CreateTexture();
+		pTexture = Renderer::Instance()->CreateTexture();
 		pTexture->Init(data["Texture"].GetString());
 		mDiffuse = glm::vec3(0.0f);
 	}

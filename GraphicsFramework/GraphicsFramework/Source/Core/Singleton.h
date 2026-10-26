@@ -20,24 +20,3 @@ public:
 		delete Instance();
 	}
 };
-
-template<typename Class, typename Factory>
-class SingletonByFactory
-{
-public:
-	static Class* Instance()
-	{
-		static Class* instance = nullptr;
-		if (!instance)
-		{
-			instance = Factory::Create();
-		}
-
-		return instance;
-	}
-
-	~SingletonByFactory()
-	{
-		delete Instance();
-	}
-};

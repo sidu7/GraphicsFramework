@@ -1,13 +1,13 @@
 #include "ShaderTest.h"
 
 #include "Core/Core.h"
+#include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 #include "UnitTestShaderID.h"
 
 void ShaderTest::Init()
 {
-	BasicShader = RenderingFactory::Instance()->CreateShader();
+	BasicShader = Renderer::Instance()->CreateShader();
 	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::SHADER_TEST));
 }
 

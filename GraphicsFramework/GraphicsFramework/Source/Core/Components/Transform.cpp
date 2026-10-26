@@ -5,7 +5,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
+#include "Rendering/UniformBuffer.h"
 
 Transform::Transform() :
 	mPosition(0.f),
@@ -19,7 +19,7 @@ Transform::Transform() :
 	mPrevModelTransformation(1.f),
 	mMatricesUBO(nullptr)
 {
-	mMatricesUBO = RenderingFactory::Instance()->CreateUniformBuffer();
+	mMatricesUBO = Renderer::Instance()->CreateUniformBuffer();
 	mMatricesUBO->Init(sizeof(ObjectMatricesUBO), Engine::Instance()->GetSettings().mTransformBindingPoint);
 }
 

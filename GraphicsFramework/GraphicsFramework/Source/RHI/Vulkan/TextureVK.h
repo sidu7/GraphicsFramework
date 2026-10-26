@@ -1,0 +1,44 @@
+/* Start Header -------------------------------------------------------
+Copyright (C) 2018-2019 DigiPen Institute of Technology.
+Reproduction or disclosure of this file or its contents without the prior
+written consent of DigiPen Institute of Technology is prohibited.
+Author: Sidhant Tumma
+- End Header --------------------------------------------------------*/
+
+#pragma once
+#include "Rendering/Texture.h"
+#include "RHI/Vulkan/VulkanTypes.h"
+
+namespace rhi::vk
+{
+class TextureVK : public Texture
+{
+public:
+	TextureVK();
+	virtual ~TextureVK();
+
+	virtual void Init(ImageFormat format, int width, int height) override;
+	virtual void Init(const std::string& FilePath) override;
+	virtual void Init(void* buffer, int size) override;
+
+	virtual void EnableTiling() const override;
+	virtual inline std::string GetSourcePath() const override { return mFilePath; }
+
+	int mWidth, mHeight;
+	std::string mFilePath;
+	unsigned int mRendererID;
+
+	static enum VkFormat GetVkFormat(ImageFormat format);
+
+	ImageInfo TexImageInfo;
+	VkImageView TexImageView;
+	VkSampler TexSampler;
+
+	BufferInfo StagingImageBuffer;
+
+protected:
+	void ReadBufferToTexture();
+
+	unsigned char* mLocalBuffer;
+};
+}

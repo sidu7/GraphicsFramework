@@ -1,24 +1,14 @@
 #include "Renderer.h"
 
-#include "Core/Core.h"
-#if defined(RENDERER_OPENGL)
-#include "Rendering/OpenGL/Renderer_OpenGL.h"
-#elif defined(RENDERER_VULKAN)
-#include "Rendering/Vulkan/Renderer_Vulkan.h"
-#elif defined(RENDERER_DX12)
-#endif
+#include "RHI/Backend.h"
 
-#include "RenderingFactory.h"
+#include "Rendering/IndexBuffer.h"
+#include "Rendering/VertexBuffer.h"
 
-Renderer* RendererFactory::Create()
+Renderer* Renderer::Instance()
 {
-#if defined(RENDERER_OPENGL)
-	return new Renderer_OpenGL();
-#elif defined(RENDERER_VULKAN)
-	return new Renderer_Vulkan();
-#elif defined(RENDERER_DX12)
-#endif
-	return nullptr;
+	static Renderer* instance = rhi::CreateDevice();
+	return instance;
 }
 
 void Renderer::DrawQuad(const Shader* shader)
@@ -36,8 +26,8 @@ void Renderer::DrawQuad(const Shader* shader)
 		2, 3, 0
 	};
 
-	VertexBuffer* VBO_quad = RenderingFactory::Instance()->CreateVertexBuffer();
-	IndexBuffer* IBO_quad = RenderingFactory::Instance()->CreateIndexBuffer();
+	VertexBuffer* VBO_quad = Renderer::Instance()->CreateVertexBuffer();
+	IndexBuffer* IBO_quad = Renderer::Instance()->CreateIndexBuffer();
 
 	VBO_quad->SetDataLayout({ VertexFormat::Vec3, VertexFormat::Vec2 });
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "Rendering/Renderer.h"
+#include <cstdint>
 
 enum class IndexType
 {

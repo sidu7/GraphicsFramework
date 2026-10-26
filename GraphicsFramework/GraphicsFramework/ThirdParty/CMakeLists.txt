@@ -87,6 +87,12 @@ target_include_directories(imgui PUBLIC
     ${GF_THIRD_PARTY}/SDL/include
 )
 
+# imgui_impl_vulkan.cpp is only compiled for Vulkan configurations and includes
+# <vulkan/vulkan.h>; scope the dependency so OpenGL configurations stay Vulkan-free.
+target_link_libraries(imgui PUBLIC
+    "$<$<OR:$<CONFIG:Debug_Vulkan>,$<CONFIG:Release_Vulkan>>:vulkan_headers>"
+)
+
 # STB Image
 add_library(stb_image STATIC ${GF_THIRD_PARTY}/stbi_image_impl.cpp)
 target_include_directories(stb_image PUBLIC ${GF_THIRD_PARTY}/stbi_image)

@@ -11,7 +11,6 @@
 #include "core/ShapeManager.h"
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 #include "Rendering/ShaderRegistry.h"
 #include "Core/Components/Transform.h"
 #include "Core/Components/Material.h"
@@ -42,7 +41,7 @@ void Mechanics::Init()
 	Engine::Instance()->GetCamera()->pitch = -20.0f;
 	Engine::Instance()->GetCamera()->CalculateFront();
 
-	Drawing = RenderingFactory::Instance()->CreateShader();
+	Drawing = Renderer::Instance()->CreateShader();
 	Drawing->Init(static_cast<int32_t>(AnimationShaderID::DRAWING));
 
 	NodeCount = 80;

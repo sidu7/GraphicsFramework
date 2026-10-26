@@ -12,7 +12,7 @@
 #include "Core/Components/Shape.h"
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
+#include "Rendering/Renderer.h"
 #include "Rendering/UniformBuffer.h"
 #include "Rendering/ShaderRegistry.h"
 #include "Utils/Random.h"
@@ -61,7 +61,7 @@ void Flocking::Init()
 	Engine::Instance()->GetCamera()->mSpeed *= 2;
 	Engine::Instance()->GetCamera()->CalculateFront();
 
-	mShader = RenderingFactory::Instance()->CreateShader();
+	mShader = Renderer::Instance()->CreateShader();
 	mShader->Init(static_cast<int32_t>(FlockingShaderID::DRAWING));
 
 	mAvoidDistance = 2.0f;

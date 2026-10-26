@@ -7,9 +7,9 @@
 #include "Core/ImguiManager.h"
 #include "Core/ShapeManager.h"
 #include "Core/Time.h"
-#include "Rendering/Model.h"
+#include "Assets/Model.h"
 #include "Rendering/Shader.h"
-#include "Rendering/RenderingFactory.h"
+#include "Rendering/Renderer.h"
 #include "Rendering/ShaderRegistry.h"
 #include "Core/Components/Transform.h"
 #include "Core/Components/Shape.h"
@@ -78,9 +78,9 @@ void AnimationScene::Init()
 
 	light = new Light(glm::vec3(10.0, 100.0, 40.0));
 
-	modelDraw = RenderingFactory::Instance()->CreateShader();
+	modelDraw = Renderer::Instance()->CreateShader();
 	modelDraw->Init(static_cast<int32_t>(AnimationShaderID::MODEL_DRAW));
-	Drawing = RenderingFactory::Instance()->CreateShader(); 
+	Drawing = Renderer::Instance()->CreateShader(); 
 	Drawing->Init(static_cast<int32_t>(AnimationShaderID::DRAWING));
 
 	std::ifstream file("res/JSON Data/ControlPoints.json");
@@ -601,8 +601,8 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 
 void AnimationScene::DrawBones()
 {
-	VertexArray* va = RenderingFactory::Instance()->CreateVertexArray();
-	VertexBuffer* vb = RenderingFactory::Instance()->CreateVertexBuffer();
+	VertexArray* va = Renderer::Instance()->CreateVertexArray();
+	VertexBuffer* vb = Renderer::Instance()->CreateVertexBuffer();
 
 	std::vector<glm::vec3> vertices;
 
@@ -682,8 +682,8 @@ void AnimationScene::CreateControlPointsVAO()
 	mCurvePointsSize = curvePoints.size();
 	delete mCurveVAO;
 
-	mCurveVAO = RenderingFactory::Instance()->CreateVertexArray();
-	VertexBuffer* vb = RenderingFactory::Instance()->CreateVertexBuffer();
+	mCurveVAO = Renderer::Instance()->CreateVertexArray();
+	VertexBuffer* vb = Renderer::Instance()->CreateVertexBuffer();
 
 	mCurveVAO->AddBuffer(vb);
 	vb->AddData(&curvePoints[0], curvePoints.size() * sizeof(glm::vec4));

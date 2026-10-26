@@ -1,7 +1,7 @@
 #include "ShapeManager.h"
 
 #include "Core/Core.h"
-#include "Rendering/RenderingFactory.h"
+#include "Rendering/Renderer.h"
 #include "Rendering/IndexBuffer.h"
 #include "Rendering/VertexBuffer.h"
 #include <algorithm>
@@ -61,8 +61,8 @@ void ShapeManager::CreateLine()
 
 	constexpr uint16_t indices[] = { 0, 1 };
 
-	data.mVBO = RenderingFactory::Instance()->CreateVertexBuffer();
-	data.mIBO = RenderingFactory::Instance()->CreateIndexBuffer();
+	data.mVBO = Renderer::Instance()->CreateVertexBuffer();
+	data.mIBO = Renderer::Instance()->CreateIndexBuffer();
 
 	data.mVBO->SetDataLayout({ VertexFormat::Vec3 });
 	data.mVBO->AddData(verts.data(), static_cast<unsigned int>(verts.size()) * sizeof(glm::vec3));
@@ -93,8 +93,8 @@ void ShapeManager::CreateWireCube()
 		0, 4, 1, 5, 2, 6, 3, 7
 	};
 
-	data.mVBO = RenderingFactory::Instance()->CreateVertexBuffer();
-	data.mIBO = RenderingFactory::Instance()->CreateIndexBuffer();
+	data.mVBO = Renderer::Instance()->CreateVertexBuffer();
+	data.mIBO = Renderer::Instance()->CreateIndexBuffer();
 
 	data.mVBO->SetDataLayout({ VertexFormat::Vec3 });
 	data.mVBO->AddData(verts.data(), static_cast<unsigned int>(verts.size()) * sizeof(glm::vec3));
@@ -118,8 +118,8 @@ void ShapeManager::CreatePyramid()
 		1, 2, 3, 3, 2, 4, 4, 3, 2, 2, 3, 1
 	};
 
-	data.mVBO = RenderingFactory::Instance()->CreateVertexBuffer();
-	data.mIBO = RenderingFactory::Instance()->CreateIndexBuffer();
+	data.mVBO = Renderer::Instance()->CreateVertexBuffer();
+	data.mIBO = Renderer::Instance()->CreateIndexBuffer();
 
 	data.mVBO->SetDataLayout({ VertexFormat::Vec3 });
 	data.mVBO->AddData(verts.data(), static_cast<unsigned int>(verts.size()) * sizeof(glm::vec3));
@@ -519,8 +519,8 @@ void ShapeManager::CreateTeapot()
 void ShapeManager::MakeVAO(const std::vector<ShapeVertex>& vertices, const std::vector<uint16_t>& indices, Shapes shape)
 {
 	ShapeData& data = mShapes[shape];
-	data.mVBO = RenderingFactory::Instance()->CreateVertexBuffer();
-	data.mIBO = RenderingFactory::Instance()->CreateIndexBuffer();
+	data.mVBO = Renderer::Instance()->CreateVertexBuffer();
+	data.mIBO = Renderer::Instance()->CreateIndexBuffer();
 
 	data.mVBO->SetDataLayout({
 		VertexFormat::Vec3,  // Position

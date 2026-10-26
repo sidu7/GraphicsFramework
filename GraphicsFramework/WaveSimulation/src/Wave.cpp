@@ -16,7 +16,6 @@ enum class WaveShaderID : int32_t
 #include "Core/Inputs.h"
 #include "Core/Window.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 #include "Rendering/Shader.h"
 #include "Rendering/VertexArray.h"
 #include "Rendering/ShaderRegistry.h"
@@ -54,30 +53,30 @@ void Wave::Init()
 	Engine::Instance()->GetCamera()->mSpeed /= 4.0f;
 	Engine::Instance()->GetCamera()->CalculateFront();
 
-	mShader = RenderingFactory::Instance()->CreateShader();
+	mShader = Renderer::Instance()->CreateShader();
 	mShader->Init(static_cast<int32_t>(WaveShaderID::DRAWING));
 
 	mHeightMap.initialize();
 
 	mDiffuseColor = glm::vec3(0.8f, 0.8f, 1);
 
-	mVAO = RenderingFactory::Instance()->CreateVertexArray();
+	mVAO = Renderer::Instance()->CreateVertexArray();
 	Renderer::Instance()->BindVertexArray(mVAO);
 	int size = mHeightMap.grid.width() * mHeightMap.grid.height() * sizeof(glm::vec3);
 	
-	mVBOs[VERT] = RenderingFactory::Instance()->CreateVertexBuffer();
+	mVBOs[VERT] = Renderer::Instance()->CreateVertexBuffer();
 	Renderer::Instance()->BindVertexBuffer(mVBOs[VERT]);
 	mVBOs[VERT]->AddDynamicData(NULL, size);
 	mVAO->Push(3, GL_FLOAT, sizeof(float));
 	mVAO->SetDataLayout();
 
-	mVBOs[NORM] = RenderingFactory::Instance()->CreateVertexBuffer();
+	mVBOs[NORM] = Renderer::Instance()->CreateVertexBuffer();
 	Renderer::Instance()->BindVertexBuffer(mVBOs[NORM]);
 	mVBOs[NORM]->AddDynamicData(NULL, size);
 	mVAO->Push(3, GL_FLOAT, sizeof(float));
 	mVAO->SetDataLayout();
 
-	mEBO = RenderingFactory::Instance()->CreateElementArrayBuffer();
+	mEBO = Renderer::Instance()->CreateElementArrayBuffer();
 	Renderer::Instance()->BindIndexBuffer(mEBO);
 	mTriCount = 2 * (mHeightMap.grid.width() - 1) * (mHeightMap.grid.height() - 1);
 	unsigned* faces = new unsigned[3 * mTriCount];

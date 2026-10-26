@@ -2,17 +2,11 @@
 
 #include "Core.h"
 
-class Window;
-
-class WindowFactory
+class Window
 {
 public:
-	static Window* Create();
-};
+	static Window* Instance();
 
-class Window : public SingletonByFactory<Window, WindowFactory>
-{
-public:
 	Window() = default;
 	virtual ~Window() = default;
 	virtual void Init(int width, int height) = 0;

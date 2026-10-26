@@ -7,11 +7,9 @@ Author: Sidhant Tumma
 
 #pragma once
 
-#include "GLEW/include/GL/glew.h"
-#include "Core/Singleton.h"
-#include "SDL/include/SDL.h"
-#include <vector>
-#include <glm/mat4x2.hpp>
+#include <cstdint>
+
+#include "RHI/Types.h"
 
 class IndexBuffer;
 class Shader;
@@ -24,39 +22,23 @@ class FrameBuffer;
 class VertexBuffer;
 class ComputeShader;
 class UniformBuffer;
+class ShaderStorageBuffer;
 class Texture;
 
-class RendererFactory
+// Abstract rendering device.
+//
+// A Renderer owns the backend context and is the entry point for both resource
+// creation and frame submission. The concrete backend (OpenGL / Vulkan) is
+// selected at build time; see docs/RHI-Migration-Plan.md.
+class Renderer
 {
 public:
-	static Renderer* Create();
-};
+	static Renderer* Instance();
 
-enum class CullFace
-{
-	None,
-	Front,
-	Back,
-	Both
-};
+	virtual ~Renderer() = default;
 
-struct Rect2D
-{
-	Rect2D() : Offset(0.f), Size(0.f) {}
+	virtual const char* GetApiName() const = 0;
 
-	glm::vec2 Offset;
-	glm::vec2 Size;
-};
-
-struct Rect3D : public Rect2D
-{
-	Rect3D() : Depth(0.0f, 1.0f) {}
-	glm::vec2 Depth;
-};
-
-class Renderer : public SingletonByFactory<Renderer, RendererFactory>
-{
-public:
 	virtual void Init() = 0;
 	virtual void Close() = 0;
 	
@@ -65,6 +47,16 @@ public:
 
 	virtual void Clear() const = 0;
 	virtual void WaitFrameFinish() const = 0;
+
+	// Resource creation
+	virtual ComputeShader* CreateComputeShader() = 0;
+	virtual IndexBuffer* CreateIndexBuffer() = 0;
+	virtual FrameBuffer* CreateFrameBuffer() = 0;
+	virtual Shader* CreateShader() = 0;
+	virtual ShaderStorageBuffer* CreateShaderStorageBuffer() = 0;
+	virtual Texture* CreateTexture() = 0;
+	virtual UniformBuffer* CreateUniformBuffer() = 0;
+	virtual VertexBuffer* CreateVertexBuffer() = 0;
 
 	// Bind Functions
 	virtual void BindShader(const Shader* shader) = 0;

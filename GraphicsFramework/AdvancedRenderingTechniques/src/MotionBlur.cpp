@@ -11,7 +11,7 @@
 #include "Core/Components/Shape.h"
 #include "Core/Components/Material.h"
 #include "Core/ShapeManager.h"
-#include "Rendering/RenderingFactory.h"
+#include "Rendering/Renderer.h"
 #include "Rendering/Shader.h"
 #include "Rendering/FrameBuffer.h"
 #include "Rendering/UniformBuffer.h"
@@ -33,13 +33,13 @@ MotionBlur::~MotionBlur()
 
 void MotionBlur::Init()
 {
-	baseShader = RenderingFactory::Instance()->CreateShader();
+	baseShader = Renderer::Instance()->CreateShader();
 	baseShader->Init(static_cast<int32_t>(MotionBlurShaderID::GBUFFER));
 
-	lighting = RenderingFactory::Instance()->CreateShader(); 
+	lighting = Renderer::Instance()->CreateShader(); 
 	lighting->Init(static_cast<int32_t>(MotionBlurShaderID::MOTIONBLUR_LIGHTING));
 
-	ambient = RenderingFactory::Instance()->CreateShader(); 
+	ambient = Renderer::Instance()->CreateShader(); 
 	ambient->Init(static_cast<int32_t>(MotionBlurShaderID::MOTIONBLUR_AMBIENT));
 
 	light = new Light(glm::vec3(100.0f, 200.0f, 10.0f));
@@ -56,22 +56,22 @@ void MotionBlur::Init()
 	Renderer::Instance()->BindShader(ambient);
 	//ambient->SetUniform3f("Ambient", 0.1f, 0.1f, 0.1f);
 
-	G_Buffer = RenderingFactory::Instance()->CreateFrameBuffer(); 
+	G_Buffer = Renderer::Instance()->CreateFrameBuffer(); 
 	G_Buffer->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), ImageFormat::RGBA32F, 5);
 
-	Color = RenderingFactory::Instance()->CreateFrameBuffer(); 
+	Color = Renderer::Instance()->CreateFrameBuffer(); 
 	Color->Init(Window::Instance()->GetWidth(), Window::Instance()->GetHeight(), ImageFormat::RGBA32F);
 
 	gBuffershow = 0;
 
-	globalMatrices = RenderingFactory::Instance()->CreateUniformBuffer();
+	globalMatrices = Renderer::Instance()->CreateUniformBuffer();
 	globalMatrices->Init(sizeof(Matrices), 2);
 
 	//SkyDome shaders
-	skyDomeShader = RenderingFactory::Instance()->CreateShader(); 
+	skyDomeShader = Renderer::Instance()->CreateShader(); 
 	skyDomeShader->Init(static_cast<int32_t>(MotionBlurShaderID::SKYDOME));
 
-	skyDomeTexture = RenderingFactory::Instance()->CreateTexture(); 
+	skyDomeTexture = Renderer::Instance()->CreateTexture(); 
 	skyDomeTexture->Init("res/Textures/popDome.hdr");
 	exposure = 5.2f;
 	contrast = 1.0f;
@@ -90,20 +90,20 @@ void MotionBlur::Init()
 
 	k = 20;
 	S = 15;
-	TileMax = RenderingFactory::Instance()->CreateFrameBuffer(); 
+	TileMax = Renderer::Instance()->CreateFrameBuffer(); 
 	TileMax->Init(Window::Instance()->GetWidth() / k, Window::Instance()->GetHeight() / k, ImageFormat::RGBA32F);
-	NeighbourMax = RenderingFactory::Instance()->CreateFrameBuffer(); 
+	NeighbourMax = Renderer::Instance()->CreateFrameBuffer(); 
 	NeighbourMax->Init(Window::Instance()->GetWidth() / k, Window::Instance()->GetHeight() / k, ImageFormat::RGBA32F);
 
-	TileMaxShader = RenderingFactory::Instance()->CreateShader(); 
+	TileMaxShader = Renderer::Instance()->CreateShader(); 
 	TileMaxShader->Init(static_cast<int32_t>(MotionBlurShaderID::TILE_MAX));
-	NeighbourMaxShader = RenderingFactory::Instance()->CreateShader(); 
+	NeighbourMaxShader = Renderer::Instance()->CreateShader(); 
 	NeighbourMaxShader->Init(static_cast<int32_t>(MotionBlurShaderID::NEIGHBOUR_MAX));
 
-	ReconstructionShader = RenderingFactory::Instance()->CreateShader(); 
+	ReconstructionShader = Renderer::Instance()->CreateShader(); 
 	ReconstructionShader->Init(static_cast<int32_t>(MotionBlurShaderID::RECONSTRUCTION));
 	MotionBlurOn = true;
-	MotionBlurShader = RenderingFactory::Instance()->CreateShader(); 
+	MotionBlurShader = Renderer::Instance()->CreateShader(); 
 	MotionBlurShader->Init(static_cast<int32_t>(MotionBlurShaderID::MOTION_BLUR));
 	ReconBlur = false;
 	PerPixel = true;

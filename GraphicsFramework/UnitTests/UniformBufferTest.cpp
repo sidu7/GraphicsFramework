@@ -1,8 +1,11 @@
 #include "UniformBufferTest.h"
 
 #include "Core/Core.h"
+#include "Rendering/IndexBuffer.h"
+#include "Rendering/Shader.h"
+#include "Rendering/UniformBuffer.h"
+#include "Rendering/VertexBuffer.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 #include "UnitTestShaderID.h"
 #include "Core/Window.h"
 
@@ -32,7 +35,7 @@ const std::vector<uint16_t> Indices = { 0, 1, 2, 2, 3, 0 };
 
 void UniformBufferTest::Init()
 {
-	VBuffer = RenderingFactory::Instance()->CreateVertexBuffer();
+	VBuffer = Renderer::Instance()->CreateVertexBuffer();
 
 	VBuffer->SetDataLayout({
 		VertexFormat::Vec2, // NDC Coords 
@@ -41,7 +44,7 @@ void UniformBufferTest::Init()
 
 	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(UniformBufferTestVertex)));
 
-	IBuffer = RenderingFactory::Instance()->CreateIndexBuffer();
+	IBuffer = Renderer::Instance()->CreateIndexBuffer();
 	IBuffer->AddData(Indices.data(), static_cast<unsigned int>(Indices.size()), IndexType::UInt16);
 
 	glm::vec2 WindowSize = Window::Instance()->GetWindowSize();
@@ -49,10 +52,10 @@ void UniformBufferTest::Init()
 	UboMatrixData.View = glm::lookAt(glm::vec3(2.f, 2.f, 2.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f));
 	UboMatrixData.Model = glm::mat4(1.f);
 
-	UBuffer = RenderingFactory::Instance()->CreateUniformBuffer();
+	UBuffer = Renderer::Instance()->CreateUniformBuffer();
 	UBuffer->Init(sizeof(UniformBufferTestMatrices), UboBinding, &UboMatrixData);
 
-	BasicShader = RenderingFactory::Instance()->CreateShader();
+	BasicShader = Renderer::Instance()->CreateShader();
 	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::UNIFORMBUFFER_TEST));
 
 	RunTime = 0.f;

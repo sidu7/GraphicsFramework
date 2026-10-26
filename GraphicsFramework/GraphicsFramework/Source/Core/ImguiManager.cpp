@@ -8,14 +8,14 @@
 #include "Imgui/backends/imgui_impl_sdl2.h"
 #if defined(RENDERER_OPENGL)
 #include "Imgui/backends/imgui_impl_opengl3.h"
-#include "Rendering/OpenGL/Window_OpenGL.h"
+#include "RHI/OpenGL/WindowGL.h"
 #elif defined(RENDERER_VULKAN)
-#include "Rendering/Vulkan/Renderer_Vulkan.h"
-#include "Rendering/Vulkan/FrameBuffer_Vulkan.h"
-#include "Rendering/Vulkan/Internal/VulkanHelper.h"
-#include "Rendering/Vulkan/Internal/CommandBuffer_Vulkan.h"
-#include "Rendering/Vulkan/Internal/CommandQueue_Vulkan.h"
-#include "Rendering/Vulkan/Internal/RenderPass_Vulkan.h"
+#include "RHI/Vulkan/DeviceVK.h"
+#include "RHI/Vulkan/FrameBufferVK.h"
+#include "RHI/Vulkan/Internal/HelperVK.h"
+#include "RHI/Vulkan/Internal/CommandBufferVK.h"
+#include "RHI/Vulkan/Internal/CommandQueueVK.h"
+#include "RHI/Vulkan/Internal/RenderPassVK.h"
 	#include "Imgui/backends/imgui_impl_vulkan.h"
 #elif defined(RENDERER_DX12)
 #endif
@@ -30,13 +30,13 @@ void ImguiManager::Init()
 
 	// Set up renderer bindings	
 #if defined(RENDERER_OPENGL)
-	Window_OpenGL* WindowOpenGL = static_cast<Window_OpenGL*>(Window::Instance());
+	rhi::gl::WindowGL* WindowOpenGL = static_cast<rhi::gl::WindowGL*>(Window::Instance());
 	ImGui_ImplSDL2_InitForOpenGL(WindowOpenGL->GetWindow(), WindowOpenGL->GetContext());
 	ImGui_ImplOpenGL3_Init("#version 430");
 #elif defined(RENDERER_VULKAN)
 	ImGui_ImplSDL2_InitForVulkan(Window::Instance()->GetWindow());
 
-	VulkanHelper VkHelper;
+	rhi::vk::Helper VkHelper;
 	VkHelper.InitImGui();
 #elif defined(RENDERER_DX12)
 #endif
@@ -104,10 +104,10 @@ void ImguiManager::Render()
 #if defined(RENDERER_OPENGL)
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 #elif defined(RENDERER_VULKAN)
-	Renderer_Vulkan* VkRenderer = static_cast<Renderer_Vulkan*>(Renderer::Instance());
+	rhi::vk::Device* VkRenderer = static_cast<rhi::vk::Device*>(Renderer::Instance());
 	if (VkRenderer)
 	{
-		const FrameBuffer_Vulkan* VkFrameBuffer = static_cast<const FrameBuffer_Vulkan*>(VkRenderer->GetBackBuffer());
+		const rhi::vk::FrameBufferVK* VkFrameBuffer = static_cast<const rhi::vk::FrameBufferVK*>(VkRenderer->GetBackBuffer());
 		VkRenderer->GetImGuiRenderPass()->BeginPass(VkRenderer->GetCommandBuffer(), VkFrameBuffer);
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), VkRenderer->GetCommandBuffer()->mCommandBuffer);
 		VkRenderer->GetImGuiRenderPass()->EndPass(VkRenderer->GetCommandBuffer());

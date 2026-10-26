@@ -1,8 +1,9 @@
 #include "VertexBufferTest.h"
 
 #include "Core/Core.h"
+#include "Rendering/Shader.h"
+#include "Rendering/VertexBuffer.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 #include "UnitTestShaderID.h"
 
 namespace
@@ -25,7 +26,7 @@ namespace
 
 void VertexBufferTest::Init()
 {
-	VBuffer = RenderingFactory::Instance()->CreateVertexBuffer();
+	VBuffer = Renderer::Instance()->CreateVertexBuffer();
 
 	VBuffer->SetDataLayout({ 
 		VertexFormat::Vec2, // NDC Coords 
@@ -34,7 +35,7 @@ void VertexBufferTest::Init()
 
 	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(VertexBufferTestVertex)));
 
-	BasicShader = RenderingFactory::Instance()->CreateShader();
+	BasicShader = Renderer::Instance()->CreateShader();
 	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::VERTEXBUFFER_TEST));
 
 	TestTime = 0.0f;

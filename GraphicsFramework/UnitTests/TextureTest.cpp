@@ -1,8 +1,12 @@
 #include "TextureTest.h"
 
 #include "Core/Core.h"
+#include "Rendering/IndexBuffer.h"
+#include "Rendering/Shader.h"
+#include "Rendering/Texture.h"
+#include "Rendering/UniformBuffer.h"
+#include "Rendering/VertexBuffer.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/RenderingFactory.h"
 #include "UnitTestShaderID.h"
 #include "Core/Window.h"
 
@@ -33,7 +37,7 @@ const std::vector<uint16_t> Indices = { 0, 1, 2, 2, 3, 0 };
 
 void TextureTest::Init()
 {
-	pVBuffer = RenderingFactory::Instance()->CreateVertexBuffer();
+	pVBuffer = Renderer::Instance()->CreateVertexBuffer();
 
 	pVBuffer->SetDataLayout({
 		VertexFormat::Vec2, // NDC Coords 
@@ -43,7 +47,7 @@ void TextureTest::Init()
 
 	pVBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(TextureTestVertex)));
 
-	pIBuffer = RenderingFactory::Instance()->CreateIndexBuffer();
+	pIBuffer = Renderer::Instance()->CreateIndexBuffer();
 	pIBuffer->AddData(Indices.data(), static_cast<unsigned int>(Indices.size()), IndexType::UInt16);
 
 	glm::vec2 WindowSize = Window::Instance()->GetWindowSize();
@@ -51,13 +55,13 @@ void TextureTest::Init()
 	TexTestMatrixData.View = glm::lookAt(glm::vec3(2.f, 2.f, 2.f), glm::vec3(0.f), glm::vec3(0.f, 0.f, 1.f));
 	TexTestMatrixData.Model = glm::mat4(1.f);
 
-	pUBuffer = RenderingFactory::Instance()->CreateUniformBuffer();
+	pUBuffer = Renderer::Instance()->CreateUniformBuffer();
 	pUBuffer->Init(sizeof(TextureTestMatrices), UboBinding, &TexTestMatrixData);
 
-	pTexture = RenderingFactory::Instance()->CreateTexture();
+	pTexture = Renderer::Instance()->CreateTexture();
 	pTexture->Init("res/Texture.jpg");
 
-	BasicShader = RenderingFactory::Instance()->CreateShader();
+	BasicShader = Renderer::Instance()->CreateShader();
 	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::TEXTURE_TEST));
 
 	RunTime = 0.f;

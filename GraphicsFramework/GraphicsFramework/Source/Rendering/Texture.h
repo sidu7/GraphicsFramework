@@ -6,7 +6,8 @@ Author: Sidhant Tumma
 - End Header --------------------------------------------------------*/
 
 #pragma once
-#include "Rendering/Renderer.h"
+#include <cstdint>
+#include <iostream>
 #include <string>
 
 typedef uint16_t half_float;

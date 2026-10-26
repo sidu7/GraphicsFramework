@@ -47,6 +47,19 @@ Use the `OpenGL-Release` or `Vulkan-Release` build preset for Release builds. Th
 
 The sample applications and graphics tests are available as executable targets by default, so they appear as selectable startup items in Visual Studio. They are excluded from the default build because some legacy sample sources still use framework APIs that have since changed. Build an individual target with `cmake --build --preset OpenGL-Debug --target FlockingParticles --parallel` (replace the target with `AdvancedRenderingTechniques`, `AnimationTechniques`, `RealTimeRayTracing`, `WaveSimulation`, or `UnitTests`). Configure with `-DGF_BUILD_SAMPLES=OFF` to omit these targets. Update any affected sample source to the current framework API before building it.
 
+### Visual Studio startup items
+
+Visual Studio lists **every** CMake target of the configured project in the *Startup Item* dropdown, including static libraries and utility targets. That is why `imgui`, `assimp`, `SDL2-static`, `zlibstatic`, `libglew_static`, `volk`, `spirv-reflect-static`, `stb_image`, `sdl_headers_copy`, and `uninstall` show up next to the real applications; they are not runnable and there is no CMake property or preset to hide them.
+
+Hide the ones you do not need (a per-workspace setting, no repo changes required):
+
+1. Open the *Startup Item* dropdown in the toolbar.
+2. Choose **Show or Hide Debug Targets…**
+3. Clear the checkbox for the third-party library and utility targets.
+4. Select **OK**.
+
+The selection is stored in the workspace's `.vs` folder, so it survives restarts. It resets if you delete the `.vs` folder or use **Delete Cache and Reconfigure**.
+
 ## Projects
 
 | Project | Description |

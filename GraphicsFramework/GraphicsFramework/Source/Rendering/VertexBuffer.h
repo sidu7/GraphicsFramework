@@ -8,7 +8,9 @@ Author: Sidhant Tumma
 
 #pragma once
 
-#include "Core/Core.h"
+#include <cstddef>
+#include <cstdint>
+#include <vector>
 
 enum class VertexFormat
 {
