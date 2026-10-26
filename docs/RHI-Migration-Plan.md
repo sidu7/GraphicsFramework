@@ -1,6 +1,6 @@
 # RHI Migration Plan — OpenGL / Vulkan
 
-Status: **in progress** — Phase 0, 1, 1.5, 2 and 3 complete.
+Status: **in progress** — Phases 0, 1, 1.5, 2, 3, 4 and 5 complete; Phase 6 next.
 Last updated: 2026-10-26.
 
 This document is the source of truth for the rendering-abstraction refactor. It describes the
@@ -383,22 +383,81 @@ Notes from the implementation:
   `vmaCreateBuffer` / `vmaCreateImage` (`VulkanMemoryAllocator` is already linked but unused).
 * Fix API details while there: `FindMemoryType` must not return `-1` as `uint32_t`.
 
-Current state after Phase 4: `CreateBuffer`, `CreateImage` and `FindMemoryType` are already members
-of `rhi::vk::Device` (they moved there when the factory was deleted), and `FindMemoryType` now
-returns `0` after printing a diagnostic instead of wrapping `-1`. The remaining work is the VMA
-swap: two `vkAllocateMemory` call sites in `RHI/Vulkan/DeviceVK.cpp`.
+Implemented:
 
-Exit criteria: no `vkAllocateMemory` call remains in framework code; Vulkan build and swapchain
-still render.
+* `RHI/Vulkan/VulkanTypes.h` keeps the `BufferInfo` / `ImageInfo` names (see the deviation note
+  below) and replaces the `VkDeviceMemory` member with a `VmaAllocation`. `VmaAllocator` /
+  `VmaAllocation` are forward-declared there, so resource headers never include `vk_mem_alloc.h`.
+* `rhi::vk::Device::Init()` creates the allocator (`vmaCreateAllocator`, `vulkanApiVersion = 1.3`)
+  after `Helper::InitVulkan()` has produced the instance / physical / logical device, and
+  `Device::Close()` destroys it before `vkDestroyDevice`.
+* The memory API is now:
+  ```cpp
+  BufferInfo CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, bool bHostVisible);
+  ImageInfo  CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageUsageFlags usage);
+  void DestroyBuffer(BufferInfo&);  void DestroyImage(ImageInfo&);
+  void* MapBuffer(BufferInfo&, size_t offset = 0);  void UnmapBuffer(BufferInfo&);
+  ```
+  `bHostVisible` maps onto `VMA_MEMORY_USAGE_AUTO` plus
+  `VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT`, so callers no longer pass
+  `VkMemoryPropertyFlags` around.
+* `FindMemoryType` and every `vkAllocateMemory` / `vkFreeMemory` / `vkGet*MemoryRequirements` /
+  `vkBind*Memory` / `vkMapMemory` / `vkUnmapMemory` call is gone from framework code.
+  `VertexBufferVK`, `IndexBufferVK`, `UniformBufferVK` and `TextureVK` map, copy and unmap through
+  the new helpers; staging buffers are released from the copy command buffer's finish delegate
+  (`DestroyBuffer` instead of the two manual frees).
+* `RHI/Vulkan/VMAImplementation.cpp` is the single translation unit that defines
+  `VMA_IMPLEMENTATION`. Every other file only includes `<vk_mem_alloc.h>` for declarations, which
+  keeps the ~13k-line implementation compiled once per configuration (the file is picked up by the
+  `RHI/Vulkan/*.cpp` glob, so it is part of the Vulkan-only source set automatically).
+
+Deviations:
+
+* `BufferInfo` / `ImageInfo` were **not** renamed to `VkBufferHandle` / `VkImageHandle`. They are
+  still per-resource *bundles* (handle + allocation + cached size + transient mapped pointer), not
+  plain handles, so the new names would have been misleading.
+* `volk` is no longer linked. Without a `volkInitialize()` call its `vk*` global function pointers
+  stay null and *shadow* the loader imports, so the first Vulkan call dereferenced null. The Vulkan
+  loader (`${Vulkan_LIBRARY}`) is linked directly instead, and the `volk` include directory was
+  removed from `GF_RHI_Vulkan`.
+
+Exit criteria (verified): no `vkAllocateMemory` call remains in framework code; the Vulkan
+configuration starts, creates the VMA allocator and renders the swapchain (see the verification
+section below).
 
 ### Phase 6 — Backend capability seam
 
-* `ImguiManager` calls a small backend hook (`InitImGui` / `NewFrame` / `Render`) instead of five
-  `#if` blocks and `static_cast<rhi::vk::Device*>` / `static_cast<rhi::gl::WindowGL*>`.
-* `Renderer::GetClipSpace()` (or `Device::GetProjectionYFlip()`) replaces
+* `ImguiManager` calls a small backend hook (`InitImGui` / `NewFrame` / `Render` / `ShutdownImGui`)
+  instead of five `#if` blocks and `static_cast<rhi::vk::Device*>` / `static_cast<rhi::gl::WindowGL*>`.
+* `Renderer::GetProjectionYFlip()` replaces
   `Camera.cpp`'s `#if defined(RENDERER_VULKAN)`.
 
 Exit criteria: no `#if defined(RENDERER_*)` in `Core/`.
+
+Implemented:
+
+* `Renderer` gains five new virtual methods: `InitImGui()`, `ShutdownImGui()`, `NewFrame()`,
+  `Render()` (ImGui hooks called by `ImguiManager`) and `GetProjectionYFlip()` (clip-space
+  capability called by `Camera`). The first four have default no-op bodies in the base class;
+  `GetProjectionYFlip()` defaults to `1.0f`.
+* `rhi::gl::Device` overrides all five: `InitImGui()` calls `ImGui_ImplSDL2_InitForOpenGL` +
+  `ImGui_ImplOpenGL3_Init`; `ShutdownImGui()` tears down both backends; `NewFrame()` calls
+  `ImGui_ImplOpenGL3_NewFrame`; `Render()` calls `ImGui_ImplOpenGL3_RenderDrawData`;
+  `GetProjectionYFlip()` returns `1.0f`.
+* `rhi::vk::Device` overrides all five: `InitImGui()` instantiates `HelperVK` and calls `InitImGui()`;
+  `ShutdownImGui()` tears down both backends; `NewFrame()` calls `ImGui_ImplVulkan_NewFrame`;
+  `Render()` calls `ImGui_ImplVulkan_RenderDrawData` directly (the render pass begin/end is handled
+  by the command buffer's draw scope); `GetProjectionYFlip()` returns `-1.0f`.
+* `ImguiManager::Init()` / `StartFrame()` / `Close()` / `Render()` now each call a single
+  `Renderer::Instance()->…` method instead of five `#if defined(RENDERER_*)` blocks and two
+  `static_cast<>` expressions. Backend-specific includes (`imgui_impl_opengl3.h`,
+  `imgui_impl_vulkan.h`, `WindowGL.h`, `DeviceVK.h`, `FrameBufferVK.h`, `HelperVK.h`,
+  `CommandBufferVK.h`, `CommandQueueVK.h`, `RenderPassVK.h`) are removed from
+  `Core/ImguiManager.cpp`.
+* `Camera::Init()` replaces `#if defined(RENDERER_VULKAN)` with `mProjection[1][1] *= Renderer::Instance()->GetProjectionYFlip();`.
+
+Exit criteria (verified): no `#if defined(RENDERER_*)` in `Core/`; `ImguiManager.cpp` includes only
+`Renderer.h` (not any backend header); both `OpenGL-Debug` and `Vulkan-Debug` build `GraphicsFramework`.
 
 ### Phase 7 — Pipeline objects (optional)
 
@@ -432,9 +491,9 @@ structural work.
 | 2 | ✅ done | `RHI/Backend.h` + per-backend `CreateDevice`/`CreateWindow`; `Renderer.cpp` / `Window.cpp` have no `#if`; `SingletonByFactory` deleted |
 | 3 | ✅ done | config-scoped backend sources + `GF_RHI_OpenGL`/`GF_RHI_Vulkan` interface targets + configure-time single-backend check; `imgui` → `vulkan_headers` scoped to Vulkan |
 | 4 | ✅ done | `RHI/{OpenGL,Vulkan}` + `Assets/` + `Utils/Math/`; classes namespaced (`rhi::gl`, `rhi::vk`) and renamed to `DeviceGL`/`DeviceVK`/`TextureGL`/`TextureVK`/…; `VkDevice Device` → `mDevice` |
-| 5 | ⬜ not started | |
-| 6 | ⬜ not started | |
-| 7 | ⬜ optional | |
+| 5 | ✅ done | VMA allocator + `CreateBuffer`/`CreateImage`/`Destroy*`/`Map*`; no raw `vkAllocateMemory`/`vkMapMemory` left; `volk` dropped (null globals shadowed the loader) |
+| 6 | ✅ done | `Renderer` hooks: `InitImGui`, `ShutdownImGui`, `NewFrame`, `Render`, `GetProjectionYFlip`; `ImguiManager.cpp` no longer has backend-specific `#if` blocks or includes; `Camera.cpp` Y-flip replaced with `GetProjectionYFlip()` |
+| 7 | ⬜ optional | descriptor binding for uniform buffers / textures is still missing, see the Phase 5 verification notes |
 
 ### Verification status after Phase 3
 
@@ -468,14 +527,91 @@ structural work.
 * `grep -r "\b\w+_OpenGL\b\|\b\w+_Vulkan\b"` over the framework, samples and `UnitTests` returns
   only SDL / ImGui backend names (`SDL_WINDOW_OPENGL`, `imgui_impl_vulkan.h`) — no leftover
   `Renderer_Vulkan`, `Texture_OpenGL`, … identifiers.
-* No framework file outside `Source/RHI/` includes a backend header except `Core/ImguiManager.cpp`
-  (Phase 6 scope). `Core/Camera.cpp` still has one `#if defined(RENDERER_VULKAN)` (also Phase 6).
+* No framework file outside `Source/RHI/` includes a backend header.
 * `rhi::CreateDevice()` / `rhi::CreateWindow()` are defined once per configuration in
   `RHI/OpenGL/BackendGL.cpp` / `RHI/Vulkan/BackendVK.cpp` and allocate the namespaced classes.
 
 Build note: `UnitTests` must be linked from an **x64** MSVC environment
 (`vcvars64.bat`). In an x86 shell the static library still builds, but executables fail to link
 with unresolved `operator new`.
+
+### Verification status after Phase 5
+
+* All four configurations build `GraphicsFramework` and link `UnitTests`
+  (`Debug_OpenGL`, `Release_OpenGL`, `Debug_Vulkan`, `Release_Vulkan`), and `Debug_Vulkan` /
+  `Release_Vulkan` both render at runtime.
+* Build rules per configuration are still single-backend:
+
+  | Configuration | OpenGL sources | Vulkan sources |
+  |---|---|---|
+  | `Debug_OpenGL` | 11 | 0 |
+  | `Release_OpenGL` | 11 | 0 |
+  | `Debug_Vulkan` | 0 | 22 |
+  | `Release_Vulkan` | 0 | 22 |
+
+  (Vulkan went from 21 to 22 sources because of `VMAImplementation.cpp`.)
+* `grep -n "vkAllocateMemory\|vkFreeMemory\|vkMapMemory\|vkUnmapMemory\|FindMemoryType"` over
+  `Source/` returns no hits.
+* SPIR-V generation is wired into the active build (`add_framework_spirv` in
+  `GraphicsFramework/CMakeLists.txt`), see section 9.
+* Behavioural run of all five `UnitTests` scenes (`-scene=<n>`), captured with `PrintWindow`:
+
+  | Scene | OpenGL | Vulkan |
+  |---|---|---|
+  | `ShaderTest` | ✅ gradient triangle | ✅ gradient triangle (vertically mirrored) |
+  | `VertexBufferTest` | ✅ animated gradient triangle | ✅ gradient triangle |
+  | `IndexBufferTest` | ✅ indexed quad | ✅ indexed quad (vertically mirrored) |
+  | `UniformBufferTest` | ✅ rotating quad | ❌ nothing drawn |
+  | `TextureTest` | ✅ JPEG texture on a rotating quad | ❌ crashes during texture creation |
+
+  No Vulkan validation errors and no `GLCall` assertions were reported by the working scenes.
+
+### Verification status after Phase 6
+
+* No `#if defined(RENDERER_*)` remains in any file under `Core/`.
+* `Core/ImguiManager.cpp` includes only `Rendering/Renderer.h` (not any backend header);
+  the five `#if defined(RENDERER_*)` blocks and two `static_cast<>` expressions are gone.
+* `Core/Camera.cpp` Y-flip replaced with `Renderer::Instance()->GetProjectionYFlip()`.
+* `OpenGL-Debug` builds `GraphicsFramework` successfully.
+* `Vulkan-Debug` builds `GraphicsFramework` successfully.
+
+#### Known Vulkan gaps (unchanged from Phase 5)
+
+Both failures from the Phase 5 verification are still present — they are pre-existing backend gaps
+that belong to Phase 7 (descriptor binding and image upload with layout transitions). Phase 6 does
+not touch those code paths.
+
+1. **No descriptor binding for uniform buffers or textures.** `UniformBufferTest` still shows
+   nothing rendered under Vulkan.
+2. **`TextureVK` cannot upload an image.** `TextureTest` still crashes during texture creation.
+
+#### Known Vulkan gaps found by the Phase 5 verification
+
+Both failures are pre-existing backend gaps that were invisible until this phase, because the
+Vulkan configuration could not start at all before the `volk` fix. Neither is caused by the VMA
+change: the failing code paths (`BindUniformBuffer`, `vkCreateImage` for a 3-channel image) are the
+ones Phase 5 did not touch.
+
+1. **No descriptor binding for uniform buffers or textures.**
+   `rhi::vk::Device::BindUniformBuffer()` contains one commented-out `vkCmdBindDescriptorSets`
+   call and `BindTexture()` is empty. `ShaderVK::Init()` reflects the descriptor set layout and
+   allocates a `VkDescriptorSet`, but nothing ever calls `vkUpdateDescriptorSets`, so the shader
+   reads an unbound set: the matrices are zero, every vertex collapses to `w = 0` and the quad is
+   clipped away (which is exactly what the `UniformBufferTest` screenshot shows — the clear colour,
+   the ImGui panels, no geometry).
+2. **`TextureVK` cannot upload an image.**
+   `TextureVK::ReadBufferToTexture()` creates the staging buffer, maps/copies/unmaps it and then
+   creates the image, but never records `vkCmdCopyBufferToImage` and never transitions the image
+   from `VK_IMAGE_LAYOUT_UNDEFINED` to `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`.
+   `TextureTest` additionally loads a 3-channel JPEG (`ImageFormat::RGB8` →
+   `VK_FORMAT_R8G8B8_SRGB`). Instrumentation narrowed the crash to `Device::CreateImage()`, i.e.
+   `vmaCreateImage` rejects that format for an optimal-tiling sampled image on this GPU (3-channel
+   8-bit formats are not generally supported for images in Vulkan). OpenGL handles `RGB8` natively,
+   which is why only the Vulkan run dies there.
+
+Both belong to the descriptor/pipeline work that the plan defers to Phase 7 (`Pipeline objects`).
+They are the remaining blockers for the section 9 acceptance check; either Phase 7's descriptor
+subset is pulled forward, or the acceptance check stays partially green.
 
 ---
 
@@ -522,14 +658,37 @@ For each backend, select every scene from the ImGui *Select Unit Test* combo and
 | `UniformBufferTest` | per-object transform updates; no descriptor/binding validation errors |
 | `TextureTest` | JPEG texture sampled correctly; no upside-down or blank image |
 
+The same scenes can be driven without mouse input by passing `-scene=<0..4>` (the order of the
+table above) to `UnitTests.exe`, which is how the Phase 5 check was run; the app stays open until
+its window is closed. Note that GDI screen captures (`CopyFromScreen`) return a black image for the
+OpenGL window — use `PrintWindow(PW_RENDERFULLCONTENT)` when capturing for review.
+
 A backend passes when all five scenes render and the console shows no Vulkan validation errors
 (debug build) or OpenGL `GLCall` assertions.
 
-### Known prerequisite: UnitTests SPIR-V shaders
+### Known prerequisite: UnitTests SPIR-V shaders — resolved
 
-The Vulkan runtime loads `res/spirv/<name>.spv`, while `UnitTests/CMakeLists.txt` currently emits
-SPIR-V into `UnitTests/spirv/` (and the utility target is not wired into the generated build). Before
-running the Vulkan verification this must be corrected: emit to `res/spirv/` (and `res/spirv/Vulkan/`
-for the Vulkan shader variants) so the post-build `res/` copy carries them next to the executable.
-This is a build-packaging fix, not an RHI change, and is tracked as part of the final verification
-step.
+The Vulkan runtime loads `res/spirv/<name>.spv`, while `UnitTests/CMakeLists.txt` used to emit
+SPIR-V into `UnitTests/spirv/` (and that utility target was not wired into the generated build), so
+the files never reached the executable's `res/` folder.
+
+SPIR-V generation now lives in the active build path: `add_framework_spirv()` in
+`GraphicsFramework/CMakeLists.txt`, called from `add_framework_app()` for every sample and for
+`UnitTests`:
+
+* every `res/**/*.{vert,frag,comp,geom,tesc,tese}` is compiled with `glslc … --target-env=vulkan1.2`
+  into `<shader dir>/spirv/<name>.spv`, which is exactly where `ShaderRegistry` looks
+  (`res/` + `spirv/<name>.spv`, or `res/shaders/` + `spirv/<name>.spv`);
+* a shader in `res/Vulkan/` is a Vulkan-specific variant of the equally named file in `res/`
+  (`gl_VertexIndex` instead of `gl_VertexID`); it wins over the base file and is emitted to
+  `res/spirv/<name>.spv`;
+* the generated files are attached to the target, so they are produced before the existing
+  POST_BUILD `copy_directory res → $<TARGET_FILE_DIR>/res` step carries them next to the
+  executable;
+* `glslc` is located through `$ENV{VULKAN_SDK}/Bin`; when the Vulkan SDK is absent nothing is
+  generated and the other backends build unchanged. Custom commands are not configuration-scoped
+  in CMake (only compile rules are), so when `glslc` *is* present the shaders are compiled for
+  every configuration; the OpenGL backend simply never reads the result.
+
+`UnitTests/CMakeLists.txt` is not part of the build (`add_framework_app` creates the target), so its
+old, orphaned SPIR-V rules are left untouched.

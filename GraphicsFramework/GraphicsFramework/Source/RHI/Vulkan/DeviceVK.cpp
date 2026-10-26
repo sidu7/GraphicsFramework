@@ -35,12 +35,18 @@ Author: Sidhant Tumma
 #include "RHI/Vulkan/Internal/DescriptorPoolVK.h"
 // Vulkan Helpers
 #include "Internal/HelperVK.h"
+// ImGui backend hooks
+#include "Imgui/backends/imgui_impl_sdl2.h"
+#include "Imgui/backends/imgui_impl_vulkan.h"
+#include <vulkan\vulkan.h>
 #include "Internal/CommandBufferPoolVK.h"
 #include "Internal/CommandBufferVK.h"
 #include "Internal/CommandQueueVK.h"
 #include "Internal/FenceVK.h"
 #include "Internal/SemaphoreVK.h"
 #include "Internal/SwapChainVK.h"
+
+#include <vk_mem_alloc.h>
 
 class VertexArray;
 class VertexBuffer;
@@ -88,80 +94,88 @@ VertexBuffer* Device::CreateVertexBuffer()
 	return new VertexBufferVK();
 }
 
-uint32_t Device::FindMemoryType(uint32_t Type, VkMemoryPropertyFlags Properties)
-{
-	for (int32_t i = 0; i < MemoryProperties.memoryTypeCount; ++i)
-	{
-		if (Type & (1 << i) && (MemoryProperties.memoryTypes[i].propertyFlags & Properties) == Properties)
-		{
-			return i;
-		}
-	}
-
-	std::cout << "Vulkan Failed to find the desired memory type." << std::endl;
-	return 0;
-}
-
-BufferInfo Device::CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags)
+BufferInfo Device::CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usageFlags, bool bHostVisible)
 {
 	BufferInfo BufferData;
-	BufferData.Size = bufferSize;
+	BufferData.Size = static_cast<uint32_t>(bufferSize);
 
 	VkBufferCreateInfo BufferCreateInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
 	BufferCreateInfo.size = bufferSize;
 	BufferCreateInfo.usage = usageFlags;
 	Helper::FillSharingMode(BufferCreateInfo.sharingMode, BufferCreateInfo.queueFamilyIndexCount, &BufferCreateInfo.pQueueFamilyIndices);
 
-	uint32_t QueueIndices[] = { GetQueueFamilyIndex(CommandQueueType::Graphics), GetQueueFamilyIndex(CommandQueueType::Transfer) };
-	BufferCreateInfo.queueFamilyIndexCount = ARRAY_SIZE(QueueIndices);
-	BufferCreateInfo.pQueueFamilyIndices = QueueIndices;
+	VmaAllocationCreateInfo AllocCreateInfo = {};
+	AllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
+	if (bHostVisible)
+	{
+		AllocCreateInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+	}
 
-	VKCall(vkCreateBuffer(mDevice, &BufferCreateInfo, nullptr, &BufferData.Buffer), "Buffer creation Failed.");
-
-	VkMemoryRequirements BufferMemoryRequirements;
-	vkGetBufferMemoryRequirements(mDevice, BufferData.Buffer, &BufferMemoryRequirements);
-
-	VkMemoryAllocateInfo AllocInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-	AllocInfo.allocationSize = BufferMemoryRequirements.size;
-	AllocInfo.memoryTypeIndex = FindMemoryType(BufferMemoryRequirements.memoryTypeBits, memoryPropertyFlags);
-
-	VKCall(vkAllocateMemory(mDevice, &AllocInfo, nullptr, &BufferData.BufferMemory), "Buffer memory allocation Failed.");
-
-	VKCall(vkBindBufferMemory(mDevice, BufferData.Buffer, BufferData.BufferMemory, 0), "Buffer memory binding Failed.");
+	VKCall(vmaCreateBuffer(mAllocator, &BufferCreateInfo, &AllocCreateInfo, &BufferData.Buffer, &BufferData.Allocation, nullptr), "Buffer creation Failed.");
 
 	return BufferData;
 }
 
-ImageInfo Device::CreateImage(uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags)
+ImageInfo Device::CreateImage(uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usageFlags)
 {
 	ImageInfo ImageData;
 
-	VkImageCreateInfo TexImageInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
-	TexImageInfo.imageType = VK_IMAGE_TYPE_2D;
-	TexImageInfo.format = imageFormat;
-	TexImageInfo.extent.width = width;
-	TexImageInfo.extent.height = height;
-	TexImageInfo.extent.depth = 1;
-	TexImageInfo.mipLevels = 1;
-	TexImageInfo.arrayLayers = 1;
-	TexImageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
-	TexImageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-	TexImageInfo.usage = usageFlags;
-	Helper::FillSharingMode(TexImageInfo.sharingMode, TexImageInfo.queueFamilyIndexCount, &TexImageInfo.pQueueFamilyIndices);
-	TexImageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	VkImageCreateInfo ImageCreateInfo = { VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO };
+	ImageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+	ImageCreateInfo.format = imageFormat;
+	ImageCreateInfo.extent.width = width;
+	ImageCreateInfo.extent.height = height;
+	ImageCreateInfo.extent.depth = 1;
+	ImageCreateInfo.mipLevels = 1;
+	ImageCreateInfo.arrayLayers = 1;
+	ImageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+	ImageCreateInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+	ImageCreateInfo.usage = usageFlags;
+	Helper::FillSharingMode(ImageCreateInfo.sharingMode, ImageCreateInfo.queueFamilyIndexCount, &ImageCreateInfo.pQueueFamilyIndices);
+	ImageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-	VKCall(vkCreateImage(mDevice, &TexImageInfo, nullptr, &ImageData.Image), "Failed to create Image.");
+	VmaAllocationCreateInfo AllocCreateInfo = {};
+	AllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
 
-	VkMemoryRequirements TexImageMemReq;
-	vkGetImageMemoryRequirements(mDevice, ImageData.Image, &TexImageMemReq);
-
-	VkMemoryAllocateInfo TexImageAllocInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
-	TexImageAllocInfo.allocationSize = TexImageMemReq.size;
-	TexImageAllocInfo.memoryTypeIndex = FindMemoryType(TexImageMemReq.memoryTypeBits, memoryPropertyFlags);
-	VKCall(vkAllocateMemory(mDevice, &TexImageAllocInfo, nullptr, &ImageData.ImageMemory), "Failed to allocate image memory.");
-	VKCall(vkBindImageMemory(mDevice, ImageData.Image, ImageData.ImageMemory, 0), "Failed to bind image memory.");
+	VKCall(vmaCreateImage(mAllocator, &ImageCreateInfo, &AllocCreateInfo, &ImageData.Image, &ImageData.Allocation, nullptr), "Failed to create Image.");
 
 	return ImageData;
+}
+
+void Device::DestroyBuffer(BufferInfo& buffer)
+{
+	if (buffer.Buffer != VK_NULL_HANDLE || buffer.Allocation != VK_NULL_HANDLE)
+	{
+		vmaDestroyBuffer(mAllocator, buffer.Buffer, buffer.Allocation);
+	}
+	buffer = BufferInfo();
+}
+
+void Device::DestroyImage(ImageInfo& image)
+{
+	if (image.Image != VK_NULL_HANDLE || image.Allocation != VK_NULL_HANDLE)
+	{
+		vmaDestroyImage(mAllocator, image.Image, image.Allocation);
+	}
+	image = ImageInfo();
+}
+
+void* Device::MapBuffer(BufferInfo& buffer, size_t offset)
+{
+	void* MappedPointer = nullptr;
+	VKCall(vmaMapMemory(mAllocator, buffer.Allocation, &MappedPointer), "Buffer memory mapping Failed.");
+
+	buffer.MappedMemory = static_cast<uint8_t*>(MappedPointer) + offset;
+	return buffer.MappedMemory;
+}
+
+void Device::UnmapBuffer(BufferInfo& buffer)
+{
+	if (buffer.Allocation != VK_NULL_HANDLE)
+	{
+		vmaUnmapMemory(mAllocator, buffer.Allocation);
+	}
+	buffer.MappedMemory = nullptr;
 }
 
 
@@ -201,6 +215,13 @@ void Device::Init()
 	Helper InitHelper;
 	
 	InitHelper.InitVulkan();
+
+	VmaAllocatorCreateInfo AllocatorInfo = {};
+	AllocatorInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+	AllocatorInfo.instance = VulkanInstance;
+	AllocatorInfo.physicalDevice = PhysicalDevice;
+	AllocatorInfo.device = mDevice;
+	VKCall(vmaCreateAllocator(&AllocatorInfo, &mAllocator), "Vulkan Memory Allocator creation Failed.");
 
 	SwapChain = new SwapChainVK();
 	SwapChain->Init();
@@ -315,6 +336,14 @@ void Device::Close()
 	delete TransientGraphicsCmdBufferPool;
 
 	delete SwapChain;
+
+	// All buffers/images are released by their owners before the device shuts down,
+	// so the allocator can go away here.
+	if (mAllocator != VK_NULL_HANDLE)
+	{
+		vmaDestroyAllocator(mAllocator);
+		mAllocator = VK_NULL_HANDLE;
+	}
 
 	vkDestroyDevice(mDevice, nullptr);
 	vkDestroySurfaceKHR(VulkanInstance, Surface, nullptr);
@@ -709,5 +738,36 @@ void Device::CreateDescriptorPools()
 	}
 
 	RendererDescPool->Init();
+}
+
+void Device::InitImGui()
+{
+	// Initialize SDL2 platform backend first
+	ImGui_ImplSDL2_InitForVulkan(Window::Instance()->GetWindow());
+
+	// Then initialize Vulkan rendering backend
+	rhi::vk::Helper VkHelper;
+	VkHelper.InitImGui();
+}
+
+void Device::NewFrame()
+{
+	ImGui_ImplVulkan_NewFrame();
+}
+
+void Device::Render()
+{
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), GetCommandBuffer()->mCommandBuffer);
+}
+
+void Device::ShutdownImGui()
+{
+	ImGui_ImplVulkan_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+}
+
+float Device::GetProjectionYFlip() const
+{
+	return -1.0f; // Vulkan clip space: Y goes down
 }
 }

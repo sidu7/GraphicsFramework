@@ -6,6 +6,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "Window.h"
 #include "ImguiManager.h"
+#include "Rendering/Renderer.h"
 
 void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 {
@@ -17,9 +18,7 @@ void Camera::Init(float FOVangle,float nearPlane, float farPlane)
 	mCameraRealUp = glm::vec3(0.0f);
 	glm::vec2 wSize = Window::Instance()->GetWindowSize();
 	mProjection = glm::perspective(FOVangle, wSize.x/wSize.y, nearPlane, farPlane);
-#if defined(RENDERER_VULKAN)
-	mProjection[1][1] *= -1.f;
-#endif
+	mProjection[1][1] *= Renderer::Instance()->GetProjectionYFlip();
 	pitch = 0.0f;
 	yaw = -90.0f;
 	CalculateFront();

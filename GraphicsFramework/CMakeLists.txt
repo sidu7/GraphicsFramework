@@ -51,6 +51,105 @@ set_target_properties(GraphicsFramework PROPERTIES
 # Add the library to the main project
 add_library(GraphicsFramework::GraphicsFramework ALIAS GraphicsFramework)
 
+# ---------------------------------------------------------------------------
+# SPIR-V generation
+#
+# Shaders are loaded through ShaderRegistry, which resolves "spirv/<name>.spv"
+# relative to the shader base directory the app registers ("res/" or
+# "res/shaders/"). The compiled SPIR-V therefore has to sit in a "spirv/" folder
+# next to the GLSL it was built from:
+#
+#   res/ShaderTest.vert       -> res/spirv/ShaderTest.vert.spv
+#   res/shaders/Drawing.vert  -> res/shaders/spirv/Drawing.vert.spv
+#
+# Shaders under res/Vulkan/ are Vulkan-specific variants of the equally named
+# shader in res/ (they use gl_VertexIndex instead of gl_VertexID). They take
+# precedence over the base file and always land in res/spirv/.
+#
+# Note that custom commands are not configuration-scoped the way compile rules
+# are, so when glslc is available the shaders are compiled in every
+# configuration. Only the Vulkan backend reads the result; without the Vulkan
+# SDK nothing is generated and the other backends are unaffected.
+# ---------------------------------------------------------------------------
+function(add_framework_spirv target_name res_dir)
+    # glslc ships with the Vulkan SDK; without it there is nothing to generate.
+    find_program(GF_GLSLC glslc
+        HINTS "$ENV{VULKAN_SDK}/Bin" "$ENV{VULKAN_SDK}/bin"
+        DOC "Path to glslc, the SPIR-V compiler shipped with the Vulkan SDK")
+    if(NOT GF_GLSLC)
+        message(STATUS "glslc not found - no SPIR-V generated for ${target_name}")
+        return()
+    endif()
+
+    set(shader_globs
+        "${res_dir}/*.vert" "${res_dir}/*.frag" "${res_dir}/*.comp"
+        "${res_dir}/*.geom" "${res_dir}/*.tesc" "${res_dir}/*.tese")
+
+    # Vulkan variants first: they override the shader of the same name.
+    set(vulkan_overrides "")
+    foreach(pattern IN LISTS shader_globs)
+        string(REPLACE "${res_dir}/" "${res_dir}/Vulkan/" nested_pattern "${pattern}")
+        file(GLOB matched CONFIGURE_DEPENDS "${nested_pattern}")
+        list(APPEND vulkan_overrides ${matched})
+    endforeach()
+
+    set(override_names "")
+    foreach(shader IN LISTS vulkan_overrides)
+        get_filename_component(shader_name "${shader}" NAME)
+        list(APPEND override_names "${shader_name}")
+    endforeach()
+
+    set(shader_sources "")
+    foreach(pattern IN LISTS shader_globs)
+        file(GLOB_RECURSE matched CONFIGURE_DEPENDS "${pattern}")
+        list(APPEND shader_sources ${matched})
+    endforeach()
+
+    set(spirv_outputs "")
+    foreach(shader IN LISTS shader_sources)
+        get_filename_component(shader_name "${shader}" NAME)
+        get_filename_component(shader_dir "${shader}" DIRECTORY)
+
+        # A res/Vulkan/<name> variant replaces res/<name>; skip the base file.
+        if(shader_dir STREQUAL "${res_dir}/Vulkan")
+            continue()
+        endif()
+        if(shader_name IN_LIST override_names)
+            continue()
+        endif()
+
+        set(output "${shader_dir}/spirv/${shader_name}.spv")
+        list(APPEND spirv_outputs "${output}")
+        add_custom_command(
+            OUTPUT "${output}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${shader_dir}/spirv"
+            COMMAND "${GF_GLSLC}" "${shader}" -o "${output}" --target-env=vulkan1.2
+            DEPENDS "${shader}"
+            COMMENT "[SPIR-V] ${shader_name}"
+            VERBATIM
+        )
+    endforeach()
+
+    foreach(shader IN LISTS vulkan_overrides)
+        get_filename_component(shader_name "${shader}" NAME)
+
+        set(output "${res_dir}/spirv/${shader_name}.spv")
+        list(APPEND spirv_outputs "${output}")
+        add_custom_command(
+            OUTPUT "${output}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${res_dir}/spirv"
+            COMMAND "${GF_GLSLC}" "${shader}" -o "${output}" --target-env=vulkan1.2
+            DEPENDS "${shader}"
+            COMMENT "[SPIR-V] Vulkan/${shader_name}"
+            VERBATIM
+        )
+    endforeach()
+
+    if(spirv_outputs)
+        target_sources(${target_name} PRIVATE ${spirv_outputs})
+    endif()
+endfunction()
+
 # Define a function to add framework apps
 function(add_framework_app target_name source_dir)
     file(GLOB_RECURSE app_sources CONFIGURE_DEPENDS "${source_dir}/*.cpp")
@@ -70,6 +169,8 @@ function(add_framework_app target_name source_dir)
         set(REsources_DIR "" CACHE STRING "No res directory found for ${target_name}" FORCE)
     endif()
     if(REsources_DIR)
+        add_framework_spirv(${target_name} "${REsources_DIR}")
+
         add_custom_command(TARGET ${target_name} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory
                 "${REsources_DIR}"

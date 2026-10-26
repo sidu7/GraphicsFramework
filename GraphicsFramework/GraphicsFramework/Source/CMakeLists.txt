@@ -108,7 +108,6 @@ target_include_directories(GF_RHI_Vulkan INTERFACE
     "${Vulkan_INCLUDE_DIRS}"
     "${GF_THIRD_PARTY}/SPIRV-Headers/include"
     "${GF_THIRD_PARTY}/spirv_reflect"
-    "${GF_THIRD_PARTY}/volk"
     "${GF_THIRD_PARTY}/vma/include"
 )
 target_compile_definitions(GF_RHI_Vulkan INTERFACE
@@ -162,7 +161,9 @@ target_link_libraries(GraphicsFramework PUBLIC
     VulkanMemoryAllocator
     stb_image
     "$<$<OR:$<CONFIG:Debug_Vulkan>,$<CONFIG:Release_Vulkan>>:spirv-reflect-static>"
-    "$<$<OR:$<CONFIG:Debug_Vulkan>,$<CONFIG:Release_Vulkan>>:volk>"
+    # The Vulkan loader is linked directly (${Vulkan_LIBRARY}). volk is not used:
+    # without a volkInitialize() call its vk* globals are null function pointers,
+    # which shadow the loader imports (causing a crash on the first vk call).
     "$<$<OR:$<CONFIG:Debug_Vulkan>,$<CONFIG:Release_Vulkan>>:${Vulkan_LIBRARY}>"
     "$<$<OR:$<CONFIG:Debug_OpenGL>,$<CONFIG:Release_OpenGL>>:opengl32>"
 )

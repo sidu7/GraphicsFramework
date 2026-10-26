@@ -26,6 +26,10 @@ bool CommandLine::HasParam(const std::string& param)
 
 bool CommandLine::GetValue(const std::string& param, float& outValue)
 {
+	if (CmdStr.empty())
+	{
+		return false;
+	}
 	std::string Sparam = SanitizeValueParam(param);
 	size_t FoundIdx = CmdStr.find(Sparam);
 	size_t Start = FoundIdx + Sparam.size();
@@ -37,6 +41,10 @@ bool CommandLine::GetValue(const std::string& param, float& outValue)
 
 bool CommandLine::GetValue(const std::string& param, int32_t& outValue)
 {
+	if (CmdStr.empty())
+	{
+		return false;
+	}
 	std::string Sparam = SanitizeValueParam(param);
 	size_t FoundIdx = CmdStr.find(Sparam);
 	size_t Start = FoundIdx + Sparam.size();
@@ -48,6 +56,10 @@ bool CommandLine::GetValue(const std::string& param, int32_t& outValue)
 
 bool CommandLine::GetValue(const std::string& param, std::string& outValue)
 {
+	if (CmdStr.empty())
+	{
+		return false;
+	}
 	std::string Sparam = SanitizeValueParam(param);
 	size_t FoundIdx = CmdStr.find(Sparam);
 	size_t Start = FoundIdx + Sparam.size();

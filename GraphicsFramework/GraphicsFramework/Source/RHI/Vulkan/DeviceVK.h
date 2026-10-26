@@ -141,11 +141,28 @@ public:
 	virtual Rect3D GetViewportSize() override;
 	virtual Rect2D GetScissorSize() override;
 
+	// Backend capability hooks for ImGui (called by ImguiManager)
+	virtual void InitImGui() override;
+	virtual void ShutdownImGui() override;
+	virtual void NewFrame() override;
+	virtual void Render() override;
+
+	// Clip-space capability
+	virtual float GetProjectionYFlip() const override;
+
 	void ExecuteTransientCommandBuffers();
 
-	// Device memory helpers (Vulkan-only)
-	BufferInfo CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags);
-	ImageInfo CreateImage(uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags);
+	// Device memory helpers (Vulkan-only). Allocation is handled by VMA:
+	// host-visible buffers are created with a persistent host-access flag and are
+	// mapped explicitly through MapBuffer()/UnmapBuffer().
+	BufferInfo CreateBuffer(VkDeviceSize bufferSize, VkBufferUsageFlags usageFlags, bool bHostVisible);
+	ImageInfo CreateImage(uint32_t width, uint32_t height, VkFormat imageFormat, VkImageUsageFlags usageFlags);
+
+	void DestroyBuffer(BufferInfo& buffer);
+	void DestroyImage(ImageInfo& image);
+
+	void* MapBuffer(BufferInfo& buffer, size_t offset = 0);
+	void UnmapBuffer(BufferInfo& buffer);
 
 	// Copy
 	CommandBufferVK* GetCopyCommandBuffer();
@@ -156,6 +173,7 @@ public:
 	inline const VkInstance& GetVulkanInstance() { return VulkanInstance; }
 	inline const VkPhysicalDevice& GetPhysicalDevice() { return PhysicalDevice; }
 	inline const VkDevice& GetDevice() { return mDevice; }
+	inline const VmaAllocator& GetAllocator() const { return mAllocator; }
 
 	inline const CommandBufferVK* GetCommandBuffer() { return RenderCommandBuffers[FrameIdx]; }
 	inline const VkClearValue& GetClearValue() { return ClearValue; }
@@ -177,8 +195,6 @@ protected:
 protected:
 	void CreateDescriptorPools();
 
-	uint32_t FindMemoryType(uint32_t Type, VkMemoryPropertyFlags Properties);
-
 	CullFace CullingFace;
 
 	// Core
@@ -190,6 +206,7 @@ protected:
 	VkDevice mDevice;
 	VkSurfaceKHR Surface;
 	VkPhysicalDeviceMemoryProperties MemoryProperties;
+	VmaAllocator mAllocator;
 
 	// Command Buffers, Queues and Pool
 	CommandBufferPoolVK* CommandBufferPool;

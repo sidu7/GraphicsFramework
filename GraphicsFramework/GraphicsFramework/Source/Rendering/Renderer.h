@@ -101,6 +101,15 @@ public:
 	virtual Rect3D GetViewportSize() = 0;
 	virtual Rect2D GetScissorSize() = 0;
 
+	// Backend capability hooks for ImGui (called by ImguiManager)
+	virtual void InitImGui() {}
+	virtual void ShutdownImGui() {}
+	virtual void NewFrame() {}
+	virtual void Render() {}
+
+	// Clip-space capability: returns -1 for Vulkan's inverted-Y NDC, 1 for OpenGL
+	virtual float GetProjectionYFlip() const { return 1.0f; }
+
 protected:
 	glm::vec3 mClearColor;
 };

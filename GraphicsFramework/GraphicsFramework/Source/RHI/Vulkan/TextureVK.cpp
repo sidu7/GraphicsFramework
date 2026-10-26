@@ -111,14 +111,12 @@ void TextureVK::Init(void* buffer, int size)
 
 TextureVK::~TextureVK()
 {
-	vkUnmapMemory(Device::Get()->GetDevice(), StagingImageBuffer.BufferMemory);
-	vkFreeMemory(Device::Get()->GetDevice(), StagingImageBuffer.BufferMemory, nullptr);
-	vkDestroyBuffer(Device::Get()->GetDevice(), StagingImageBuffer.Buffer, nullptr);
+	Device* VkDev = Device::Get();
 
-	vkFreeMemory(Device::Get()->GetDevice(), TexImageInfo.ImageMemory, nullptr);
-	vkDestroyImage(Device::Get()->GetDevice(), TexImageInfo.Image, nullptr);
-	vkDestroyImageView(Device::Get()->GetDevice(), TexImageView, nullptr);
-	vkDestroySampler(Device::Get()->GetDevice(), TexSampler, nullptr);
+	VkDev->DestroyBuffer(StagingImageBuffer);
+	VkDev->DestroyImage(TexImageInfo);
+	vkDestroyImageView(VkDev->GetDevice(), TexImageView, nullptr);
+	vkDestroySampler(VkDev->GetDevice(), TexSampler, nullptr);
 }
  
 void TextureVK::EnableTiling() const
@@ -134,13 +132,13 @@ void TextureVK::ReadBufferToTexture()
 	}
 
 	uint32_t ImageSize = mWidth * mHeight * GetNumChannels();
-	StagingImageBuffer = Device::Get()->CreateBuffer(ImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	StagingImageBuffer = Device::Get()->CreateBuffer(ImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true /*bHostVisible*/);
 
-	vkMapMemory(Device::Get()->GetDevice(), StagingImageBuffer.BufferMemory, 0, ImageSize, 0, &StagingImageBuffer.MappedMemory);
-	memcpy(StagingImageBuffer.MappedMemory, mLocalBuffer, static_cast<size_t>(ImageSize));
-	vkUnmapMemory(Device::Get()->GetDevice(), StagingImageBuffer.BufferMemory);
+	void* MappedData = Device::Get()->MapBuffer(StagingImageBuffer);
+	memcpy(MappedData, mLocalBuffer, static_cast<size_t>(ImageSize));
+	Device::Get()->UnmapBuffer(StagingImageBuffer);
 
-	TexImageInfo = Device::Get()->CreateImage(mWidth, mHeight, GetVkFormat(mFormat), VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	TexImageInfo = Device::Get()->CreateImage(mWidth, mHeight, GetVkFormat(mFormat), VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 
 	// Texture Image View
 	VkImageViewCreateInfo TexImageViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };

@@ -729,6 +729,10 @@ void Helper::InitVulkan()
 
 				VKCall(vkCreateDevice(VkRenderer->PhysicalDevice, &DeviceInfo, nullptr, &VkRenderer->mDevice), "Vulkan Logical Device creation Failed.");
 			}
+			else
+			{
+				std::cout << "Vulkan Device extensions not available." << std::endl;
+			}
 		}
 	}
 }

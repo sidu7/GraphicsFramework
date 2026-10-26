@@ -87,6 +87,15 @@ public:
 	virtual Rect3D GetViewportSize() override { return ViewportSize; }
 	virtual Rect2D GetScissorSize() override { return ScissorSize; }
 
+	// Backend capability hooks for ImGui (called by ImguiManager)
+	virtual void InitImGui() override;
+	virtual void ShutdownImGui() override;
+	virtual void NewFrame() override;
+	virtual void Render() override;
+
+	// Clip-space capability
+	virtual float GetProjectionYFlip() const override;
+
 protected:
 	FrameBuffer* BackBuffer;
 	CullFace CullingFace;

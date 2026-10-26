@@ -12,19 +12,22 @@ UniformBufferVK::UniformBufferVK() :
 
 UniformBufferVK::~UniformBufferVK()
 {
-	vkUnmapMemory(Device::Get()->GetDevice(), UboInfo.BufferMemory);
-	vkFreeMemory(Device::Get()->GetDevice(), UboInfo.BufferMemory, nullptr);
-	vkDestroyBuffer(Device::Get()->GetDevice(), UboInfo.Buffer, nullptr);
-	UboInfo.MappedMemory = nullptr;
+	Device* VkDev = Device::Get();
+
+	if (UboInfo.MappedMemory)
+	{
+		VkDev->UnmapBuffer(UboInfo);
+	}
+	VkDev->DestroyBuffer(UboInfo);
 }
 
 void UniformBufferVK::Init(uint32_t size, uint32_t binding, const void* data)
 {
 	mBinding = binding;
 
-	UboInfo = Device::Get()->CreateBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	UboInfo = Device::Get()->CreateBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, true /*bHostVisible*/);
 
-	VKCall(vkMapMemory(Device::Get()->GetDevice(), UboInfo.BufferMemory, 0, UboInfo.Size, 0, &UboInfo.MappedMemory), "Uniform Buffer memory mapping Failed.");
+	UboInfo.MappedMemory = Device::Get()->MapBuffer(UboInfo);
 }
 
 void UniformBufferVK::AddData(uint32_t size, const void* data, uint32_t offset) const

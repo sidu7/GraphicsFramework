@@ -29,6 +29,10 @@ Author: Sidhant Tumma
 #include "RHI/OpenGL/ShaderGL.h"
 #include "RHI/OpenGL/ComputeShaderGL.h"
 #include "RHI/OpenGL/TextureGL.h"
+#include "Core/Window.h"
+#include "Imgui/backends/imgui_impl_sdl2.h"
+#include "Imgui/backends/imgui_impl_opengl3.h"
+#include "RHI/OpenGL/WindowGL.h"
 
 class VertexArray;
 class VertexBuffer;
@@ -397,5 +401,36 @@ void Device::SetScissorSize(Rect2D scissor)
 {
 	ScissorSize = scissor;
 	glScissor(ViewportSize.Offset.x, ViewportSize.Offset.y, ViewportSize.Size.x, ViewportSize.Size.y);
+}
+
+float Device::GetProjectionYFlip() const
+{
+	return 1.0f; // OpenGL clip space: Y goes up
+}
+
+void Device::InitImGui()
+{
+	rhi::gl::WindowGL* WindowGL = static_cast<rhi::gl::WindowGL*>(Window::Instance());
+	ImGui_ImplSDL2_InitForOpenGL(WindowGL->GetWindow(), WindowGL->GetContext());
+	ImGui_ImplOpenGL3_Init("#version 430");
+
+	// Build font texture atlas eagerly so it's available for the first NewFrame() call
+	ImGui_ImplOpenGL3_CreateFontsTexture();
+}
+
+void Device::NewFrame()
+{
+	ImGui_ImplOpenGL3_NewFrame();
+}
+
+void Device::Render()
+{
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void Device::ShutdownImGui()
+{
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
 }
 }

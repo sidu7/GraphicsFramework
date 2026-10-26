@@ -17,31 +17,10 @@ IndexBufferVK::~IndexBufferVK()
 
 void IndexBufferVK::Delete()
 {
-	VkDevice device = Device::Get()->GetDevice();
+	Device* VkDev = Device::Get();
 
-	if (StagingBufferInfo.Buffer != VK_NULL_HANDLE)
-	{
-		vkDestroyBuffer(device, StagingBufferInfo.Buffer, nullptr);
-		StagingBufferInfo.Buffer = VK_NULL_HANDLE;
-	}
-	if (StagingBufferInfo.BufferMemory != VK_NULL_HANDLE)
-	{
-		vkFreeMemory(device, StagingBufferInfo.BufferMemory, nullptr);
-		StagingBufferInfo.BufferMemory = VK_NULL_HANDLE;
-	}
-	StagingBufferInfo.MappedMemory = nullptr;
-
-	if (MainBufferInfo.Buffer != VK_NULL_HANDLE)
-	{
-		vkDestroyBuffer(device, MainBufferInfo.Buffer, nullptr);
-		MainBufferInfo.Buffer = VK_NULL_HANDLE;
-	}
-	if (MainBufferInfo.BufferMemory != VK_NULL_HANDLE)
-	{
-		vkFreeMemory(device, MainBufferInfo.BufferMemory, nullptr);
-		MainBufferInfo.BufferMemory = VK_NULL_HANDLE;
-	}
-	MainBufferInfo.MappedMemory = nullptr;
+	VkDev->DestroyBuffer(StagingBufferInfo);
+	VkDev->DestroyBuffer(MainBufferInfo);
 }
 
 void IndexBufferVK::AddData(const void* data, unsigned int count, IndexType type)
@@ -52,25 +31,21 @@ void IndexBufferVK::AddData(const void* data, unsigned int count, IndexType type
 
 	if (StagingBufferInfo.Buffer == VK_NULL_HANDLE)
 	{
-		StagingBufferInfo = Device::Get()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		StagingBufferInfo = Device::Get()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true /*bHostVisible*/);
 	}
 	if (MainBufferInfo.Buffer == VK_NULL_HANDLE)
 	{
-		MainBufferInfo = Device::Get()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		MainBufferInfo = Device::Get()->CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, false /*bHostVisible*/);
 	}
 
 	// Map Memory and copy data
-	VKCall(vkMapMemory(Device::Get()->GetDevice(), StagingBufferInfo.BufferMemory, 0, bufferSize, 0, &StagingBufferInfo.MappedMemory), "Index Buffer memory mapping Failed.");
-	memcpy(StagingBufferInfo.MappedMemory, data, bufferSize);
-	vkUnmapMemory(Device::Get()->GetDevice(), StagingBufferInfo.BufferMemory);
+	void* MappedData = Device::Get()->MapBuffer(StagingBufferInfo);
+	memcpy(MappedData, data, bufferSize);
+	Device::Get()->UnmapBuffer(StagingBufferInfo);
 
 	std::function<void()> OnCopyFinish = [this]()
 	{
-		vkFreeMemory(Device::Get()->GetDevice(), StagingBufferInfo.BufferMemory, nullptr);
-		StagingBufferInfo.BufferMemory = VK_NULL_HANDLE;
-		vkDestroyBuffer(Device::Get()->GetDevice(), StagingBufferInfo.Buffer, nullptr);
-		StagingBufferInfo.Buffer = VK_NULL_HANDLE;
-		StagingBufferInfo.MappedMemory = nullptr;
+		Device::Get()->DestroyBuffer(StagingBufferInfo);
 	};
 
 	Device::Get()->QueueCopyCommands(StagingBufferInfo, MainBufferInfo, OnCopyFinish);

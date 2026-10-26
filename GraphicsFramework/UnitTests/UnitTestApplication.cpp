@@ -43,6 +43,23 @@ void UnitTestApplication::Init()
 
 	Engine::Instance()->AddCustomDebugFunction(std::bind(&UnitTestApplication::UnitTestSelector, this));
 	Engine::Instance()->SetScene<ShaderTest>();
+
+	// Optional startup selector: -scene=<0..4> jumps straight to one unit test, which makes the
+	// scenes scriptable for the backend verification (the combo below stays interactive).
+	int SceneIndex = -1;
+	if (CommandLine::Instance()->GetValue("-scene", SceneIndex))
+	{
+		SelectedUnitTest = SceneIndex;
+		switch (SceneIndex)
+		{
+			case 0: Engine::Instance()->SetScene<ShaderTest>(); break;
+			case 1: Engine::Instance()->SetScene<VertexBufferTest>(); break;
+			case 2: Engine::Instance()->SetScene<IndexBufferTest>(); break;
+			case 3: Engine::Instance()->SetScene<UniformBufferTest>(); break;
+			case 4: Engine::Instance()->SetScene<TextureTest>(); break;
+			default: break;
+		}
+	}
 }
 
 void UnitTestApplication::Close()
