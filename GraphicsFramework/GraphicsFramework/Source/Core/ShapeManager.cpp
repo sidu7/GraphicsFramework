@@ -132,12 +132,12 @@ void ShapeManager::CreatePyramid()
 
 void ShapeManager::CreateQuad()
 {
-	std::vector<Vertex> vertices;
+	std::vector<ShapeVertex> vertices;
 	std::vector<uint16_t> indices;
 
 	for (int i = 0; i < 4; ++i)
 	{
-		Vertex v;
+		ShapeVertex v;
 		int x = (i == 0 || i == 3) ? -1 : 1;
 		int y = (i < 2) ? -1 : 1;
 		v.position  = glm::vec3(0.5f * x, 0.5f * y, 0.0f);
@@ -153,7 +153,7 @@ void ShapeManager::CreateQuad()
 
 void ShapeManager::CreateCube()
 {
-	std::vector<Vertex> vertices;
+	std::vector<ShapeVertex> vertices;
 	vertices.reserve(32);
 	std::vector<uint16_t> indices;
 
@@ -203,21 +203,22 @@ void ShapeManager::CreateCube()
 	{
 		for (int v = 0; v < 4; ++v)
 		{
-			Vertex vertex;
+			ShapeVertex vertex;
 			vertex.position  = glm::vec3(facePositions[f][v][0], facePositions[f][v][1], facePositions[f][v][2]);
 			vertex.normal    = faceNormals[f];
 			vertex.texCoord  = faceTexCoords[v];
 			vertices.push_back(vertex);
 		}
 
-		// Add 3 indices for each of the 2 triangles per face
-		for (int i = 0; i < 2; ++i)
-		{
-			int base = faceOffsets[f] + i * 3;
-			indices.push_back(static_cast<uint16_t>(base));
-			indices.push_back(static_cast<uint16_t>(base + 1));
-			indices.push_back(static_cast<uint16_t>(base + 2));
-		}
+		// Two triangles per face: (0,1,2) and (0,2,3) relative to the face's
+		// first vertex, matching the 4 vertices pushed above.
+		const uint16_t base = static_cast<uint16_t>(faceOffsets[f]);
+		indices.push_back(base);
+		indices.push_back(static_cast<uint16_t>(base + 1));
+		indices.push_back(static_cast<uint16_t>(base + 2));
+		indices.push_back(base);
+		indices.push_back(static_cast<uint16_t>(base + 2));
+		indices.push_back(static_cast<uint16_t>(base + 3));
 	}
 
 	MakeVAO(vertices, indices, Shapes::CUBE);
@@ -229,7 +230,7 @@ void ShapeManager::CreateSphere()
 	int n = 32;
 	float d = 2.0f * PI / static_cast<float>(n * 2);
 
-	std::vector<Vertex> vertices;
+	std::vector<ShapeVertex> vertices;
 	std::vector<uint16_t> indices;
 	vertices.reserve((n * 2 + 1) * (n + 1));
 	indices.reserve(n * n * 6);
@@ -241,7 +242,7 @@ void ShapeManager::CreateSphere()
 		{
 			float t = j * PI / static_cast<float>(n);
 
-			Vertex v;
+			ShapeVertex v;
 			v.position = glm::vec3(cos(s) * sin(t), sin(s) * sin(t), cos(t));
 			v.normal   = v.position;  // unit sphere: position == normal
 			v.texCoord = glm::vec2(s / (2.0f * PI), t / PI);
@@ -271,8 +272,8 @@ void ShapeManager::CreateTeapot()
 {
 	const int n = 12;
 
-	// 16 control points per Bezier patch × 78 patches
-	static constexpr unsigned int TeapotIndex[78][16] = {
+	// 16 control points per Bezier patch × 32 patches (standard Newell teapot)
+	static constexpr unsigned int TeapotIndex[32][16] = {
 		{ 1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16 },
 		{ 4, 17, 18, 19,  8, 20, 21, 22, 12, 23, 24, 25, 16, 26, 27, 28 },
 		{ 19, 29, 30, 31, 22, 32, 33, 34, 25, 35, 36, 37, 28, 38, 39, 40 },
@@ -305,18 +306,6 @@ void ShapeManager::CreateTeapot()
 		{270,270,270,270,282,289,290,291,278,286,287,288,274,283,284,285 },
 		{270,270,270,270,291,298,299,300,288,295,296,297,285,292,293,294 },
 		{270,270,270,270,300,305,306,279,297,303,304,275,294,301,302,271 },
-		{177,184,185,174,189,198,199,186,193,200,201,190,197,202,203,194 },
-		{133,134,135,136,145,146,147,148,149,150,151,152,153,154,155,156 },
-		{136,143,144,133,148,156,157,145,152,158,159,149,155,160,161, 69 },
-		{174,175,176,177,186,187,188,189,190,191,192,193,194,195,196,197 },
-		{204,204,204,204,207,208,209,210,211,211,211,211,212,213,214,215 },
-		{212,213,214,215,234,235,236,237,238,239,240,241,242,243,244,245 },
-		{245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260 },
-		{260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275 },
-		{275,276,277,278,279,280,281,282,283,284,285,286,287,288,289,290 },
-		{290,291,292,293,294,295,296,297,298,299,300,301,302,303,304,305 },
-		{305,306,279,300,270,270,270,270,271,272,273,274,275,276,277,278 },
-		{306,279,270,270,270,270,271,272,273,274,307,308,309,310,311,312 },
 	};
 
 	// Control points (1-based indexing in TeapotIndex, converted to 0-based below)
@@ -431,13 +420,13 @@ void ShapeManager::CreateTeapot()
 		glm::vec3(1.425,-0.798,0.0)
 	};
 
-	const int npatches = 78;
+	constexpr int npatches = static_cast<int>(sizeof(TeapotIndex) / sizeof(TeapotIndex[0]));
 	const int vertsPerPatch = (n + 1) * (n + 1);
 
-	std::vector<Vertex> vertices;
+	std::vector<ShapeVertex> vertices;
 	std::vector<uint16_t> indices;
 	vertices.reserve(npatches * vertsPerPatch);
-	indices.reserve(npatches * n * n * 2);  // 2 triangles per grid cell
+	indices.reserve(npatches * n * n * 6);  // 6 indices per grid cell (2 triangles)
 
 	for (int p = 0; p < npatches; ++p)
 	{
@@ -498,7 +487,7 @@ void ShapeManager::CreateTeapot()
 					u2 * dv0 * (*pts[9] - *pts[8]) + u2 * dv1 * (*pts[10] - *pts[9]) + u2 * dv2 * (*pts[11] - *pts[10]) +
 					u3 * dv0 * (*pts[13] - *pts[12]) + u3 * dv1 * (*pts[14] - *pts[13]) + u3 * dv2 * (*pts[15] - *pts[14]);
 
-				Vertex vert;
+				ShapeVertex vert;
 				vert.position  = V;
 				vert.normal    = glm::normalize(glm::cross(dv, du));
 				vert.texCoord  = glm::vec2(u, v);
@@ -527,7 +516,7 @@ void ShapeManager::CreateTeapot()
 //  Shared VAO builder
 // ──────────────────────────────────────────────────────
 
-void ShapeManager::MakeVAO(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, Shapes shape)
+void ShapeManager::MakeVAO(const std::vector<ShapeVertex>& vertices, const std::vector<uint16_t>& indices, Shapes shape)
 {
 	ShapeData& data = mShapes[shape];
 	data.mVBO = RenderingFactory::Instance()->CreateVertexBuffer();
@@ -539,6 +528,6 @@ void ShapeManager::MakeVAO(const std::vector<Vertex>& vertices, const std::vecto
 		VertexFormat::Vec2,  // Texture Coordinates
 	});
 
-	data.mVBO->AddData(vertices.data(), static_cast<unsigned int>(vertices.size()) * sizeof(Vertex));
+	data.mVBO->AddData(vertices.data(), static_cast<unsigned int>(vertices.size()) * sizeof(ShapeVertex));
 	data.mIBO->AddData(indices.data(), static_cast<unsigned int>(indices.size()), IndexType::UInt16);
 }

@@ -6,7 +6,7 @@
 class IndexBuffer;
 class VertexBuffer;
 
-struct Vertex
+struct ShapeVertex
 {
 	glm::vec3 position;
 	glm::vec3 normal;
@@ -54,7 +54,7 @@ private:
 	void CreateTeapot();
 
 	// Shared VAO creation (takes data by const reference to avoid copies)
-	void MakeVAO(const std::vector<Vertex>& vertices, const std::vector<uint16_t>& indices, Shapes shape);
+	void MakeVAO(const std::vector<ShapeVertex>& vertices, const std::vector<uint16_t>& indices, Shapes shape);
 
 	bool mInitialized = false;
 };

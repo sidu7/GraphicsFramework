@@ -5,20 +5,26 @@
 #include "Rendering/RenderingFactory.h"
 #include "UnitTestShaderID.h"
 
-struct Vertex
+namespace
 {
-	glm::vec2 Position;
-	glm::vec3 Color;
-};
+	// Test-local vertex type. Must not be named `Vertex`: the framework already
+	// defines a global `Vertex` (ShapeManager.h) with a different layout, and a
+	// second definition would be an ODR violation that silently corrupts the heap.
+	struct IndexBufferTestVertex
+	{
+		glm::vec2 Position;
+		glm::vec3 Color;
+	};
 
-const std::vector<Vertex> Vertices = {
-		{ glm::vec2(-0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f) },
-		{ glm::vec2(0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f) },
-		{ glm::vec2(0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
-		{ glm::vec2(-0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f) }
-};
+	const std::vector<IndexBufferTestVertex> Vertices = {
+			{ glm::vec2(-0.5f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f) },
+			{ glm::vec2(0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f) },
+			{ glm::vec2(0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
+			{ glm::vec2(-0.5f, 0.5f), glm::vec3(1.0f, 1.0f, 1.0f) }
+	};
 
-const std::vector<uint16_t> Indices = { 0, 1, 2, 2, 3, 0 };
+	const std::vector<uint16_t> Indices = { 0, 1, 2, 2, 3, 0 };
+}
 
 void IndexBufferTest::Init()
 {
@@ -29,7 +35,7 @@ void IndexBufferTest::Init()
 		VertexFormat::Vec3  // Color
 						   });
 
-	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(Vertex)));
+	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(IndexBufferTestVertex)));
 
 	IBuffer = RenderingFactory::Instance()->CreateIndexBuffer();
 	IBuffer->AddData(Indices.data(), static_cast<unsigned int>(Indices.size()), IndexType::UInt16);

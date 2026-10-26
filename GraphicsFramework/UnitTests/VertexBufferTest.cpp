@@ -5,17 +5,23 @@
 #include "Rendering/RenderingFactory.h"
 #include "UnitTestShaderID.h"
 
-struct Vertex
+namespace
 {
-	glm::vec2 Position;
-	glm::vec3 Color;
-};
+	// Test-local vertex type. Must not be named `Vertex`: the framework already
+	// defines a global `Vertex` (ShapeManager.h) with a different layout, and a
+	// second definition would be an ODR violation that silently corrupts the heap.
+	struct VertexBufferTestVertex
+	{
+		glm::vec2 Position;
+		glm::vec3 Color;
+	};
 
-std::vector<Vertex> Vertices = {
-	{ glm::vec2(0.0f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f) },
-	{ glm::vec2(0.5f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f) },
-	{ glm::vec2(-0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
-};
+	std::vector<VertexBufferTestVertex> Vertices = {
+		{ glm::vec2(0.0f, -0.5f), glm::vec3(1.0f, 0.0f, 0.0f) },
+		{ glm::vec2(0.5f, 0.5f), glm::vec3(0.0f, 1.0f, 0.0f) },
+		{ glm::vec2(-0.5f, 0.5f), glm::vec3(0.0f, 0.0f, 1.0f) },
+	};
+}
 
 void VertexBufferTest::Init()
 {
@@ -26,7 +32,7 @@ void VertexBufferTest::Init()
 		VertexFormat::Vec3  // Color
 						   });
 
-	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(Vertex)));
+	VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(VertexBufferTestVertex)));
 
 	BasicShader = RenderingFactory::Instance()->CreateShader();
 	BasicShader->Init(static_cast<int32_t>(UnitTestShaderID::VERTEXBUFFER_TEST));
@@ -47,11 +53,11 @@ void VertexBufferTest::Update()
 	if (TestTime > 0.5f)
 	{
 		TestTime = 0.0f;
-		for (Vertex& Vert : Vertices)
+		for (VertexBufferTestVertex& Vert : Vertices)
 		{
 			Vert.Color = glm::vec3(glm::linearRand(0.0f, 1.0f), glm::linearRand(0.0f, 1.0f), glm::linearRand(0.0f, 1.0f));
 		}
-		VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(Vertex)));
+		VBuffer->AddData(Vertices.data(), static_cast<unsigned int>(Vertices.size() * sizeof(VertexBufferTestVertex)));
 	}
 	Renderer::Instance()->Draw(BasicShader, VBuffer, static_cast<int32_t>(Vertices.size()), 0);
 }
