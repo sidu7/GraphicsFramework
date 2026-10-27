@@ -129,7 +129,7 @@ unsigned int ShaderGL::CompileShader(unsigned int type, const std::vector<char>&
 	if (result == GL_FALSE)
 	{
 		int length;
-		GLCall(glGetShaderiv(id, GL_COMPILE_STATUS, &length));
+		GLCall(glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length));
 		char* message = (char*)alloca(length * sizeof(char));
 		GLCall(glGetShaderInfoLog(id, length, &length, message));
 		std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex " : "fragment ") << "shader" << std::endl;

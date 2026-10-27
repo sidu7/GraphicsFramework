@@ -53,27 +53,26 @@ void ShapeManager::Close()
 
 void ShapeManager::CreateLine()
 {
-	ShapeData& data = mShapes[Shapes::LINE];
+	std::vector<ShapeVertex> verts(2);
+	verts[0].position = glm::vec3(0.0f, 0.0f, 0.0f);
+	verts[1].position = glm::vec3(1.0f, 0.0f, 0.0f);
+	for (ShapeVertex& vert : verts)
+	{
+		vert.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+		vert.texCoord = glm::vec2(0.0f, 0.0f);
+	}
 
-	std::vector<glm::vec3> verts;
-	verts.emplace_back(0.0f, 0.0f, 0.0f);
-	verts.emplace_back(1.0f, 0.0f, 0.0f);
+	const std::vector<uint16_t> indices = { 0, 1 };
 
-	constexpr uint16_t indices[] = { 0, 1 };
-
-	data.mVBO = Renderer::Instance()->CreateVertexBuffer();
-	data.mIBO = Renderer::Instance()->CreateIndexBuffer();
-
-	data.mVBO->SetDataLayout({ VertexFormat::Vec3 });
-	data.mVBO->AddData(verts.data(), static_cast<unsigned int>(verts.size()) * sizeof(glm::vec3));
-	data.mIBO->AddData(indices, static_cast<unsigned int>(sizeof(indices) / sizeof(indices[0])), IndexType::UInt16);
+	// Same layout as the solid geometry: Vulkan derives the vertex stride from
+	// the shader rather than from SetDataLayout, so wire primitives must use the
+	// shared ShapeVertex layout too.
+	MakeVAO(verts, indices, Shapes::LINE);
 }
 
 void ShapeManager::CreateWireCube()
 {
-	ShapeData& data = mShapes[Shapes::WIRECUBE];
-
-	std::vector<glm::vec3> verts = {
+	const glm::vec3 Positions[] = {
 		glm::vec3(-0.5f, -0.5f, -0.5f),
 		glm::vec3( 0.5f, -0.5f, -0.5f),
 		glm::vec3( 0.5f,  0.5f, -0.5f),
@@ -84,7 +83,18 @@ void ShapeManager::CreateWireCube()
 		glm::vec3(-0.5f,  0.5f,  0.5f),
 	};
 
-	constexpr uint16_t indices[] = {
+	std::vector<ShapeVertex> verts;
+	verts.reserve(8);
+	for (const glm::vec3& Position : Positions)
+	{
+		ShapeVertex vert;
+		vert.position = Position;
+		vert.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+		vert.texCoord = glm::vec2(0.0f, 0.0f);
+		verts.push_back(vert);
+	}
+
+	const std::vector<uint16_t> indices = {
 		// Back face
 		0, 1, 1, 2, 2, 3, 3, 0,
 		// Front face
@@ -93,19 +103,16 @@ void ShapeManager::CreateWireCube()
 		0, 4, 1, 5, 2, 6, 3, 7
 	};
 
-	data.mVBO = Renderer::Instance()->CreateVertexBuffer();
-	data.mIBO = Renderer::Instance()->CreateIndexBuffer();
-
-	data.mVBO->SetDataLayout({ VertexFormat::Vec3 });
-	data.mVBO->AddData(verts.data(), static_cast<unsigned int>(verts.size()) * sizeof(glm::vec3));
-	data.mIBO->AddData(indices, static_cast<unsigned int>(sizeof(indices) / sizeof(indices[0])), IndexType::UInt16);
+	MakeVAO(verts, indices, Shapes::WIRECUBE);
 }
 
 void ShapeManager::CreatePyramid()
 {
-	ShapeData& data = mShapes[Shapes::PYRAMID];
-
-	std::vector<glm::vec3> verts = {
+	// Built with the shared ShapeVertex layout (position/normal/texcoord) so the
+	// vertex stride matches what shaders declare. A position-only buffer happens
+	// to work on OpenGL (which honours SetDataLayout) but not on Vulkan, where
+	// the stride comes from the shader's reflected attributes.
+	const glm::vec3 Positions[] = {
 		glm::vec3( 0.0f,  0.5f,  0.0f),  // apex
 		glm::vec3( 0.5f, -0.5f,  0.5f),
 		glm::vec3( 0.5f, -0.5f, -0.5f),
@@ -113,17 +120,23 @@ void ShapeManager::CreatePyramid()
 		glm::vec3(-0.5f, -0.5f, -0.5f),
 	};
 
-	constexpr uint16_t indices[] = {
+	std::vector<ShapeVertex> vertices;
+	vertices.reserve(5);
+	for (const glm::vec3& Position : Positions)
+	{
+		ShapeVertex Vertex;
+		Vertex.position = Position;
+		Vertex.normal = glm::normalize(Position - glm::vec3(0.0f, -0.1f, 0.0f));
+		Vertex.texCoord = glm::vec2(Position.x + 0.5f, Position.z + 0.5f);
+		vertices.push_back(Vertex);
+	}
+
+	const std::vector<uint16_t> indices = {
 		1, 0, 2, 2, 0, 3, 3, 0, 4, 4, 0, 1,
 		1, 2, 3, 3, 2, 4, 4, 3, 2, 2, 3, 1
 	};
 
-	data.mVBO = Renderer::Instance()->CreateVertexBuffer();
-	data.mIBO = Renderer::Instance()->CreateIndexBuffer();
-
-	data.mVBO->SetDataLayout({ VertexFormat::Vec3 });
-	data.mVBO->AddData(verts.data(), static_cast<unsigned int>(verts.size()) * sizeof(glm::vec3));
-	data.mIBO->AddData(indices, static_cast<unsigned int>(sizeof(indices) / sizeof(indices[0])), IndexType::UInt16);
+	MakeVAO(vertices, indices, Shapes::PYRAMID);
 }
 
 // ──────────────────────────────────────────────────────

@@ -137,6 +137,10 @@ public:
 	virtual void SetCullingFace(CullFace Face) override;
 	virtual CullFace GetCullingFace() override;
 
+	// Vulkan clears through the render pass load op, so the colour lives in the
+	// clear-value array rather than in Renderer::mClearColor.
+	virtual void SetClearColor(glm::vec3 color) override;
+
 	virtual const FrameBuffer* GetBackBuffer() override;
 	virtual void SetViewportSize(Rect3D viewport) override;
 	virtual void SetScissorSize(Rect2D scissor) override;
@@ -186,7 +190,7 @@ public:
 	inline const VmaAllocator& GetAllocator() const { return mAllocator; }
 
 	inline const CommandBufferVK* GetCommandBuffer() { return RenderCommandBuffers[FrameIdx]; }
-	inline const VkClearValue& GetClearValue() { return ClearValue; }
+	inline const VkClearValue* GetClearValues() const { return ClearValues; }
 	inline const uint32_t GetQueueFamilyIndex(CommandQueueType type) { return QueueFamilyData.QueueIndices[type]; }
 	inline const CommandQueueVK* GetQueue(CommandQueueType type) { return CommandQueues[type]; }
 	inline DescriptorPoolVK* GetDescriptorPool() { return RendererDescPool; }
@@ -210,6 +214,11 @@ protected:
 	// currently bound uniform buffers/textures. Returns VK_NULL_HANDLE when the
 	// shader has no descriptors.
 	VkDescriptorSet AllocateDrawDescriptorSet(const ShaderVK* shader);
+
+	// Records the shared dynamic state for a debug-line draw and binds the
+	// shader's line pipeline (Vulkan only allows a topology change within the
+	// same topology class).
+	void BeginDebugDraw(const Shader* shader, VkPrimitiveTopology topology);
 
 	CullFace CullingFace;
 
@@ -254,8 +263,26 @@ protected:
 	std::vector<FenceVK*> InFlightFences;
 
 	// RenderPass
+	//
+	// The screen render pass stays open for the whole 3D portion of a frame so
+	// that every draw accumulates into the same swapchain image (the pass is
+	// only cleared once, when it is begun in StartFrame). It is closed when
+	// ImGui renders (a separate pass that presents to screen) or at the end of
+	// the frame.
+	void BeginScreenPass();
+	void EndScreenPass();
+
 	RenderPassVK* ScreenRenderPass;
-	VkClearValue ClearValue;
+	bool mScreenPassOpen = false;
+	bool mPresentedToScreen = false;
+
+	// One depth buffer per swapchain image, owned here because the framebuffers
+	// only reference the views.
+	std::vector<ImageInfo> DepthImages;
+	std::vector<VkImageView> DepthImageViews;
+
+	// [0] colour, [1] depth
+	VkClearValue ClearValues[2];
 
 	// ImGui
 	RenderPassVK* ImGuiRenderPass;

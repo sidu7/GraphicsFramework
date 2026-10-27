@@ -22,6 +22,10 @@ public:
 
 		file.close();
 
+		// Shader sources are handed to glShaderSource without an explicit length,
+		// so the buffer has to be null terminated.
+		FileData.push_back('\0');
+
 		return FileData;
 	}
 

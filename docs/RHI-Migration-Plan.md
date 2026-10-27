@@ -705,8 +705,20 @@ For each backend, select every scene from the ImGui *Select Unit Test* combo and
 
 The same scenes can be driven without mouse input by passing `-scene=<0..4>` (the order of the
 table above) to `UnitTests.exe`, which is how the Phase 5 check was run; the app stays open until
-its window is closed. Note that GDI screen captures (`CopyFromScreen`) return a black image for the
-OpenGL window — use `PrintWindow(PW_RENDERFULLCONTENT)` when capturing for review.
+its window is closed. Note that GDI screen captures (`CopyFromScreen`) return a black image for
+both backends — use `PrintWindow(PW_RENDERFULLCONTENT)` when capturing for review.
+
+The capture procedure is automated: `scripts/verify-scene.ps1` builds the target, runs one scene,
+captures the `SDL_app` window with `PrintWindow`, saves the PNG plus the redirected stdout/stderr
+(Vulkan validation messages) and prints pixel statistics that decide pass/fail without opening the
+image:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\verify-scene.ps1 -Preset Vulkan-Debug -Scene 4 -Build
+```
+
+See `.opencode/skills/visual-verify/SKILL.md` for the full procedure, baseline numbers and failure
+signatures.
 
 A backend passes when all five scenes render and the console shows no Vulkan validation errors
 (debug build) or OpenGL `GLCall` assertions.
@@ -740,3 +752,44 @@ SPIR-V generation now lives in the active build path: `add_framework_spirv()` in
 
 `UnitTests/CMakeLists.txt` is not part of the build (`add_framework_app` creates the target), so its
 old, orphaned SPIR-V rules are left untouched.
+
+### Vulkan frame structure (render pass and depth)
+
+`Device::Draw` used to open and close a render pass per object, so every object cleared the
+swapchain image and only the last one survived. The Vulkan backend now records one screen pass per
+frame:
+
+* `StartFrame` begins `ScreenRenderPass` (colour **clear** + depth clear) and leaves it open;
+  `Draw` records into the open pass and only (re)opens it if a draw happens outside the usual
+  window (`BeginScreenPass`/`EndScreenPass` are idempotent).
+* `Render` (ImGui) ends the screen pass and begins `ImGuiRenderPass`, which **loads** the scene
+  colour, draws the UI and transitions the image to `PRESENT_SRC_KHR`.
+* `SwapBuffers` ends the screen pass and, if ImGui never ran (e.g. `NO_IMGUI`), runs an empty
+  `ImGuiRenderPass` so the image still reaches the present layout.
+* Each swapchain image owns a `VK_FORMAT_D32_SFLOAT` depth buffer attached to both passes, so
+  draw order no longer determines visibility (`Device::SetDepthTest` now drives the dynamic
+  `VK_DYNAMIC_STATE_DEPTH_TEST_ENABLE`; pipelines created for a target with depth set
+  `depthWriteEnable`).
+* `SetClearColor` writes the render-pass clear value; previously Vulkan always cleared to black
+  because the value was hard-coded in `Init`.
+* The per-frame descriptor pools are sized for a whole frame of draws (one descriptor set per
+  recorded draw). At 256 sets / 256 uniform buffers they were exhausted at ~64 draws, which
+  aborted `FlockingParticles` (250+ draws) on its first frame.
+
+`ShapeManager::CreatePyramid` now writes the shared `ShapeVertex` layout. Its position-only buffer
+worked on OpenGL (which honours `SetDataLayout`) but Vulkan derives the stride from the reflected
+shader inputs, so the flock rendered as malformed slivers there.
+
+The debug-draw entry points (`DebugDraw`, `DebugDrawLines`, `DrawDebugCircle`, `DrawDebugLine`)
+were no-ops in the Vulkan backend, so the flock's boundary box never appeared. They now record
+indexed/array line draws with `ShaderVK::mLinePipeline`, a second pipeline created with
+`VK_PRIMITIVE_TOPOLOGY_LINE_LIST`: Vulkan only allows a dynamic topology change within the same
+topology class, so the triangle pipeline cannot be reused. `GL_LINE_LOOP` has no Vulkan
+equivalent and is drawn as a line strip. `ShapeManager::CreateLine`/`CreateWireCube` now use the
+shared `ShapeVertex` layout as well, because Vulkan ignores `SetDataLayout` and takes the vertex
+stride from the shader.
+
+Components that write a transform after `Transform::Update` runs (the flock's flight direction)
+must call `Transform::UpdateUniformBuffer()` afterwards. `Transform::Update` uploads the object
+UBO, so changing `mModelTransformation` later without re-uploading it left the fish drawn with
+the previous, unrotated matrix.

@@ -34,4 +34,9 @@ public:
 	void Serialize(rapidjson::Value::Object data) override;
 
 	void SetModelTransformation();
+
+	// Re-uploads the object matrices after mModelTransformation was changed
+	// outside of Update() (e.g. a component that steers rotation). Without this
+	// the draw would keep using the matrices uploaded by Update().
+	void UpdateUniformBuffer();
 };

@@ -4,12 +4,15 @@
 class Texture;
 class UniformBuffer;
 
+// std140 layout: vec4s are 16-byte aligned, the scalars after them are packed at
+// their natural 4-byte alignment (shininess at 32, lighting at 36). Using an int
+// for the flag keeps the four bytes that the GLSL side reads well defined.
 struct MaterialDataUBO
 {
 	glm::vec4 mDiffuse;
 	glm::vec4 mSpecular;
-	alignas(16) float mShininess;
-	alignas(16) bool mLighting;
+	float mShininess;
+	int mLighting;
 };
 
 class Material : public Component

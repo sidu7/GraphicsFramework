@@ -54,7 +54,26 @@ git submodule update --init --recursive
 | `GraphicsFramework/VulkanTest/` | Legacy standalone sample (not CMake) |
 | `GraphicsFramework/DLLs/` | Runtime DLLs copied to sample output dirs |
 | `IrradianceMapApp/` | Standalone HDR irradiance-map CLI tool |
+| `scripts/` | Developer tooling — `verify-scene.ps1` builds, runs and screenshots one scene |
 
 ## Testing
 - `UnitTests` target runs interactive graphics tests (shaders, buffers, textures) through the framework.
 - Run with: `cmake --build --preset <preset> --target UnitTests --parallel`, then execute the built binary.
+
+## Visual verification (does it actually draw?)
+- Rendering is only verifiable from a screenshot: the apps are GUI programs, and normal
+  screenshots (`CopyFromScreen`) return black for both backends.
+- Use `scripts/verify-scene.ps1`; it builds, runs one scene, captures the SDL window with
+  `PrintWindow(PW_RENDERFULLCONTENT)`, saves the PNG plus redirected stdout/stderr (Vulkan
+  validation messages) and prints pixel statistics:
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File scripts\verify-scene.ps1 -Preset Vulkan-Debug -Scene 4 -Build
+  ```
+  Exit code `0` = rendered, `2` = crashed or nothing drawn. Scenes: `0` Shader, `1` VertexBuffer,
+  `2` IndexBuffer, `3` UniformBuffer, `4` Texture.
+- The capture is OS-level, so it works for any app built with `add_framework_app` and any RHI
+  (Vulkan, OpenGL, …); only the `-scene` numbers are UnitTests-specific. Use `-BuildTarget <name>`
+  and `-NoScene` for a sample, `-Background "r,g,b"` for a non-black clear colour, and
+  `-AnalyzeOnly <png>` to analyse an existing screenshot.
+- Full procedure, baseline numbers, failure signatures and manual capture: skill
+  `.opencode/skills/visual-verify/SKILL.md` (load with `@visual-verify`).

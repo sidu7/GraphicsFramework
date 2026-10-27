@@ -12,7 +12,6 @@
 #include "Core/Components/Shape.h"
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
-#include "Rendering/Renderer.h"
 #include "Rendering/UniformBuffer.h"
 #include "Rendering/ShaderRegistry.h"
 #include "Utils/Random.h"
@@ -23,6 +22,24 @@
 #include "Obstacle.h"
 
 const float PI = 22.0f / 7.0f;
+
+// Binding points consumed by res/shaders/Drawing.vert / .frag. Transform (0) and
+// Material (1) come from Settings.json; the scene owns the camera and light blocks.
+constexpr uint32_t CameraBindingPoint = 2;
+constexpr uint32_t LightBindingPoint = 3;
+
+struct CameraMatricesUBO
+{
+	glm::mat4 mProjection;
+	glm::mat4 mView;
+	glm::mat4 mInverseView;
+};
+
+struct LightDataUBO
+{
+	glm::vec4 mPosition;
+	glm::vec4 mColor;
+};
 
 // FlockingParticles project-local shader IDs
 enum class FlockingShaderID : int32_t
@@ -40,6 +57,8 @@ void Flocking::Close()
 {
 	delete mLight;
 	delete mShader;
+	delete mCameraUBO;
+	delete mLightUBO;
 }
 
 void Flocking::Init()
@@ -48,7 +67,7 @@ void Flocking::Init()
 	ShaderRegistry::Instance()->Init("res/shaders/", [](ShaderRegistry* reg) {
 		reg->RegisterShader(static_cast<int32_t>(FlockingShaderID::DRAWING),
 							"Drawing.vert", "Drawing.frag",
-							"", "");
+							"spirv/Drawing.vert.spv", "spirv/Drawing.frag.spv");
 	});
 
 	mLight = new Light(glm::vec3(10.0, 100.0, 40.0));
@@ -64,8 +83,19 @@ void Flocking::Init()
 	mShader = Renderer::Instance()->CreateShader();
 	mShader->Init(static_cast<int32_t>(FlockingShaderID::DRAWING));
 
+	// Per-frame uniform blocks read by Drawing.vert / Drawing.frag
+	mCameraUBO = Renderer::Instance()->CreateUniformBuffer();
+	mCameraUBO->Init(sizeof(CameraMatricesUBO), CameraBindingPoint);
+
+	mLightUBO = Renderer::Instance()->CreateUniformBuffer();
+	mLightUBO->Init(sizeof(LightDataUBO), LightBindingPoint);
+
 	mAvoidDistance = 2.0f;
-	
+
+	// Created first so it is drawn before the flock and obstacles. Vulkan has no
+	// depth attachment yet, so draw order is the only ordering guarantee there.
+	ObjectManager::Instance()->AddObject("res/data/Floor.json");
+
 	Boundary = ObjectManager::Instance()->AddObject("res/data/Boundary.json");
 	AddBoxObstacle(Boundary->GetComponent<Transform>(), mAvoidDistance, false);
 		
@@ -155,12 +185,21 @@ void Flocking::Init()
 		mFishes.push_back(fish);
 	}
 	
-	ObjectManager::Instance()->AddObject("res/data/Floor.json");
 	Engine::Instance()->mPause = false;
 }
 
 void Flocking::Update()
 {	
+	Camera* camera = Engine::Instance()->GetCamera();
+	CameraMatricesUBO cameraData{ camera->mProjection, camera->mView, glm::inverse(camera->mView) };
+	mCameraUBO->AddData(sizeof(cameraData), &cameraData);
+
+	LightDataUBO lightData{ glm::vec4(mLight->position, 1.0f), glm::vec4(1.0f) };
+	mLightUBO->AddData(sizeof(lightData), &lightData);
+
+	Renderer::Instance()->BindUniformBuffer(mCameraUBO, CameraBindingPoint);
+	Renderer::Instance()->BindUniformBuffer(mLightUBO, LightBindingPoint);
+
 	ObjectManager::Instance()->UpdateObjects();
 	ObjectManager::Instance()->RenderObjects(mShader);
 	if (!Engine::Instance()->mPause)
@@ -235,6 +274,8 @@ void Flocking::RenderObject(Object* object, Shader* shader)
 
 void Flocking::DebugDisplay()
 {
+	ImGui::SetNextWindowPos(ImVec2(330.0f, 40.0f), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Flocking");
 	ImGui::Checkbox("Pause Simulation", &Engine::Instance()->mPause);
 	ImGui::InputInt("FrameRate", &mFPS);
 	if(ImGui::Button("Set FrameRate"))
@@ -266,6 +307,7 @@ void Flocking::DebugDisplay()
 			obs->mDistanceThreshold = mAvoidDistance;
 		}
 	}
+	ImGui::End();
 }
 
 std::vector<Object*> Flocking::FindNeighbours(Object* fish)

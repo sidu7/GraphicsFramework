@@ -253,15 +253,35 @@ void Device::Init()
 	TransientTransferCmdBufferPool->Init(CommandQueueType::Transfer, true /*isTransient*/);
 	
 	ScreenRenderPass = new RenderPassVK();
-	ScreenRenderPass->Init(SwapChain->ImageFormat, true, false);
+	ScreenRenderPass->Init(SwapChain->ImageFormat, true, false, true);
 
 	ImGuiRenderPass = new RenderPassVK();
-	ImGuiRenderPass->Init(SwapChain->ImageFormat, false, true);
+	ImGuiRenderPass->Init(SwapChain->ImageFormat, false, true, true);
 
 	for (const VkImageView& ImageView : SwapChain->ImageViews)
 	{
+		// Depth is attached to the back buffer so scenes do not depend on draw order.
+		ImageInfo DepthImage = CreateImage(SwapChain->ImageExtent.width, SwapChain->ImageExtent.height,
+			VK_FORMAT_D32_SFLOAT, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+
+		VkImageViewCreateInfo DepthViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+		DepthViewInfo.image = DepthImage.Image;
+		DepthViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		DepthViewInfo.format = VK_FORMAT_D32_SFLOAT;
+		DepthViewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		DepthViewInfo.subresourceRange.baseMipLevel = 0;
+		DepthViewInfo.subresourceRange.levelCount = 1;
+		DepthViewInfo.subresourceRange.baseArrayLayer = 0;
+		DepthViewInfo.subresourceRange.layerCount = 1;
+
+		VkImageView DepthView = VK_NULL_HANDLE;
+		VKCall(vkCreateImageView(mDevice, &DepthViewInfo, nullptr, &DepthView), "Depth Image View creation Failed.");
+
+		DepthImages.push_back(DepthImage);
+		DepthImageViews.push_back(DepthView);
+
 		FrameBufferVK* frameBuffer = static_cast<FrameBufferVK*>(CreateFrameBuffer());
-		frameBuffer->InitAsBackBuffer(SwapChain->ImageExtent.width, SwapChain->ImageExtent.height, ImageView);
+		frameBuffer->InitAsBackBuffer(SwapChain->ImageExtent.width, SwapChain->ImageExtent.height, ImageView, DepthView);
 		SwapchainFrameBuffers.push_back(frameBuffer);
 	}
 
@@ -284,8 +304,8 @@ void Device::Init()
 	CreateDescriptorPools();
 	CreateFrameDescriptorPools();
 
-	ClearValue.color = { 0.0f, 0.0f, 0.0f, 0.0f };
-	ClearValue.depthStencil = { 0.0f, 0 };
+	ClearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
+	ClearValues[1].depthStencil = { 1.0f, 0 };
 
 
 	Viewport.x = 0.0f;
@@ -301,7 +321,7 @@ void Device::Init()
 	Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	CullMode = VK_CULL_MODE_NONE;
 	FrontFace = VK_FRONT_FACE_CLOCKWISE;
-	DepthTestEnable = false;
+	DepthTestEnable = true;
 
 	ActiveCopyCommandBuffer = nullptr;
 	mBoundShader = nullptr;
@@ -329,6 +349,19 @@ void Device::Close()
 	{
 		delete FrameBuffer;
 	}
+	SwapchainFrameBuffers.clear();
+
+	for (const VkImageView DepthView : DepthImageViews)
+	{
+		vkDestroyImageView(mDevice, DepthView, nullptr);
+	}
+	DepthImageViews.clear();
+
+	for (ImageInfo& DepthImage : DepthImages)
+	{
+		DestroyImage(DepthImage);
+	}
+	DepthImages.clear();
 
 	for (int32_t i = 0; i < BACKBUFFER_COUNT; ++i)
 	{
@@ -398,11 +431,46 @@ void Device::StartFrame()
 
 	// Record Command Buffer
 	GetCommandBuffer()->Begin();
+
+	// The screen pass is cleared once per frame and stays open while the scene
+	// draws its objects, so all of them accumulate into the same image.
+	mPresentedToScreen = false;
+	BeginScreenPass();
+}
+
+void Device::BeginScreenPass()
+{
+	if (mScreenPassOpen)
+	{
+		return;
+	}
+
+	ScreenRenderPass->BeginPass(GetCommandBuffer(), static_cast<const FrameBufferVK*>(GetBackBuffer()));
+	mScreenPassOpen = true;
+}
+
+void Device::EndScreenPass()
+{
+	if (!mScreenPassOpen)
+	{
+		return;
+	}
+
+	ScreenRenderPass->EndPass(GetCommandBuffer());
+	mScreenPassOpen = false;
 }
 
 void Device::SwapBuffers()
 {
-	//vkCmdEndRenderPass(GetRenderCommandBuffer());
+	EndScreenPass();
+
+	// Without ImGui the screen pass is the last pass of the frame; a pass that
+	// stores to the image and ends in PRESENT_SRC_KHR is needed before presenting.
+	if (!mPresentedToScreen)
+	{
+		ImGuiRenderPass->BeginPass(GetCommandBuffer(), static_cast<const FrameBufferVK*>(GetBackBuffer()));
+		ImGuiRenderPass->EndPass(GetCommandBuffer());
+	}
 
 	GetCommandBuffer()->End();
 
@@ -568,7 +636,8 @@ void Device::UnbindTexture(const Texture* texture, unsigned int slot)
 
 void Device::Draw(const Shader* Shader, const VertexBuffer* vertexBuffer, int32_t VertexCount, int32_t VertexStart, int32_t InstanceCount, int32_t InstanceStart)
 {
-	ScreenRenderPass->BeginPass(GetCommandBuffer(), static_cast<const FrameBufferVK*>(GetBackBuffer()));
+	// The pass is opened in StartFrame and shared by every draw of the frame.
+	BeginScreenPass();
 
 	vkCmdSetViewport(GetCommandBuffer()->mCommandBuffer, 0, 1, &Viewport);
 	vkCmdSetScissor(GetCommandBuffer()->mCommandBuffer, 0, 1, &ScissorRect);
@@ -592,13 +661,12 @@ void Device::Draw(const Shader* Shader, const VertexBuffer* vertexBuffer, int32_
 	BindVertexBuffer(vertexBuffer);
 
 	vkCmdDraw(GetCommandBuffer()->mCommandBuffer, VertexCount, InstanceCount, VertexStart, InstanceStart);
-
-	ScreenRenderPass->EndPass(GetCommandBuffer());
 }
 
 void Device::Draw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)
 {
-	ScreenRenderPass->BeginPass(GetCommandBuffer(), static_cast<const FrameBufferVK*>(GetBackBuffer()));
+	// The pass is opened in StartFrame and shared by every draw of the frame.
+	BeginScreenPass();
 
 	vkCmdSetViewport(GetCommandBuffer()->mCommandBuffer, 0, 1, &Viewport);
 	vkCmdSetScissor(GetCommandBuffer()->mCommandBuffer, 0, 1, &ScissorRect);
@@ -624,28 +692,96 @@ void Device::Draw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuff
 	BindIndexBuffer(indexBuffer);
 
 	vkCmdDrawIndexed(GetCommandBuffer()->mCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
+}
 
-	ScreenRenderPass->EndPass(GetCommandBuffer());
+void Device::BeginDebugDraw(const Shader* shader, VkPrimitiveTopology topology)
+{
+	const ShaderVK* VkShader = static_cast<const ShaderVK*>(shader);
+	if (!VkShader || VkShader->mLinePipeline == VK_NULL_HANDLE)
+	{
+		return;
+	}
+
+	BeginScreenPass();
+
+	VkCommandBuffer CommandBuffer = GetCommandBuffer()->mCommandBuffer;
+	vkCmdSetViewport(CommandBuffer, 0, 1, &Viewport);
+	vkCmdSetScissor(CommandBuffer, 0, 1, &ScissorRect);
+	vkCmdSetPrimitiveTopology(CommandBuffer, topology);
+	// Line primitives are not affected by culling; disabling it keeps the debug
+	// draws independent of the winding of the shape they visualise.
+	vkCmdSetCullMode(CommandBuffer, VK_CULL_MODE_NONE);
+	vkCmdSetFrontFace(CommandBuffer, FrontFace);
+	vkCmdSetDepthTestEnable(CommandBuffer, DepthTestEnable);
+
+	vkCmdBindPipeline(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, VkShader->mLinePipeline);
+	mBoundShader = shader;
+
+	VkDescriptorSet DrawDescriptorSet = AllocateDrawDescriptorSet(VkShader);
+	if (DrawDescriptorSet != VK_NULL_HANDLE)
+	{
+		vkCmdBindDescriptorSets(CommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+			VkShader->mPipelineLayout, 0, 1, &DrawDescriptorSet, 0, nullptr);
+	}
 }
 
 void Device::DebugDraw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)
 {
+	// OpenGL draws this as GL_LINE_LOOP; Vulkan has no line-loop topology, so
+	// use a line strip (same vertices, without the closing segment).
+	if (!shader || !vertexBuffer || !indexBuffer)
+	{
+		return;
+	}
+
+	BeginDebugDraw(shader, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP);
+	BindVertexBuffer(vertexBuffer);
+	BindIndexBuffer(indexBuffer);
+	vkCmdDrawIndexed(GetCommandBuffer()->mCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
 }
 
 void Device::DebugDrawLines(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)
 {
+	if (!shader || !vertexBuffer || !indexBuffer)
+	{
+		return;
+	}
+
+	// The wire primitives store their indices in line-pair order, matching the
+	// GL_LINES draw the OpenGL backend records.
+	BeginDebugDraw(shader, VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
+	BindVertexBuffer(vertexBuffer);
+	BindIndexBuffer(indexBuffer);
+	vkCmdDrawIndexed(GetCommandBuffer()->mCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
 }
 
 void Device::DrawDebugCircle(const VertexBuffer* vertexBuffer, const Shader* shader)
 {
+	if (!shader || !vertexBuffer)
+	{
+		return;
+	}
+
+	BeginDebugDraw(shader, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP);
+	BindVertexBuffer(vertexBuffer);
+	vkCmdDraw(GetCommandBuffer()->mCommandBuffer, 16, 1, 0, 0);
 }
 
 void Device::DrawDebugLine(const VertexBuffer* vertexBuffer, const Shader* shader)
 {
+	if (!shader || !vertexBuffer)
+	{
+		return;
+	}
+
+	BeginDebugDraw(shader, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP);
+	BindVertexBuffer(vertexBuffer);
+	vkCmdDraw(GetCommandBuffer()->mCommandBuffer, 2, 1, 0, 0);
 }
 
 void Device::SetDepthTest(bool bEnabled)
 {
+	DepthTestEnable = bEnabled;
 }
 
 void Device::SetBlending(bool bEnabled)
@@ -660,6 +796,12 @@ void Device::SetCullingFace(CullFace Face)
 CullFace Device::GetCullingFace()
 {
 	return CullingFace;
+}
+
+void Device::SetClearColor(glm::vec3 color)
+{
+	Renderer::SetClearColor(color);
+	ClearValues[0].color = { color.r, color.g, color.b, 1.0f };
 }
 
 const FrameBuffer* Device::GetBackBuffer()
@@ -784,25 +926,28 @@ void Device::CreateFrameDescriptorPools()
 	// Per-frame transient descriptor sets. The pool is reset once the frame's
 	// fence has been waited on, so a set can be allocated per recorded draw
 	// without the whole shader seeing the last descriptor write of the frame.
+	// Each recorded draw allocates its own descriptor set, so the pools must be
+	// large enough for a whole frame of draws (FlockingParticles alone records
+	// 250+). They are reset per frame, so this is a high-water mark, not a leak.
 	const std::vector<VkDescriptorPoolSize> PoolSizes = {
-		{ VK_DESCRIPTOR_TYPE_SAMPLER, 64 },
-		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 256 },
-		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 64 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 64 },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 32 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 32 },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 256 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 128 },
-		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 64 },
-		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 64 },
-		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 32 },
+		{ VK_DESCRIPTOR_TYPE_SAMPLER, 256 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1024 },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 256 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 256 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 128 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 128 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 4096 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1024 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 256 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 256 },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 128 },
 	};
 
 	FrameDescriptorPools.resize(BACKBUFFER_COUNT, VK_NULL_HANDLE);
 	for (VkDescriptorPool& FrameDescPool : FrameDescriptorPools)
 	{
 		VkDescriptorPoolCreateInfo FrameDescPoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
-		FrameDescPoolInfo.maxSets = 256;
+		FrameDescPoolInfo.maxSets = 1024;
 		FrameDescPoolInfo.poolSizeCount = static_cast<uint32_t>(PoolSizes.size());
 		FrameDescPoolInfo.pPoolSizes = PoolSizes.data();
 
@@ -915,7 +1060,14 @@ void Device::NewFrame()
 
 void Device::Render()
 {
+	// ImGui draws in its own pass, which loads the scene image and presents it.
+	EndScreenPass();
+
+	ImGuiRenderPass->BeginPass(GetCommandBuffer(), static_cast<const FrameBufferVK*>(GetBackBuffer()));
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), GetCommandBuffer()->mCommandBuffer);
+	ImGuiRenderPass->EndPass(GetCommandBuffer());
+
+	mPresentedToScreen = true;
 }
 
 void Device::ShutdownImGui()

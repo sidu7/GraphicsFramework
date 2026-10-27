@@ -39,7 +39,7 @@ void Material::Update()
 
 	if (mMaterialUBO)
 	{
-		MaterialDataUBO UboData{ glm::vec4(DiffuseColor, 1.0f), glm::vec4(mSpecular, 1.0f), mShininess, mLighting };
+		MaterialDataUBO UboData{ glm::vec4(DiffuseColor, 1.0f), glm::vec4(mSpecular, 1.0f), mShininess, mLighting ? 1 : 0 };
 		mMaterialUBO->AddData(sizeof(UboData), &UboData);
 	}
 }

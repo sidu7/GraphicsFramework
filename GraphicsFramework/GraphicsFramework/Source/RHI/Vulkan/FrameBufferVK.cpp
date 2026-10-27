@@ -19,7 +19,8 @@ FrameBufferVK::FrameBufferVK() :
 	mWidth(0), 
 	mHeight(0), 
 	mTexCount(0),
-	bIsBackBuffer(false)
+	bIsBackBuffer(false),
+	mHasDepth(false)
 {
 
 }
@@ -102,20 +103,23 @@ const Texture* FrameBufferVK::GetTexture(unsigned int index)
 	return nullptr;
 }
 
-void FrameBufferVK::InitAsBackBuffer(int16_t width, int16_t height, VkImageView ImageView)
+void FrameBufferVK::InitAsBackBuffer(int16_t width, int16_t height, VkImageView ImageView, VkImageView DepthView)
 {
 	mWidth = width;
 	mHeight = height;
 	mTexCount = 1;
 	bIsBackBuffer = true;
+	mHasDepth = DepthView != VK_NULL_HANDLE;
 
 	Device* VkRenderer = static_cast<Device*>(Renderer::Instance());
 	if (VkRenderer)
 	{
+		const VkImageView Attachments[2] = { ImageView, DepthView };
+
 		VkFramebufferCreateInfo FrameBufferInfo = { VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO };
 		FrameBufferInfo.renderPass = VkRenderer->GetScreenRenderPass()->mRenderPass;
-		FrameBufferInfo.attachmentCount = mTexCount;
-		FrameBufferInfo.pAttachments = &ImageView;
+		FrameBufferInfo.attachmentCount = mHasDepth ? 2 : 1;
+		FrameBufferInfo.pAttachments = Attachments;
 		FrameBufferInfo.width = mWidth;
 		FrameBufferInfo.height = mHeight;
 		FrameBufferInfo.layers = 1;

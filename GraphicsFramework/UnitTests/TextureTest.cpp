@@ -76,6 +76,8 @@ void TextureTest::Close()
 	delete pVBuffer;
 	delete pIBuffer;
 	delete pUBuffer;
+	delete pTexture;
+	pTexture = nullptr;
 }
 
 void TextureTest::Update()

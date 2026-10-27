@@ -41,12 +41,7 @@ void Transform::Update()
 	}
 
 	SetModelTransformation();
-
-	if (mMatricesUBO)
-	{
-		ObjectMatricesUBO UboData{ glm::inverse(mModelTransformation), mModelTransformation, mPrevModelTransformation };
-		mMatricesUBO->AddData(sizeof(UboData), &UboData);
-	}
+	UpdateUniformBuffer();
 }
 
 void Transform::Serialize(rapidjson::Value::Object data)
@@ -64,4 +59,13 @@ void Transform::Serialize(rapidjson::Value::Object data)
 void Transform::SetModelTransformation()
 {
 	mModelTransformation = mTranslationMatrix * mRotationMatrix * mScaleMatrix;	
+}
+
+void Transform::UpdateUniformBuffer()
+{
+	if (mMatricesUBO)
+	{
+		ObjectMatricesUBO UboData{ glm::inverse(mModelTransformation), mModelTransformation, mPrevModelTransformation };
+		mMatricesUBO->AddData(sizeof(UboData), &UboData);
+	}
 }

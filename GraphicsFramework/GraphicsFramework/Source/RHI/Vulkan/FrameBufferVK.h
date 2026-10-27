@@ -32,7 +32,9 @@ public:
 	virtual inline int GetWidth() const override { return mWidth; }
 	virtual inline int GetHeight() const override { return mHeight; }
 
-	void InitAsBackBuffer(int16_t width, int16_t height, VkImageView ImageView);
+	void InitAsBackBuffer(int16_t width, int16_t height, VkImageView ImageView, VkImageView DepthView = VK_NULL_HANDLE);
+
+	bool HasDepth() const { return mHasDepth; }
 
 	std::vector<TextureVK*> m_Textures;
 	unsigned int mWidth, mHeight;
@@ -43,5 +45,6 @@ public:
 
 protected:
 	bool bIsBackBuffer;
+	bool mHasDepth;
 };
 }

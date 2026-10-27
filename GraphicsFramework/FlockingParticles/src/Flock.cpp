@@ -75,9 +75,31 @@ void Flock::Update()
 	auto data = ShapeManager::Instance()->mShapes[LINE];
 	Renderer::Instance()->AddDebugRenderData(DebugData(data.first,data.second,model, GL_LINES,glm::vec3(1.0f,0.0f,0.0f)));*/
 	
-	glm::vec3 front = glm::normalize(mVelocity);	
-	trans->mRotationMatrix = toMat4(glm::rotation(Y, front));
+	glm::vec3 front = glm::vec3(0.0f, 0.0f, 1.0f);
+	if (glm::length(mVelocity) > 0.0f)
+	{
+		front = glm::normalize(mVelocity);
+	}
+
+	// The fish mesh (pyramid) points along +Y in model space, so its model
+	// rotation has to take +Y onto the direction of travel.
+	glm::quat orientation;
+	if (glm::dot(Y, front) < -0.9999f)
+	{
+		// glm::rotation is undefined for exactly opposite vectors.
+		orientation = glm::angleAxis(3.14159265358979323846f, glm::vec3(0.0f, 0.0f, 1.0f));
+	}
+	else
+	{
+		orientation = glm::rotation(Y, front);
+	}
+
+	trans->mRotationMatrix = toMat4(orientation);
 	trans->SetModelTransformation();
+
+	// Transform::Update() already uploaded this frame's matrices before this
+	// component ran, so the new rotation has to be pushed to the UBO as well.
+	trans->UpdateUniformBuffer();
 }
 
 void Flock::Serialize(rapidjson::Value::Object data)

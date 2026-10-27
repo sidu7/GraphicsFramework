@@ -21,6 +21,7 @@ namespace rhi::vk
 {
 ShaderVK::ShaderVK() :
 	mPipeline(VK_NULL_HANDLE),
+	mLinePipeline(VK_NULL_HANDLE),
 	mPipelineLayout(VK_NULL_HANDLE),
 	mDescriptorSet(nullptr),
 	mBoundFramebuffer(nullptr)
@@ -36,6 +37,10 @@ ShaderVK::~ShaderVK()
 	if (mPipeline != VK_NULL_HANDLE)
 	{
 		vkDestroyPipeline(Device::Get()->GetDevice(), mPipeline, nullptr);
+	}
+	if (mLinePipeline != VK_NULL_HANDLE)
+	{
+		vkDestroyPipeline(Device::Get()->GetDevice(), mLinePipeline, nullptr);
 	}
 	delete mDescriptorSet;
 }
@@ -161,9 +166,15 @@ void ShaderVK::Init(int32_t shaderId)
 	MultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
 	MultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
 
+	// The back buffer owns a depth attachment; offscreen targets may not.
+	const FrameBufferVK* TargetFrameBuffer = mBoundFramebuffer
+		? mBoundFramebuffer
+		: static_cast<const FrameBufferVK*>(Device::Get()->GetBackBuffer());
+	const bool bHasDepthAttachment = TargetFrameBuffer && TargetFrameBuffer->HasDepth();
+
 	VkPipelineDepthStencilStateCreateInfo DepthStencilStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 	DepthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
-	DepthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
+	DepthStencilStateCreateInfo.depthWriteEnable = bHasDepthAttachment ? VK_TRUE : VK_FALSE;
 	DepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
 	DepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 	DepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
@@ -229,22 +240,17 @@ void ShaderVK::Init(int32_t shaderId)
 	GraphicsPipeLineCreateInfo.pColorBlendState = &ColorBlendStateCreateInfo;
 	GraphicsPipeLineCreateInfo.pDynamicState = &DynamicStateCreateInfo;
 	GraphicsPipeLineCreateInfo.layout = mPipelineLayout;
-
-	if (mBoundFramebuffer)
-	{
-		GraphicsPipeLineCreateInfo.renderPass = mBoundFramebuffer->mRenderPass->mRenderPass;
-	}
-	else // Use BackBuffer's Renderpass
-	{
-		const FrameBufferVK* VkframeBuffer = static_cast<const FrameBufferVK*>(Device::Get()->GetBackBuffer());
-		GraphicsPipeLineCreateInfo.renderPass = VkframeBuffer->mRenderPass->mRenderPass;
-	}
+	GraphicsPipeLineCreateInfo.renderPass = TargetFrameBuffer->mRenderPass->mRenderPass;
 
 	GraphicsPipeLineCreateInfo.subpass = 0;
 	GraphicsPipeLineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 	GraphicsPipeLineCreateInfo.basePipelineIndex = -1;
 
 	VKCall(vkCreateGraphicsPipelines(Device::Get()->GetDevice(), VK_NULL_HANDLE, 1, &GraphicsPipeLineCreateInfo, nullptr, &mPipeline), "Shader Pipeline creation Failed.");
+
+	// Line topology variant for DebugDrawLines()/DebugDraw().
+	InputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+	VKCall(vkCreateGraphicsPipelines(Device::Get()->GetDevice(), VK_NULL_HANDLE, 1, &GraphicsPipeLineCreateInfo, nullptr, &mLinePipeline), "Shader line Pipeline creation Failed.");
 
 	// Destroy shader modules as graphics pipeline is created
 	vkDestroyShaderModule(Device::Get()->GetDevice(), VertexShaderModule, nullptr);
@@ -359,9 +365,15 @@ void ShaderVK::Init(const std::string& vertexPath, const std::string& fragmentPa
 	MultisampleStateCreateInfo.alphaToCoverageEnable = VK_FALSE;
 	MultisampleStateCreateInfo.alphaToOneEnable = VK_FALSE;
 
+	// The back buffer owns a depth attachment; offscreen targets may not.
+	const FrameBufferVK* TargetFrameBuffer = mBoundFramebuffer
+		? mBoundFramebuffer
+		: static_cast<const FrameBufferVK*>(Device::Get()->GetBackBuffer());
+	const bool bHasDepthAttachment = TargetFrameBuffer && TargetFrameBuffer->HasDepth();
+
 	VkPipelineDepthStencilStateCreateInfo DepthStencilStateCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO };
 	DepthStencilStateCreateInfo.depthTestEnable = VK_FALSE;
-	DepthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
+	DepthStencilStateCreateInfo.depthWriteEnable = bHasDepthAttachment ? VK_TRUE : VK_FALSE;
 	DepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
 	DepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
 	DepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
@@ -413,22 +425,17 @@ void ShaderVK::Init(const std::string& vertexPath, const std::string& fragmentPa
 	GraphicsPipeLineCreateInfo.pColorBlendState = &ColorBlendStateCreateInfo;
 	GraphicsPipeLineCreateInfo.pDynamicState = &DynamicStateCreateInfo;
 	GraphicsPipeLineCreateInfo.layout = mPipelineLayout;
-
-	if (mBoundFramebuffer)
-	{
-		GraphicsPipeLineCreateInfo.renderPass = mBoundFramebuffer->mRenderPass->mRenderPass;
-	}
-	else
-	{
-		const FrameBufferVK* VkframeBuffer = static_cast<const FrameBufferVK*>(Device::Get()->GetBackBuffer());
-		GraphicsPipeLineCreateInfo.renderPass = VkframeBuffer->mRenderPass->mRenderPass;
-	}
+	GraphicsPipeLineCreateInfo.renderPass = TargetFrameBuffer->mRenderPass->mRenderPass;
 
 	GraphicsPipeLineCreateInfo.subpass = 0;
 	GraphicsPipeLineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 	GraphicsPipeLineCreateInfo.basePipelineIndex = -1;
 
 	VKCall(vkCreateGraphicsPipelines(Device::Get()->GetDevice(), VK_NULL_HANDLE, 1, &GraphicsPipeLineCreateInfo, nullptr, &mPipeline), "Shader Pipeline creation Failed.");
+
+	// Line topology variant for DebugDrawLines()/DebugDraw().
+	InputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+	VKCall(vkCreateGraphicsPipelines(Device::Get()->GetDevice(), VK_NULL_HANDLE, 1, &GraphicsPipeLineCreateInfo, nullptr, &mLinePipeline), "Shader line Pipeline creation Failed.");
 
 	vkDestroyShaderModule(Device::Get()->GetDevice(), VertexShaderModule, nullptr);
 	vkDestroyShaderModule(Device::Get()->GetDevice(), FragmentShaderModule, nullptr);

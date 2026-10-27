@@ -9,11 +9,13 @@
     {
       "Type": "Material",
       "DebugColor": [ 0.0, 1.0, 0.0 ],
-      "WireMesh": true
+      "Lighting": false
     },
     {
       "Type": "Shape",
-      "Shape": 4
+      "Shape": 4,
+      "Mesh": false,
+      "WireMesh": true
     }
   ]
 }

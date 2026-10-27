@@ -9,6 +9,7 @@ class Light;
 class Shader;
 class Object;
 class Obstacle;
+class UniformBuffer;
 
 class Flocking : public Scene
 {
@@ -34,6 +35,9 @@ private:
 	Light* mLight;
 
 	Shader* mShader;
+
+	UniformBuffer* mCameraUBO = nullptr;
+	UniformBuffer* mLightUBO = nullptr;
 
 	Object* Boundary;
 	Object* SphereObstacle;

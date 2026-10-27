@@ -25,6 +25,10 @@ public:
 	virtual void Init(const std::string& vertexPath, const std::string& fragmentPath) override;
 
 	VkPipeline mPipeline;
+	// Second graphics pipeline for debug line primitives. Vulkan only allows a
+	// dynamic topology change within the same topology class, so line draws
+	// cannot reuse the triangle pipeline.
+	VkPipeline mLinePipeline;
 	VkPipelineLayout mPipelineLayout;
 	DescriptorSetVK* mDescriptorSet;
 
