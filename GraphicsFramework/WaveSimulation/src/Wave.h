@@ -6,31 +6,47 @@
 
 class Light;
 class Shader;
-class VertexArray;
 class VertexBuffer;
 class IndexBuffer;
+class UniformBuffer;
 
 class Wave : public Scene
 {
 public:
+	Wave() = default;
 	~Wave() override;
+
 	void Init() override;
+	void Close() override;
 	void Update() override;
+	void RenderObject(class Object* object, class Shader* shader) override;
 	void DebugDisplay() override;
 
 private:
-	Light* mLight;
+	// One interleaved vertex: position + normal, stride 24 bytes.
+	// The attribute order is the order passed to VertexBuffer::SetDataLayout,
+	// which is also the GLSL location order (0 = position, 1 = normal).
+	struct WaveVertex
+	{
+		glm::vec3 mPosition;
+		glm::vec3 mNormal;
+	};
 
-	Shader* mShader;
+	Light* mLight = nullptr;
+	Shader* mShader = nullptr;
 
 	HeightField mHeightMap;
-	
-	VertexArray* mVAO;
-	VertexBuffer* mVBOs[2];
-	enum { VERT = 0, NORM = 1 };
-	IndexBuffer* mEBO;
-	int mTriCount;
-	std::vector<glm::vec3> mMeshPositions, mMeshNormals;
-	glm::vec3 mDiffuseColor;
-	float mWaveIntensity;
+
+	VertexBuffer* mVertexBuffer = nullptr;
+	IndexBuffer* mIndexBuffer = nullptr;
+
+	UniformBuffer* mObjectUBO = nullptr;    // binding 0
+	UniformBuffer* mMaterialUBO = nullptr;  // binding 1
+	UniformBuffer* mCameraUBO = nullptr;    // binding 2
+	UniformBuffer* mLightUBO = nullptr;     // binding 3
+
+	std::vector<WaveVertex> mVertices;
+
+	glm::vec3 mDiffuseColor{ 0.8f, 0.8f, 1.0f };
+	float mWaveIntensity = 0.01f;
 };

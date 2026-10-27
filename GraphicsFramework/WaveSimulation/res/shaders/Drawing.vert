@@ -1,19 +1,33 @@
-#version 330
+#version 450
 
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec3 normal;
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
 
-uniform mat4 model_trans;
-uniform mat4 normal_trans;
-uniform mat4 vp;
+// Per-object matrices, filled by the scene (Settings.json: TransformBindingPoint)
+layout (binding = 0) uniform ObjectMatrices
+{
+	mat4 normaltr;
+	mat4 model;
+	mat4 prevModel;
+} Object;
 
-out vec3 world_position;
-out vec3 world_normal;
+// Per-frame camera, filled by the scene
+layout (binding = 2) uniform CameraMatrices
+{
+	mat4 projection;
+	mat4 view;
+	mat4 invView;
+} Camera;
 
-void main() {
-  vec4 P = model_trans * vec4(position,1);
-  vec4 m = normal_trans * vec4(normal,0);
-  gl_Position = vp * P;
-  world_position = P.xyz;
-  world_normal = normalize(m.xyz);
+layout (location = 0) out vec3 worldPos;
+layout (location = 1) out vec3 worldNormal;
+
+void main()
+{
+	vec4 worldPosition = Object.model * vec4(aPos, 1.0);
+
+	gl_Position = Camera.projection * Camera.view * worldPosition;
+
+	worldPos = worldPosition.xyz;
+	worldNormal = normalize((Object.normaltr * vec4(aNormal, 0.0)).xyz);
 }
