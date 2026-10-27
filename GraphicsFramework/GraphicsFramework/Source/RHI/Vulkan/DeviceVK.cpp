@@ -33,6 +33,7 @@ Author: Sidhant Tumma
 #include "RHI/Vulkan/TextureVK.h"
 #include "RHI/Vulkan/Internal/RenderPassVK.h"
 #include "RHI/Vulkan/Internal/DescriptorPoolVK.h"
+#include "RHI/Vulkan/Internal/DescriptorSetVK.h"
 // Vulkan Helpers
 #include "Internal/HelperVK.h"
 // ImGui backend hooks
@@ -178,6 +179,14 @@ void Device::UnmapBuffer(BufferInfo& buffer)
 	buffer.MappedMemory = nullptr;
 }
 
+void Device::FlushBuffer(const BufferInfo& buffer, VkDeviceSize offset, VkDeviceSize size)
+{
+	if (buffer.Allocation != VK_NULL_HANDLE)
+	{
+		VKCall(vmaFlushAllocation(mAllocator, buffer.Allocation, offset, size), "Buffer flush Failed.");
+	}
+}
+
 
 #if _DEBUG
 VKAPI_ATTR VkBool32 VKAPI_CALL Device::DebugMessageCallback(VkDebugUtilsMessageSeverityFlagBitsEXT Severity, VkDebugUtilsMessageTypeFlagsEXT MessageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
@@ -273,6 +282,7 @@ void Device::Init()
 
 	// Create Descriptor Pools from settings
 	CreateDescriptorPools();
+	CreateFrameDescriptorPools();
 
 	ClearValue.color = { 0.0f, 0.0f, 0.0f, 0.0f };
 	ClearValue.depthStencil = { 0.0f, 0 };
@@ -294,6 +304,7 @@ void Device::Init()
 	DepthTestEnable = false;
 
 	ActiveCopyCommandBuffer = nullptr;
+	mBoundShader = nullptr;
 }
 
 void Device::Close()
@@ -303,6 +314,12 @@ void Device::Close()
 	// Write out descriptor pool data to setting file
 
 	vkDestroyDescriptorPool(mDevice, RendererDescPool->DescPool, nullptr);
+
+	for (const VkDescriptorPool& FrameDescPool : FrameDescriptorPools)
+	{
+		vkDestroyDescriptorPool(mDevice, FrameDescPool, nullptr);
+	}
+	FrameDescriptorPools.clear();
 
 	vkDestroyDescriptorPool(mDevice, ImGuiDescPool, nullptr);
 	delete ImGuiRenderPass;
@@ -369,7 +386,14 @@ void Device::StartFrame()
 	SwapChain->AcquireNextImage(ImageAvailableSemaphores[FrameIdx]);
 
 	InFlightFences[FrameIdx]->Reset();
-		
+
+	// The fence for this frame index was just waited on, so the descriptor sets
+	// recorded into it are no longer in use and the pool can be recycled.
+	if (FrameIdx < FrameDescriptorPools.size())
+	{
+		VKCall(vkResetDescriptorPool(mDevice, FrameDescriptorPools[FrameIdx], 0), "Descriptor Pool reset Failed.");
+	}
+
 	GetCommandBuffer()->Reset();
 
 	// Record Command Buffer
@@ -397,6 +421,7 @@ void Device::BindShader(const Shader* shader)
 	if (VkShader)
 	{
 		vkCmdBindPipeline(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, VkShader->mPipeline);
+		mBoundShader = shader;
 	}
 }
 
@@ -429,15 +454,76 @@ void Device::BindIndexBuffer(const IndexBuffer* indexBuffer)
 
 void Device::BindUniformBuffer(const UniformBuffer* uniformBuffer, unsigned int bindpoint)
 {
-	const UniformBufferVK* VkUbo = static_cast<const UniformBufferVK*>(uniformBuffer);
-	if (VkUbo)
+	// Descriptors cannot be written here: the shader that will consume them is
+	// only known when Draw() records the command (BindUniformBuffer is usually
+	// called before the draw that binds the shader). Store the binding and let
+	// AllocateDrawDescriptorSet() fill the set at draw-recording time.
+	if (uniformBuffer)
 	{
-		//vkCmdBindDescriptorSets(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *VkUbo->PipelineLayout, 0, 1, &VkUbo->UboDescSet->DescSet, 0, nullptr);
+		mBoundUniformBuffers[bindpoint] = uniformBuffer;
+	}
+	else
+	{
+		mBoundUniformBuffers.erase(bindpoint);
 	}
 }
 
 void Device::BindTexture(const Texture* texture, unsigned int slot)
 {
+	if (texture)
+	{
+		mBoundTextures[slot] = texture;
+	}
+	else
+	{
+		mBoundTextures.erase(slot);
+	}
+}
+
+VkDescriptorSet Device::AllocateDrawDescriptorSet(const ShaderVK* shader)
+{
+	if (!shader || !shader->mDescriptorSet)
+	{
+		return VK_NULL_HANDLE;
+	}
+
+	DescriptorSetVK* DescriptorSet = shader->mDescriptorSet;
+	VkDescriptorSet DrawSet = DescriptorSet->Allocate(FrameDescriptorPools[FrameIdx]);
+	if (DrawSet == VK_NULL_HANDLE)
+	{
+		return VK_NULL_HANDLE;
+	}
+
+	for (const std::pair<const uint32_t, const UniformBuffer*>& BoundUbo : mBoundUniformBuffers)
+	{
+		if (DescriptorSet->GetBindingType(BoundUbo.first) != VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+		{
+			continue;
+		}
+
+		const UniformBufferVK* VkUbo = static_cast<const UniformBufferVK*>(BoundUbo.second);
+		if (VkUbo && VkUbo->UboInfo.Buffer != VK_NULL_HANDLE)
+		{
+			DescriptorSet->WriteUniformBuffer(DrawSet, BoundUbo.first, VkUbo->UboInfo.Buffer,
+				static_cast<VkDeviceSize>(VkUbo->UboInfo.Size));
+		}
+	}
+
+	for (const std::pair<const uint32_t, const Texture*>& BoundTex : mBoundTextures)
+	{
+		if (DescriptorSet->GetBindingType(BoundTex.first) != VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+		{
+			continue;
+		}
+
+		const TextureVK* VkTex = static_cast<const TextureVK*>(BoundTex.second);
+		if (VkTex && VkTex->TexImageView != VK_NULL_HANDLE && VkTex->TexSampler != VK_NULL_HANDLE)
+		{
+			DescriptorSet->WriteTexture(DrawSet, BoundTex.first, VkTex->TexImageView, VkTex->TexSampler);
+		}
+	}
+
+	return DrawSet;
 }
 
 void Device::UnbindShader(const Shader* shader)
@@ -462,10 +548,22 @@ void Device::UnbindIndexBuffer(const IndexBuffer* elementArrayBuffer)
 
 void Device::UnbindUniformBuffer(const UniformBuffer* uniformBuffer)
 {
+	for (auto It = mBoundUniformBuffers.begin(); It != mBoundUniformBuffers.end();)
+	{
+		if (It->second == uniformBuffer)
+		{
+			It = mBoundUniformBuffers.erase(It);
+		}
+		else
+		{
+			++It;
+		}
+	}
 }
 
 void Device::UnbindTexture(const Texture* texture, unsigned int slot)
 {
+	mBoundTextures.erase(slot);
 }
 
 void Device::Draw(const Shader* Shader, const VertexBuffer* vertexBuffer, int32_t VertexCount, int32_t VertexStart, int32_t InstanceCount, int32_t InstanceStart)
@@ -479,7 +577,17 @@ void Device::Draw(const Shader* Shader, const VertexBuffer* vertexBuffer, int32_
 	vkCmdSetFrontFace(GetCommandBuffer()->mCommandBuffer, FrontFace);
 	vkCmdSetDepthTestEnable(GetCommandBuffer()->mCommandBuffer, DepthTestEnable);
 
-	vkCmdBindPipeline(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<const ShaderVK*>(Shader)->mPipeline);
+	const ShaderVK* VkShader = static_cast<const ShaderVK*>(Shader);
+	vkCmdBindPipeline(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, VkShader->mPipeline);
+
+	mBoundShader = Shader;
+
+	VkDescriptorSet DrawDescriptorSet = AllocateDrawDescriptorSet(VkShader);
+	if (DrawDescriptorSet != VK_NULL_HANDLE)
+	{
+		vkCmdBindDescriptorSets(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+			VkShader->mPipelineLayout, 0, 1, &DrawDescriptorSet, 0, nullptr);
+	}
 
 	BindVertexBuffer(vertexBuffer);
 
@@ -499,7 +607,18 @@ void Device::Draw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuff
 	vkCmdSetFrontFace(GetCommandBuffer()->mCommandBuffer, FrontFace);
 	vkCmdSetDepthTestEnable(GetCommandBuffer()->mCommandBuffer, DepthTestEnable);
 
-	vkCmdBindPipeline(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, static_cast<const ShaderVK*>(shader)->mPipeline);
+	const ShaderVK* VkShader = static_cast<const ShaderVK*>(shader);
+	vkCmdBindPipeline(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, VkShader->mPipeline);
+
+	// Track the bound shader and bind this draw's descriptor set
+	mBoundShader = shader;
+
+	VkDescriptorSet DrawDescriptorSet = AllocateDrawDescriptorSet(VkShader);
+	if (DrawDescriptorSet != VK_NULL_HANDLE)
+	{
+		vkCmdBindDescriptorSets(GetCommandBuffer()->mCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+			VkShader->mPipelineLayout, 0, 1, &DrawDescriptorSet, 0, nullptr);
+	}
 
 	BindVertexBuffer(vertexBuffer);
 	BindIndexBuffer(indexBuffer);
@@ -633,6 +752,14 @@ void Device::QueueCopyCommands(const BufferInfo& srcBuffer, const BufferInfo& ds
 	vkCmdCopyBuffer(CopyCommandBuffer->mCommandBuffer, srcBuffer.Buffer, dstBuffer.Buffer, 1, &CopyRegion);
 }
 
+void Device::ScheduleCopyCommandCleanup(const OnCommandExecutionEnd& FinishDelegate)
+{
+	if (ActiveCopyCommandBuffer && FinishDelegate)
+	{
+		ActiveCopyCommandBuffer->ExecutionFinishDelegates.push_back(FinishDelegate);
+	}
+}
+
 CommandBufferVK* Device::AllocateTransientCommandBuffer(CommandQueueType type)
 {
 	switch (type)
@@ -650,6 +777,37 @@ CommandBufferVK* Device::AllocateTransientCommandBuffer(CommandQueueType type)
 		break;
 	}
 	return nullptr;
+}
+
+void Device::CreateFrameDescriptorPools()
+{
+	// Per-frame transient descriptor sets. The pool is reset once the frame's
+	// fence has been waited on, so a set can be allocated per recorded draw
+	// without the whole shader seeing the last descriptor write of the frame.
+	const std::vector<VkDescriptorPoolSize> PoolSizes = {
+		{ VK_DESCRIPTOR_TYPE_SAMPLER, 64 },
+		{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 256 },
+		{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 64 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 64 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 32 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 32 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 256 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 128 },
+		{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 64 },
+		{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 64 },
+		{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 32 },
+	};
+
+	FrameDescriptorPools.resize(BACKBUFFER_COUNT, VK_NULL_HANDLE);
+	for (VkDescriptorPool& FrameDescPool : FrameDescriptorPools)
+	{
+		VkDescriptorPoolCreateInfo FrameDescPoolInfo = { VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO };
+		FrameDescPoolInfo.maxSets = 256;
+		FrameDescPoolInfo.poolSizeCount = static_cast<uint32_t>(PoolSizes.size());
+		FrameDescPoolInfo.pPoolSizes = PoolSizes.data();
+
+		VKCall(vkCreateDescriptorPool(mDevice, &FrameDescPoolInfo, nullptr, &FrameDescPool), "Frame Descriptor Pool creation Failed.");
+	}
 }
 
 void Device::CreateDescriptorPools()

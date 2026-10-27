@@ -14,6 +14,8 @@ Author: Sidhant Tumma
 #include <vulkan\vulkan.h>
 #include <vulkan/vk_enum_string_helper.h>
 
+#include <unordered_map>
+
 #define VKCall(FuncCall, Error) \
 {	\
 	VkResult Result = FuncCall; \
@@ -40,6 +42,7 @@ class FenceVK;
 struct BufferInfo;
 class SwapChainVK;
 class DescriptorPoolVK;
+class ShaderVK;
 enum CommandQueueType
 {
 	Graphics,
@@ -164,9 +167,16 @@ public:
 	void* MapBuffer(BufferInfo& buffer, size_t offset = 0);
 	void UnmapBuffer(BufferInfo& buffer);
 
+	// Makes CPU writes to a mapped host-visible buffer visible to the GPU.
+	// A no-op on coherent memory, required on non-coherent heaps.
+	void FlushBuffer(const BufferInfo& buffer, VkDeviceSize offset = 0, VkDeviceSize size = VK_WHOLE_SIZE);
+
 	// Copy
 	CommandBufferVK* GetCopyCommandBuffer();
 	void QueueCopyCommands(const BufferInfo& srcBuffer, const BufferInfo& dstBuffer, const OnCommandExecutionEnd& FinishDelegate = OnCommandExecutionEnd());
+	
+	// Schedule a cleanup callback to run after the current copy command buffer finishes execution
+	void ScheduleCopyCommandCleanup(const OnCommandExecutionEnd& FinishDelegate);
 
 	CommandBufferVK* AllocateTransientCommandBuffer(CommandQueueType type);
 
@@ -194,8 +204,22 @@ protected:
 
 protected:
 	void CreateDescriptorPools();
+	void CreateFrameDescriptorPools();
+
+	// Allocates a fresh descriptor set for the current draw and fills it with the
+	// currently bound uniform buffers/textures. Returns VK_NULL_HANDLE when the
+	// shader has no descriptors.
+	VkDescriptorSet AllocateDrawDescriptorSet(const ShaderVK* shader);
 
 	CullFace CullingFace;
+
+	// Bind state. Vulkan descriptors are written when a draw is recorded, not
+	// when BindUniformBuffer/BindTexture is called, so the bindings are kept here.
+	std::unordered_map<uint32_t, const UniformBuffer*> mBoundUniformBuffers;
+	std::unordered_map<uint32_t, const Texture*> mBoundTextures;
+
+	// Descriptor pools reset once per frame; descriptor sets are transient.
+	std::vector<VkDescriptorPool> FrameDescriptorPools;
 
 	// Core
 	std::vector<const char*> InstanceExtensions;
@@ -250,5 +274,8 @@ protected:
 
 	// Transient Operations
 	CommandBufferVK* ActiveCopyCommandBuffer;
+
+	// Currently bound shader (for descriptor set writes)
+	const Shader* mBoundShader;
 };
 }

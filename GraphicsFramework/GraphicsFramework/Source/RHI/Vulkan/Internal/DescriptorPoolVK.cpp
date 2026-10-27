@@ -39,19 +39,31 @@ void DescriptorPoolVK::Init()
 
 bool DescriptorPoolVK::AllocateDescriptorSet(const DescriptorSetVK* DescSet)
 {
-	if (DescSet)
+	if (!DescSet)
 	{
-		for (const VkDescriptorSetLayoutBinding& Binding : DescSet->LayoutBindings)
+		return false;
+	}
+
+	// First pass: verify all bindings fit in the pool
+	for (const VkDescriptorSetLayoutBinding& Binding : DescSet->LayoutBindings)
+	{
+		auto FoundItr = PoolSizesMap.find(Binding.descriptorType);
+		if (FoundItr == PoolSizesMap.end() || (FoundItr->second - Binding.descriptorCount) < 0)
 		{
-			auto FoundItr = PoolSizesMap.find(Binding.descriptorType);
-			if (FoundItr != PoolSizesMap.end() && (FoundItr->second - Binding.descriptorCount) >= 0)
-			{
-				return true;
-			}
+			return false;
+		}
+	}
+	// Second pass: decrement pool sizes for all bindings
+	for (const VkDescriptorSetLayoutBinding& Binding : DescSet->LayoutBindings)
+	{
+		auto FoundItr = PoolSizesMap.find(Binding.descriptorType);
+		if (FoundItr != PoolSizesMap.end())
+		{
+			FoundItr->second -= Binding.descriptorCount;
 		}
 	}
 
-	return false;
+	return true;
 }
 
 bool DescriptorPoolVK::FreeDescriptorSet(const DescriptorSetVK* DescSet)
@@ -60,9 +72,10 @@ bool DescriptorPoolVK::FreeDescriptorSet(const DescriptorSetVK* DescSet)
 	{
 		for (const VkDescriptorSetLayoutBinding& Binding : DescSet->LayoutBindings)
 		{
-			if (PoolSizesMap.find(Binding.descriptorType) != PoolSizesMap.end())
+			auto FoundItr = PoolSizesMap.find(Binding.descriptorType);
+			if (FoundItr != PoolSizesMap.end())
 			{
-				return true;
+				FoundItr->second += Binding.descriptorCount;
 			}
 		}
 	}

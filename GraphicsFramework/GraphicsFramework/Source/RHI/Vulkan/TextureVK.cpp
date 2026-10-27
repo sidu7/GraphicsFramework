@@ -10,6 +10,8 @@ Author: Sidhant Tumma
 #include "Core/Core.h"
 #include "RHI/Vulkan/DeviceVK.h"
 #include "RHI/Vulkan/Internal/HelperVK.h"
+#include "RHI/Vulkan/Internal/CommandBufferVK.h"
+#include "RHI/Vulkan/Internal/CommandQueueVK.h"
 
 namespace rhi::vk
 {
@@ -115,8 +117,14 @@ TextureVK::~TextureVK()
 
 	VkDev->DestroyBuffer(StagingImageBuffer);
 	VkDev->DestroyImage(TexImageInfo);
-	vkDestroyImageView(VkDev->GetDevice(), TexImageView, nullptr);
-	vkDestroySampler(VkDev->GetDevice(), TexSampler, nullptr);
+	if (TexImageView != VK_NULL_HANDLE)
+	{
+		vkDestroyImageView(VkDev->GetDevice(), TexImageView, nullptr);
+	}
+	if (TexSampler != VK_NULL_HANDLE)
+	{
+		vkDestroySampler(VkDev->GetDevice(), TexSampler, nullptr);
+	}
 }
  
 void TextureVK::EnableTiling() const
@@ -131,20 +139,59 @@ void TextureVK::ReadBufferToTexture()
 		return;
 	}
 
-	uint32_t ImageSize = mWidth * mHeight * GetNumChannels();
+	const int SourceChannels = GetNumChannels();
+	if (SourceChannels <= 0)
+	{
+		std::cout << "[Texture] Unsupported texture format for " << mFilePath << std::endl;
+		return;
+	}
+
+	// Vulkan does not guarantee 3-channel image formats (and many GPUs reject
+	// R8G8B8_SRGB for optimal-tiling sampled images), so every 8-bit source is
+	// expanded to RGBA8 before it is uploaded.
+	const bool bIs8Bit = mFormat == ImageFormat::R8 || mFormat == ImageFormat::RG8 ||
+		mFormat == ImageFormat::RGB8 || mFormat == ImageFormat::RGBA8;
+
+	std::vector<unsigned char> ExpandedPixels;
+	const unsigned char* UploadPixels = mLocalBuffer;
+	uint32_t UploadChannels = static_cast<uint32_t>(SourceChannels);
+	VkFormat UploadFormat = GetVkFormat(mFormat);
+
+	if (bIs8Bit && SourceChannels != 4)
+	{
+		const size_t PixelCount = static_cast<size_t>(mWidth) * static_cast<size_t>(mHeight);
+		ExpandedPixels.resize(PixelCount * 4);
+
+		for (size_t PixelIdx = 0; PixelIdx < PixelCount; ++PixelIdx)
+		{
+			const unsigned char* SourcePixel = mLocalBuffer + PixelIdx * static_cast<size_t>(SourceChannels);
+			unsigned char* DestPixel = ExpandedPixels.data() + PixelIdx * 4;
+			DestPixel[0] = SourcePixel[0];
+			DestPixel[1] = SourceChannels > 1 ? SourcePixel[1] : 0;
+			DestPixel[2] = SourceChannels > 2 ? SourcePixel[2] : 0;
+			DestPixel[3] = 255;
+		}
+
+		UploadPixels = ExpandedPixels.data();
+		UploadChannels = 4;
+		UploadFormat = GetVkFormat(ImageFormat::RGBA8);
+	}
+
+	const VkDeviceSize ImageSize = static_cast<VkDeviceSize>(mWidth) * static_cast<VkDeviceSize>(mHeight) * UploadChannels;
 	StagingImageBuffer = Device::Get()->CreateBuffer(ImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true /*bHostVisible*/);
 
 	void* MappedData = Device::Get()->MapBuffer(StagingImageBuffer);
-	memcpy(MappedData, mLocalBuffer, static_cast<size_t>(ImageSize));
+	memcpy(MappedData, UploadPixels, static_cast<size_t>(ImageSize));
+	Device::Get()->FlushBuffer(StagingImageBuffer);
 	Device::Get()->UnmapBuffer(StagingImageBuffer);
 
-	TexImageInfo = Device::Get()->CreateImage(mWidth, mHeight, GetVkFormat(mFormat), VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
+	TexImageInfo = Device::Get()->CreateImage(mWidth, mHeight, UploadFormat, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
 
 	// Texture Image View
 	VkImageViewCreateInfo TexImageViewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
 	TexImageViewInfo.image = TexImageInfo.Image;
 	TexImageViewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-	TexImageViewInfo.format = GetVkFormat(mFormat);
+	TexImageViewInfo.format = UploadFormat;
 	TexImageViewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
 	TexImageViewInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 	TexImageViewInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -166,8 +213,9 @@ void TextureVK::ReadBufferToTexture()
 	TexImageSamplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	TexImageSamplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
 	TexImageSamplerInfo.mipLodBias = 0.f;
-	TexImageSamplerInfo.anisotropyEnable = VK_TRUE;
-	TexImageSamplerInfo.maxAnisotropy = 4;
+	// samplerAnisotropy is not enabled on the logical device, so keep it off.
+	TexImageSamplerInfo.anisotropyEnable = VK_FALSE;
+	TexImageSamplerInfo.maxAnisotropy = 1.f;
 	TexImageSamplerInfo.compareEnable = VK_FALSE;
 	TexImageSamplerInfo.compareOp = VK_COMPARE_OP_LESS;
 	TexImageSamplerInfo.minLod = 0.f;
@@ -176,6 +224,76 @@ void TextureVK::ReadBufferToTexture()
 	TexImageSamplerInfo.unnormalizedCoordinates = VK_FALSE;
 
 	VKCall(vkCreateSampler(Device::Get()->GetDevice(), &TexImageSamplerInfo, nullptr, &TexSampler), "Failed to create Tex image sampler.");
+
+	// Upload synchronously: the texture must be sampleable as soon as Init()
+	// returns, and the staging buffer can then be destroyed immediately instead
+	// of being kept alive until a later frame flushes the copy queue.
+	CommandBufferVK* CopyCommandBuffer = Device::Get()->AllocateTransientCommandBuffer(CommandQueueType::Transfer);
+	if (!CopyCommandBuffer)
+	{
+		std::cout << "[Texture] Could not allocate an upload command buffer for " << mFilePath << std::endl;
+		return;
+	}
+
+	CopyCommandBuffer->Begin();
+	VkCommandBuffer CmdBuf = CopyCommandBuffer->mCommandBuffer;
+
+	// Transition image from UNDEFINED to TRANSFER_DST_OPTIMAL
+	VkImageMemoryBarrier ToTransferBarrier = {};
+	ToTransferBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	ToTransferBarrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	ToTransferBarrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	ToTransferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	ToTransferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	ToTransferBarrier.image = TexImageInfo.Image;
+	ToTransferBarrier.srcAccessMask = 0;
+	ToTransferBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	ToTransferBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	ToTransferBarrier.subresourceRange.baseMipLevel = 0;
+	ToTransferBarrier.subresourceRange.levelCount = 1;
+	ToTransferBarrier.subresourceRange.baseArrayLayer = 0;
+	ToTransferBarrier.subresourceRange.layerCount = 1;
+
+	vkCmdPipelineBarrier(CmdBuf,
+		VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+		0, 0, nullptr, 0, nullptr, 1, &ToTransferBarrier);
+
+	// Copy buffer to image
+	VkBufferImageCopy CopyRegion = {};
+	CopyRegion.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	CopyRegion.imageSubresource.layerCount = 1;
+	CopyRegion.imageExtent.width = mWidth;
+	CopyRegion.imageExtent.height = mHeight;
+	CopyRegion.imageExtent.depth = 1;
+
+	vkCmdCopyBufferToImage(CmdBuf, StagingImageBuffer.Buffer, TexImageInfo.Image,
+		VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &CopyRegion);
+
+	// Transition image from TRANSFER_DST_OPTIMAL to SHADER_READ_ONLY_OPTIMAL
+	VkImageMemoryBarrier ToShaderBarrier = {};
+	ToShaderBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	ToShaderBarrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	ToShaderBarrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	ToShaderBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	ToShaderBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	ToShaderBarrier.image = TexImageInfo.Image;
+	ToShaderBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	ToShaderBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+	ToShaderBarrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	ToShaderBarrier.subresourceRange.baseMipLevel = 0;
+	ToShaderBarrier.subresourceRange.levelCount = 1;
+	ToShaderBarrier.subresourceRange.baseArrayLayer = 0;
+	ToShaderBarrier.subresourceRange.layerCount = 1;
+
+	vkCmdPipelineBarrier(CmdBuf,
+		VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+		0, 0, nullptr, 0, nullptr, 1, &ToShaderBarrier);
+
+	CopyCommandBuffer->End();
+	Device::Get()->GetQueue(CommandQueueType::Transfer)->SubmitCommandBuffer(CopyCommandBuffer, true /*bWait*/);
+	delete CopyCommandBuffer;
+
+	Device::Get()->DestroyBuffer(StagingImageBuffer);
 }
 
 }

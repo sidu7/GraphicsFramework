@@ -64,7 +64,22 @@ void ShaderVK::Init(int32_t shaderId)
 	GenerateShaderBindings(vertSource, ShaderRegistry::ShaderStage::Vertex);
 	GenerateShaderBindings(fragSource, ShaderRegistry::ShaderStage::Fragment);
 
-	mDescriptorSet->Init();
+	// Only create descriptor set if the shader has bindings (uniforms/textures)
+	if (mDescriptorSet->GetBindingCount() > 0)
+	{
+		mDescriptorSet->Init();
+
+		// The set layout only exists after Init(); the pipeline layout must
+		// reference the real handle, not the VK_NULL_HANDLE seen while reflecting.
+		DescriptorSetLayouts.clear();
+		DescriptorSetLayouts.push_back(mDescriptorSet->DescLayout);
+	}
+	else
+	{
+		delete mDescriptorSet;
+		mDescriptorSet = nullptr;
+		DescriptorSetLayouts.clear();
+	}
 
 	// Create shader modules from SPIR-V
 	VkShaderModule VertexShaderModule = VK_NULL_HANDLE;
@@ -192,7 +207,7 @@ void ShaderVK::Init(int32_t shaderId)
 
 	// Create Pipeline Layout
 	VkPipelineLayoutCreateInfo PipelineCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-	PipelineCreateInfo.flags = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	PipelineCreateInfo.flags = 0;
 	PipelineCreateInfo.setLayoutCount = DescriptorSetLayouts.size();
 	PipelineCreateInfo.pSetLayouts = DescriptorSetLayouts.data();
 	PipelineCreateInfo.pushConstantRangeCount = 0;
@@ -256,7 +271,20 @@ void ShaderVK::Init(const std::string& vertexPath, const std::string& fragmentPa
 	GenerateShaderBindings(vertSource, ShaderRegistry::ShaderStage::Vertex);
 	GenerateShaderBindings(fragSource, ShaderRegistry::ShaderStage::Fragment);
 
-	mDescriptorSet->Init();
+	// Only create descriptor set if the shader has bindings (uniforms/textures)
+	if (mDescriptorSet->GetBindingCount() > 0)
+	{
+		mDescriptorSet->Init();
+
+		DescriptorSetLayouts.clear();
+		DescriptorSetLayouts.push_back(mDescriptorSet->DescLayout);
+	}
+	else
+	{
+		delete mDescriptorSet;
+		mDescriptorSet = nullptr;
+		DescriptorSetLayouts.clear();
+	}
 
 	VkShaderModule VertexShaderModule = VK_NULL_HANDLE;
 	LoadShaderModule(vertSource, VertexShaderModule);
@@ -364,7 +392,7 @@ void ShaderVK::Init(const std::string& vertexPath, const std::string& fragmentPa
 	DynamicStateCreateInfo.pDynamicStates = DynamicState.data();
 
 	VkPipelineLayoutCreateInfo PipelineCreateInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
-	PipelineCreateInfo.flags = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	PipelineCreateInfo.flags = 0;
 	PipelineCreateInfo.setLayoutCount = DescriptorSetLayouts.size();
 	PipelineCreateInfo.pSetLayouts = DescriptorSetLayouts.data();
 	PipelineCreateInfo.pushConstantRangeCount = 0;
@@ -511,7 +539,6 @@ void ShaderVK::GenerateShaderBindings(const std::vector<char>& shaderSource, Sha
 				mDescriptorSet->AddBinding(DescBinding);
 			}
 
-			DescriptorSetLayouts.push_back(mDescriptorSet->DescLayout);
 		}
 	}
 }

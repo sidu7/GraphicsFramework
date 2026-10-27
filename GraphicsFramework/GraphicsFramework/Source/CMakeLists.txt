@@ -168,6 +168,36 @@ target_link_libraries(GraphicsFramework PUBLIC
     "$<$<OR:$<CONFIG:Debug_OpenGL>,$<CONFIG:Release_OpenGL>>:opengl32>"
 )
 
+# Force x64 Windows SDK library search paths to take priority over x86.
+# This is needed because SDL2-static links against simple library names like
+# kernel32, user32, gdi32, etc., and CMake may resolve them to the wrong
+# architecture if the x64 paths aren't searched first.
+set(WINDOWS_KITS_ROOT "C:/Program Files (x86)/Windows Kits/10")
+set(GF_X64_WINDOWS_LIBS "")
+file(GLOB WINDOWS_SDK_VERSIONS "${WINDOWS_KITS_ROOT}/Lib/10.0.*")
+foreach(_sdk_ver IN LISTS WINDOWS_SDK_VERSIONS)
+    if(EXISTS "${_sdk_ver}/um/x64")
+        list(APPEND GF_X64_WINDOWS_LIBS "${_sdk_ver}/um/x64")
+    endif()
+    if(EXISTS "${_sdk_ver}/ucrt/x64")
+        list(APPEND GF_X64_WINDOWS_LIBS "${_sdk_ver}/ucrt/x64")
+    endif()
+endforeach()
+list(REMOVE_DUPLICATES GF_X64_WINDOWS_LIBS)
+
+# Also add x64 MSVC runtime library paths to override any x86 paths
+set(MSVC_LIB_ROOT "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/Tools/MSVC/14.52.37025/lib")
+if(EXISTS "${MSVC_LIB_ROOT}/x64")
+    list(APPEND GF_X64_WINDOWS_LIBS "${MSVC_LIB_ROOT}/x64")
+endif()
+
+if(GF_X64_WINDOWS_LIBS)
+    target_link_directories(GraphicsFramework PUBLIC "${GF_X64_WINDOWS_LIBS}")
+    message(STATUS "Added x64 library paths: ${GF_X64_WINDOWS_LIBS}")
+else()
+    message(WARNING "Could not find x64 library paths")
+endif()
+
 # The backend sources are already part of the archive through target_sources
 # above; no static-library back-edge is needed. Backend code can therefore call
 # framework services (Engine, ObjectManager, ShaderRegistry, ...) and the
