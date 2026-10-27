@@ -1,7 +1,8 @@
 # RHI Migration Plan — OpenGL / Vulkan
 
-Status: **in progress** — Phases 0, 1, 1.5, 2, 3, 4 and 5 complete; Phase 6 next.
-Last updated: 2026-10-26.
+Status: **in progress** — Phases 0, 1, 1.5, 2, 3, 4, 5 and 6 complete, plus the Vulkan
+descriptor-binding and texture-upload work that the plan had deferred to Phase 7; Phase 7 next.
+Last updated: 2026-10-27.
 
 This document is the source of truth for the rendering-abstraction refactor. It describes the
 current problems, the target architecture, the file layout, and the ordered migration phases.
@@ -469,6 +470,11 @@ Exit criteria (verified): no `#if defined(RENDERER_*)` in `Core/`; `ImguiManager
 Reason for last: this changes the public draw API and every sample, so it should follow the
 structural work.
 
+Status: the **descriptor-binding and image-upload subset** of this phase was executed ahead of
+schedule to unblock the section 9 acceptance check (see
+[Vulkan descriptor and texture gaps resolved](#vulkan-descriptor-and-texture-gaps-resolved)). The
+pipeline-object part and the `BeginRenderPass` / `EndRenderPass` RHI are still open.
+
 ---
 
 ## 6. Conventions during the migration
@@ -564,7 +570,9 @@ with unresolved `operator new`.
   | `UniformBufferTest` | ✅ rotating quad | ❌ nothing drawn |
   | `TextureTest` | ✅ JPEG texture on a rotating quad | ❌ crashes during texture creation |
 
-  No Vulkan validation errors and no `GLCall` assertions were reported by the working scenes.
+  No Vulkan validation errors and no `GLCall` assertions were reported by the working scenes. The
+  two Vulkan failures (`UniformBufferTest`, `TextureTest`) are fixed — see
+  [Vulkan descriptor and texture gaps resolved](#vulkan-descriptor-and-texture-gaps-resolved).
 
 ### Verification status after Phase 6
 
@@ -575,43 +583,80 @@ with unresolved `operator new`.
 * `OpenGL-Debug` builds `GraphicsFramework` successfully.
 * `Vulkan-Debug` builds `GraphicsFramework` successfully.
 
-#### Known Vulkan gaps (unchanged from Phase 5)
+#### Known Vulkan gaps found by the Phase 5 verification — resolved
 
-Both failures from the Phase 5 verification are still present — they are pre-existing backend gaps
-that belong to Phase 7 (descriptor binding and image upload with layout transitions). Phase 6 does
-not touch those code paths.
+Both failures were pre-existing backend gaps that became visible during Phase 5, once the `volk`
+fix let the Vulkan configuration start. Neither was caused by the VMA change. They were closed by
+pulling forward the descriptor-binding and image-upload subset of Phase 7; the details are in
+[Vulkan descriptor and texture gaps resolved](#vulkan-descriptor-and-texture-gaps-resolved) below.
 
-1. **No descriptor binding for uniform buffers or textures.** `UniformBufferTest` still shows
-   nothing rendered under Vulkan.
-2. **`TextureVK` cannot upload an image.** `TextureTest` still crashes during texture creation.
 
-#### Known Vulkan gaps found by the Phase 5 verification
+---
 
-Both failures are pre-existing backend gaps that were invisible until this phase, because the
-Vulkan configuration could not start at all before the `volk` fix. Neither is caused by the VMA
-change: the failing code paths (`BindUniformBuffer`, `vkCreateImage` for a 3-channel image) are the
-ones Phase 5 did not touch.
+### Vulkan descriptor and texture gaps resolved
 
-1. **No descriptor binding for uniform buffers or textures.**
-   `rhi::vk::Device::BindUniformBuffer()` contains one commented-out `vkCmdBindDescriptorSets`
-   call and `BindTexture()` is empty. `ShaderVK::Init()` reflects the descriptor set layout and
-   allocates a `VkDescriptorSet`, but nothing ever calls `vkUpdateDescriptorSets`, so the shader
-   reads an unbound set: the matrices are zero, every vertex collapses to `w = 0` and the quad is
-   clipped away (which is exactly what the `UniformBufferTest` screenshot shows — the clear colour,
-   the ImGui panels, no geometry).
-2. **`TextureVK` cannot upload an image.**
-   `TextureVK::ReadBufferToTexture()` creates the staging buffer, maps/copies/unmaps it and then
-   creates the image, but never records `vkCmdCopyBufferToImage` and never transitions the image
-   from `VK_IMAGE_LAYOUT_UNDEFINED` to `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL`.
-   `TextureTest` additionally loads a 3-channel JPEG (`ImageFormat::RGB8` →
-   `VK_FORMAT_R8G8B8_SRGB`). Instrumentation narrowed the crash to `Device::CreateImage()`, i.e.
-   `vmaCreateImage` rejects that format for an optimal-tiling sampled image on this GPU (3-channel
-   8-bit formats are not generally supported for images in Vulkan). OpenGL handles `RGB8` natively,
-   which is why only the Vulkan run dies there.
+The descriptor subset of Phase 7 was pulled forward so the section 9 acceptance check is green for
+both backends. No new `#if defined(RENDERER_*)` was introduced: everything lives in
+`Source/RHI/Vulkan/`.
 
-Both belong to the descriptor/pipeline work that the plan defers to Phase 7 (`Pipeline objects`).
-They are the remaining blockers for the section 9 acceptance check; either Phase 7's descriptor
-subset is pulled forward, or the acceptance check stays partially green.
+#### Descriptor binding (`UniformBufferTest`)
+
+Root cause: `ShaderVK::GenerateShaderBindings()` pushed `mDescriptorSet->DescLayout` into
+`DescriptorSetLayouts` **before** `DescriptorSetVK::Init()` had created the layout, so
+`vkCreatePipelineLayout` received `VK_NULL_HANDLE` set layouts and every draw using the shader
+produced no geometry.
+
+Fix:
+
+* Reflection runs first, then `DescriptorSetVK::Init()` is called in its layout-only form
+  (`DescriptorSetVK::Allocate()` creates the `VkDescriptorSet` separately), and only then
+  `DescriptorSetLayouts = { DescLayout }`.
+* A uniform buffer / texture referenced by both the vertex and fragment stage is emitted once with
+  the two `VkShaderStageFlags` OR-ed together, instead of as duplicate bindings.
+* `PipelineCreateInfo.flags` is `0`; it previously carried `VK_PIPELINE_BIND_POINT_GRAPHICS` in a
+  bitfield, which is not a valid pipeline flag.
+* Descriptor sets are written at **record/draw time**, not at `BindUniformBuffer()` /
+  `BindTexture()` time, because the shader is unknown there. `Device` caches the bound resources
+  and `Device::AllocateDrawDescriptorSet()` writes them before `vkCmdBindDescriptorSets`.
+* One set per recorded draw comes from a per-frame `VkDescriptorPool` that is reset after the
+  frame's fence wait, so several draws with different UBOs/textures in one frame stay correct.
+* `Device::FlushBuffer()` (VMA flush) was added and `UniformBufferVK` now honours the `data` /
+  `offset` arguments of `Init()`.
+
+#### Image upload (`TextureTest`)
+
+Root cause: `TextureVK::ReadBufferToTexture()` never recorded `vkCmdCopyBufferToImage` and never
+transitioned the image out of `VK_IMAGE_LAYOUT_UNDEFINED`; the 3-channel JPEG
+(`ImageFormat::RGB8` → `VK_FORMAT_R8G8B8_SRGB`) additionally made `vmaCreateImage` fail, because
+3-channel 8-bit formats are not generally supported for optimal-tiling sampled images.
+
+Fix:
+
+* 8-bit 1/2/3-channel sources are expanded to `RGBA8` and uploaded as
+  `VK_FORMAT_R8G8B8A8_SRGB`; 4-channel sources upload unchanged.
+* Upload is synchronous: a transient transfer command buffer records the copy and the barrier to
+  `VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL` and is submitted with
+  `SubmitCommandBuffer(cmd, true)`, instead of being deferred to the next frame.
+* The staging-to-image barrier takes `TOP_OF_PIPE` as its source stage, and sampler anisotropy is
+  disabled where the device does not support it.
+
+#### Verification
+
+`cmake --build --preset Vulkan-Debug --target UnitTests --parallel` and
+`cmake --build --preset OpenGL-Debug --target UnitTests --parallel` both succeed. All five scenes
+were captured with `PrintWindow(PW_RENDERFULLCONTENT)` via `-scene=<n>`:
+
+| Scene | OpenGL | Vulkan |
+|---|---|---|
+| `ShaderTest` | ✅ gradient triangle | ✅ gradient triangle (vertically mirrored) |
+| `VertexBufferTest` | ✅ animated gradient triangle | ✅ gradient triangle |
+| `IndexBufferTest` | ✅ indexed quad | ✅ indexed quad (vertically mirrored) |
+| `UniformBufferTest` | ✅ rotating quad | ✅ rotating quad |
+| `TextureTest` | ✅ JPEG texture on a rotating quad | ✅ JPEG texture on a rotating quad |
+
+`TextureTest` is noticeably dark on both backends (the JPEG is sampled through an sRGB format while
+the swapchain/back buffer is UNORM), so Vulkan matches the OpenGL reference pixel-for-pixel in
+character; that tone-mapping difference is pre-existing and not introduced by this work.
 
 ---
 
@@ -665,6 +710,9 @@ OpenGL window — use `PrintWindow(PW_RENDERFULLCONTENT)` when capturing for rev
 
 A backend passes when all five scenes render and the console shows no Vulkan validation errors
 (debug build) or OpenGL `GLCall` assertions.
+
+Result (2026-10-27): both `Debug_OpenGL` and `Debug_Vulkan` pass all five scenes; see
+[Vulkan descriptor and texture gaps resolved](#vulkan-descriptor-and-texture-gaps-resolved).
 
 ### Known prerequisite: UnitTests SPIR-V shaders — resolved
 
