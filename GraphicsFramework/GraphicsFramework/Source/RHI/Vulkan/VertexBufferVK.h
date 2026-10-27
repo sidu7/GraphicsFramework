@@ -27,9 +27,10 @@ public:
 
 	static enum VkFormat GetVertexFormat(VertexFormat format);
 
-	BufferInfo StagingBufferInfo;
+	BufferInfo StagingBufferInfo;   // unused, kept for ABI/source compatibility
 	BufferInfo MainBufferInfo;
 protected:
-	void CreateBufferInfo(uint32_t vertexDataSize);
+	void EnsureCapacity(uint32_t requiredSize);
+	void WriteAt(const void* data, unsigned int size, unsigned int offset);
 };
 }
