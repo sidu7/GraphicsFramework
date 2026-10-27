@@ -43,12 +43,16 @@ const VkSurfaceFormatKHR& SwapChainDetails::GetSurfaceFormat()
 
 const VkPresentModeKHR SwapChainDetails::GetPresentMode()
 {
+	// Prefer unlimited FPS: IMMEDIATE > MAILBOX (triple-buffered) > FIFO (VSync)
+	for (VkPresentModeKHR PresentMode : PresentModes)
+	{
+		if (PresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR)
+			return PresentMode;
+	}
 	for (VkPresentModeKHR PresentMode : PresentModes)
 	{
 		if (PresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
-		{
 			return PresentMode;
-		}
 	}
 
 	return VK_PRESENT_MODE_FIFO_KHR;

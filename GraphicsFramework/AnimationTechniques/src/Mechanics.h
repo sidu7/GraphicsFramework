@@ -1,14 +1,16 @@
 #pragma once
-#include "core/Scene.h"
-
+#include "Core/Scene.h"
 #include <glm/glm.hpp>
 #include <utility>
 #include <vector>
 
+// Application-local shader IDs (shared across all scenes in this project)
+#include "ProjectShaderIDs.h"
+
 class Light;
 class Shader;
-class VertexArray;
-class IndexBuffer;
+class UniformBuffer;
+class Object;
 struct ShapeData;
 
 struct Mass
@@ -67,21 +69,33 @@ private:
 	glm::vec3 Func(glm::vec3 initial, float time, glm::vec3 x);
 
 private:
-	Light* mLight;
-	Shader* Drawing;
+	Light* mLight = nullptr;
+	Shader* Drawing = nullptr;
 
-	bool mPauseSimulation;
-	float Time;
-	int NodeCount;
-	float NodeMass;
+	// Shared UBOs
+	UniformBuffer* mCameraUBO = nullptr;
+	UniformBuffer* mLightUBO = nullptr;
+
+	// Per-node UBO pool (like AnimationScene)
+	struct NodeDrawUniforms
+	{
+		UniformBuffer* mObjectUBO = nullptr;
+		UniformBuffer* mMaterialUBO = nullptr;
+	};
+	std::vector<NodeDrawUniforms> mNodeUBOs;
+
+	bool mPauseSimulation = false;
+	float Time = 0.0f;
+	int NodeCount = 0;
+	float NodeMass = 0.0f;
 	std::vector<RopeNode> mRopeNodes;
 	std::vector<Spring> mSprings;
-	float mSpringConstant;
-	float mSpringLength;
-	float mSpringFriction;
+	float mSpringConstant = 0.0f;
+	float mSpringLength = 0.0f;
+	float mSpringFriction = 0.0f;
 	glm::vec3 mGravitationalForce;
-	float mAirFriction;
+	float mAirFriction = 0.0f;
 	glm::vec3 mRopeConnectionPosition1;
 	glm::vec3 mRopeConnectionPosition2;
-	float mRopeConnectionVelocity;
+	float mRopeConnectionVelocity = 0.0f;
 };

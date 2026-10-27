@@ -22,7 +22,7 @@ public:
 	void DebugDisplay() override;
 
 private:
-	std::vector<Object*> FindNeighbours(Object* fish);
+	std::vector<Object*> FindNeighbours(Object* fish, std::vector<Object*>& neighbourBuffer);
 	void FirstandThirdAcceleration(std::vector<Object*>& neighbours, Object* fish,
 		glm::vec3& a_first, glm::vec3& a_third);
 	void AvoidObstacles(glm::vec3& a_first, Object* fish);

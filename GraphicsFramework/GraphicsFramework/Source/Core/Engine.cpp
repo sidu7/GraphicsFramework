@@ -40,7 +40,7 @@ void Engine::Start(const std::string& settingsFilePath)
 	//Init Managers
 	Inputs::Instance()->Init();
 	Renderer::Instance()->Init();
-	Time::Instance()->Init(60);
+	Time::Instance()->Init(120);
 	ShapeManager::Instance()->Init();
 	ImguiManager::Instance()->Init();
 	ComponentFactory::Instance()->Init();

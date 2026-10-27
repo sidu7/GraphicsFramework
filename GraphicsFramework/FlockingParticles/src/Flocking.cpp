@@ -162,9 +162,9 @@ void Flocking::Init()
 	mAlignWeight = 2;
 	mCohesionWeight = 1;
 	mSeparateWeight = 5.5f;
-	mFPS = 0;
+	mFPS = 120;  // Default to 120 FPS (unlimited when neededTime=0, capped by display otherwise)
 	Time::Instance()->SetFrameRate(mFPS);
-	
+
 	auto rand = Random::Range(-1.0f, 1.0f);
 	auto rand2 = Random::Range();
 	glm::vec3 Y(0.0f, 1.0f, 0.0f);
@@ -210,14 +210,16 @@ void Flocking::Update()
 			Flock* flock = fish->GetComponent<Flock>();
 			glm::vec3 accels[4] = { glm::vec3(0.0f),glm::vec3(0.0f) ,glm::vec3(0.0f), glm::vec3(0.0f) };
 
-			std::vector<Object*> neighbours = FindNeighbours(fish);
+			std::vector<Object*> neighbours;
+			neighbours.reserve(mFishes.size());
+			FindNeighbours(fish, neighbours);
 			AvoidObstacles(accels[0], fish);
 			flock->mAcceleration += accels[0];
-			if (neighbours.size() > 0)
+			if (!neighbours.empty())
 			{
 				NeighboursData& data = flock->mNeighboursData;
-				data.mFlockCenter /= neighbours.size();
-				accels[1] = SteerTowards(data.mFlockHeading,fish) * mAlignWeight;
+				data.mFlockCenter /= static_cast<float>(neighbours.size());
+				accels[1] = SteerTowards(data.mFlockHeading, fish) * mAlignWeight;
 				glm::vec3 offsetToCenter = data.mFlockCenter - fish->GetComponent<Transform>()->mPosition;
 				accels[2] = SteerTowards(offsetToCenter, fish) * mCohesionWeight;
 
@@ -310,44 +312,54 @@ void Flocking::DebugDisplay()
 	ImGui::End();
 }
 
-std::vector<Object*> Flocking::FindNeighbours(Object* fish)
+std::vector<Object*> Flocking::FindNeighbours(Object* fish, std::vector<Object*>& neighbourBuffer)
 {
-	std::vector<Object*> list;
+	neighbourBuffer.clear();
 	glm::vec3 posA = fish->GetComponent<Transform>()->mPosition;
-	glm::vec3 velA = fish->GetComponent<Flock>()->mVelocity;
 	NeighboursData& data = fish->GetComponent<Flock>()->mNeighboursData;
 	data.Clear();
+
+	// Normalize velocity once, outside the loop
+	glm::vec3 velA = fish->GetComponent<Flock>()->mVelocity;
+	const glm::vec3 normVel = glm::normalize(velA);
+
 	for(auto obj : mFishes)
 	{
-		if(obj != fish)
-		{
-			glm::vec3 posB = obj->GetComponent<Transform>()->mPosition;
+		if(obj == fish) continue;
 
-			glm::vec3 P = glm::normalize(posB - posA);
-			glm::vec3 V = glm::normalize(velA);
-			float dot = glm::dot(P,V);
-			float angle = glm::acos(fabs(dot));
-			float dist = glm::length(posB - posA);
-			if (angle <= mFishViewAngle && dist <= mFishViewDistance)
-			//if(dist < mFishViewDistance)
-			{
-				list.push_back(obj);			
-			}
+		glm::vec3 posB = obj->GetComponent<Transform>()->mPosition;
+		glm::vec3 diff = posB - posA;
+		float dist = glm::length(diff);
+		if (dist > mFishViewDistance) continue;
+
+		// Angular check: is obj within the fish's viewing cone?
+		float dot = glm::dot(glm::normalize(diff), normVel);
+		if (dot >= 1.0f) {
+			// Exactly ahead — always within cone
+		} else {
+			float angle = glm::acos(glm::clamp(dot, -1.0f, 1.0f));
+			if (angle > mFishViewAngle) continue;
 		}
+
+		neighbourBuffer.push_back(obj);
 	}
-	if(list.size() > 8)
+
+	// Keep only the 5 closest neighbors (sort by distance, keep first 5)
+	const int kMaxNeighbors = 5;
+	if (neighbourBuffer.size() > static_cast<size_t>(kMaxNeighbors))
 	{
-		std::sort(list.begin(), list.end(), [posA](Object* a, Object* b)
-			{
-				glm::vec3 pos_a = a->GetComponent<Transform>()->mPosition;
-				glm::vec3 pos_b = b->GetComponent<Transform>()->mPosition;
-
-				return glm::length(pos_a - posA) < glm::length(pos_b - posA);
-			});
-		list.erase(list.begin() + 5, list.end());
+		std::partial_sort(neighbourBuffer.begin(),
+		                  neighbourBuffer.begin() + kMaxNeighbors,
+		                  neighbourBuffer.end(),
+		                  [&posA](Object* a, Object* b) {
+			                  return glm::length(a->GetComponent<Transform>()->mPosition - posA)
+	                             < glm::length(b->GetComponent<Transform>()->mPosition - posA);
+		                  });
+		neighbourBuffer.resize(kMaxNeighbors);
 	}
 
-	for(auto n : list)
+	// Aggregate neighbor data using only the kept neighbors
+	for(auto n : neighbourBuffer)
 	{
 		Flock* fo = n->GetComponent<Flock>();
 		glm::vec3 posB = n->GetComponent<Transform>()->mPosition;
@@ -360,7 +372,8 @@ std::vector<Object*> Flocking::FindNeighbours(Object* fish)
 			data.mAvoidanceDirection += glm::normalize(posA - posB);
 		}
 	}
-	return list;
+
+	return neighbourBuffer;
 }
 
 
