@@ -2,6 +2,7 @@
 
 // External
 #include <iostream>
+#include <chrono>
 #include "glm/gtc/matrix_transform.hpp"
 #include <rapidjson/rapidjson.h>
 
@@ -19,6 +20,8 @@
 #include "ObjectManager.h"
 #include "ComponentFactory.h"
 #include "Utils/JSONHelper.h"
+#include "Profiling/ProfilerInternal.h"
+#include "Profiling/Profiler.h"
 
 void Engine::Start(const std::string& settingsFilePath)
 {
@@ -37,13 +40,20 @@ void Engine::Start(const std::string& settingsFilePath)
 
 	appIsRunning = true;
 
-	//Init Managers
+	// Init managers
 	Inputs::Instance()->Init();
 	Renderer::Instance()->Init();
 	Time::Instance()->Init(120);
 	ShapeManager::Instance()->Init();
 	ImguiManager::Instance()->Init();
 	ComponentFactory::Instance()->Init();
+
+	// Initialize profiler with settings from Settings.json
+#ifdef GF_PROFILING
+	Profiler::Instance()->Init(mSettings.mProfilerSettings);
+#else
+	Profiler::Instance()->Init();
+#endif
 
 	pCamera = new Camera();
 	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
@@ -55,42 +65,59 @@ void Engine::Run()
 {
 	while (appIsRunning)
 	{
-		for (const NextFrameFunc& Func : StartFrameFuncs)
+		// ── Profiler: start new frame ──
+		Profiler::Instance()->StartFrame();
+
 		{
-			Func();
-		}
-		StartFrameFuncs.clear();
+			GF_PROFILE_SCOPE("Engine::Run");
+			for (const NextFrameFunc& Func : StartFrameFuncs)
+			{
+				Func();
+			}
+			StartFrameFuncs.clear();
 
-		Time::Instance()->FrameStart();	
-		ImguiManager::Instance()->StartFrame();
+			Time::Instance()->FrameStart();
+			ImguiManager::Instance()->StartFrame();
 
-		Renderer::Instance()->StartFrame();
-		Inputs::Instance()->Update();
-		pCamera->Update();
+			Renderer::Instance()->StartFrame();
+			Inputs::Instance()->Update();
+			pCamera->Update();
 
 #if !NO_IMGUI
-		// Call Custom debug functions
-		for (CustomDebugFunc& Func : CustomDebugFunctions)
-		{
-			Func();
-		}
+			// Call Custom debug functions
+			for (CustomDebugFunc& Func : CustomDebugFunctions)
+			{
+				Func();
+			}
 #endif
 
-		if (pScene)
-		{
-			pScene->DebugDisplay();
-			pScene->Update();
-		}
-	
-		ImguiManager::Instance()->Update();
-		Renderer::Instance()->SwapBuffers();
-		Time::Instance()->FrameEnd();
+			if (pScene)
+			{
+				pScene->DebugDisplay();
+				pScene->Update();
+			}
 
-		for (const NextFrameFunc& Func : EndFrameFuncs)
-		{
-			Func();
+			// ── Render loop timing ──
+			Profiler::Instance()->MarkRenderStart();
+
+			// ── ImGui timing ──
+			Profiler::Instance()->MarkImguiStart();
+			ImguiManager::Instance()->Update();
+			Profiler::Instance()->MarkImguiEnd();
+
+			Renderer::Instance()->SwapBuffers();
+			Time::Instance()->FrameEnd();
+			Profiler::Instance()->MarkRenderEnd();
+
+			for (const NextFrameFunc& Func : EndFrameFuncs)
+			{
+				Func();
+			}
+			EndFrameFuncs.clear();
 		}
-		EndFrameFuncs.clear();
+
+		// ── Profiler: end frame ──
+		Profiler::Instance()->EndFrame();
 	}
 
 	Renderer::Instance()->WaitFrameFinish();
@@ -158,4 +185,24 @@ void Settings::Parse(rapidjson::Document& settingsFile)
 	{
 		mMaterialBindingPoint = Root["MaterialBindingPoint"].GetInt();
 	}
+
+	// Profiler settings (optional — uses defaults if absent)
+#ifdef GF_PROFILING
+	if (Root.HasMember("Profiler"))
+	{
+		rapidjson::Value::Object Profiler = Root["Profiler"].GetObject();
+		if (Profiler.HasMember("MaxConcurrentQueries"))
+		{
+			mProfilerSettings.maxConcurrentQueries = static_cast<uint32_t>(Profiler["MaxConcurrentQueries"].GetUint());
+		}
+		if (Profiler.HasMember("Enabled"))
+		{
+			mProfilerSettings.enabled = Profiler["Enabled"].GetBool();
+		}
+		if (Profiler.HasMember("CaptureDrawCalls"))
+		{
+			mProfilerSettings.captureDrawCalls = Profiler["CaptureDrawCalls"].GetBool();
+		}
+	}
+#endif
 }

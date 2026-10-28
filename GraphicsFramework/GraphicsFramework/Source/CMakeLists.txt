@@ -150,6 +150,22 @@ target_compile_definitions(GraphicsFramework PUBLIC
     "$<$<OR:$<CONFIG:Debug_Vulkan>,$<CONFIG:Release_Vulkan>>:RENDERER_VULKAN>"
 )
 
+# Profiler — GF_PROFILING is defined in Debug builds (always) and Release builds
+# (only when GF_BUILD_DEBUG_PROFILER is ON).  All profiler code is wrapped in
+# #ifdef GF_PROFILING so that when it is not defined the compiler eliminates every
+# call, vtable, and data structure (zero overhead).
+if(GF_BUILD_DEBUG_PROFILER)
+    target_compile_definitions(GraphicsFramework PUBLIC
+        $<$<CONFIG:Debug>:GF_PROFILING>
+        $<$<CONFIG:Release>:GF_PROFILING>
+    )
+else()
+    # Always on in Debug, off in Release
+    target_compile_definitions(GraphicsFramework PUBLIC
+        $<$<CONFIG:Debug>:GF_PROFILING>
+    )
+endif()
+
 # Set library dependencies
 target_link_libraries(GraphicsFramework PUBLIC
     assimp::assimp

@@ -29,6 +29,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(GF_BUILD_SAMPLES "Add the existing sample application and test targets" ON)
+option(GF_BUILD_DEBUG_PROFILER "Enable CPU/GPU profiler" ON)
 
 # Validate platform
 if(NOT WIN32 OR NOT MSVC OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
