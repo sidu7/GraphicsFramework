@@ -24,6 +24,7 @@ class ComputeShader;
 class UniformBuffer;
 class ShaderStorageBuffer;
 class Texture;
+class Profiler;
 
 // Abstract rendering device.
 //

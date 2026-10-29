@@ -1,6 +1,7 @@
 #include "UniformBufferVK.h"
 
 #include "Internal\DescriptorPoolVK.h"
+#include "Profiling/Profiler.h"
 
 namespace rhi::vk
 {
@@ -37,6 +38,7 @@ void UniformBufferVK::Init(uint32_t size, uint32_t binding, const void* data)
 
 void UniformBufferVK::AddData(uint32_t size, const void* data, uint32_t offset) const
 {
+	GF_PROFILE_SCOPE("UniformBufferVK::AddData");
 	if (!UboInfo.MappedMemory || !data)
 	{
 		return;

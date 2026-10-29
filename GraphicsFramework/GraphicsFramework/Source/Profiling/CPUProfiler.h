@@ -94,17 +94,9 @@ public:
         , mFile(file)
         , mLine(line)
     {
-        if (file && line > 0)
-        {
-            std::string displayName = std::string(file) + ":" + std::to_string(line);
-            if (name)
-                displayName += " (" + std::string(name) + ")";
-            CPUProfiler::Instance()->PushScope(displayName.c_str());
-        }
-        else if (name)
-        {
-            CPUProfiler::Instance()->PushScope(name);
-        }
+        // Only use the name — file:line prefixes are redundant and truncate
+        // the actual function/scope name in the overlay.
+        CPUProfiler::Instance()->PushScope(mName.c_str());
     }
 
     ~ScopeGuard()

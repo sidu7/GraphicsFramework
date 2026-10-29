@@ -2,7 +2,6 @@
 
 // External
 #include <iostream>
-#include <chrono>
 #include "glm/gtc/matrix_transform.hpp"
 #include <rapidjson/rapidjson.h>
 
@@ -49,11 +48,7 @@ void Engine::Start(const std::string& settingsFilePath)
 	ComponentFactory::Instance()->Init();
 
 	// Initialize profiler with settings from Settings.json
-#ifdef GF_PROFILING
 	Profiler::Instance()->Init(mSettings.mProfilerSettings);
-#else
-	Profiler::Instance()->Init();
-#endif
 
 	pCamera = new Camera();
 	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
@@ -67,7 +62,6 @@ void Engine::Run()
 	{
 		// ── Profiler: start new frame ──
 		Profiler::Instance()->StartFrame();
-
 		{
 			GF_PROFILE_SCOPE("Engine::Run");
 			for (const NextFrameFunc& Func : StartFrameFuncs)
@@ -82,25 +76,13 @@ void Engine::Run()
 			Renderer::Instance()->StartFrame();
 			Inputs::Instance()->Update();
 			pCamera->Update();
-
-#if !NO_IMGUI
-			// Call Custom debug functions
-			for (CustomDebugFunc& Func : CustomDebugFunctions)
-			{
-				Func();
-			}
-#endif
-
 			if (pScene)
 			{
 				pScene->DebugDisplay();
 				pScene->Update();
 			}
 
-			// ── Render loop timing ──
 			Profiler::Instance()->MarkRenderStart();
-
-			// ── ImGui timing ──
 			Profiler::Instance()->MarkImguiStart();
 			ImguiManager::Instance()->Update();
 			Profiler::Instance()->MarkImguiEnd();
@@ -132,6 +114,11 @@ void Engine::Stop()
 	ObjectManager::Instance()->Close();
 	ShapeManager::Instance()->Close();
 	ImguiManager::Instance()->Close();
+
+	// The profiler owns Vulkan/OpenGL objects (query pools, GL query names), so
+	// it must be shut down before the renderer destroys the device/context.
+	Profiler::Instance()->Close();
+
 	Renderer::Instance()->Close();
 	std::cout << "Window closed" << std::endl;
 	Window::Instance()->Close();
@@ -187,7 +174,6 @@ void Settings::Parse(rapidjson::Document& settingsFile)
 	}
 
 	// Profiler settings (optional — uses defaults if absent)
-#ifdef GF_PROFILING
 	if (Root.HasMember("Profiler"))
 	{
 		rapidjson::Value::Object Profiler = Root["Profiler"].GetObject();
@@ -204,5 +190,4 @@ void Settings::Parse(rapidjson::Document& settingsFile)
 			mProfilerSettings.captureDrawCalls = Profiler["CaptureDrawCalls"].GetBool();
 		}
 	}
-#endif
 }

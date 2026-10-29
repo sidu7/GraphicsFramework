@@ -26,10 +26,16 @@ public:
 	bool mLighting;
 	UniformBuffer* mMaterialUBO;
 
+	// Name accessor (used by the profiler for draw call metadata)
+	std::string GetName() const { return mName; }
+
 	Material();
 	virtual ~Material();
 
 	virtual void Update() override;
 
 	virtual void Serialize(rapidjson::Value::Object data) override;	
+
+private:
+	std::string mName;
 };

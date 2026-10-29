@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
-#ifdef GF_PROFILING
 #include "Profiling/ProfilerInternal.h"
-#endif
 
 class Camera;
 class Scene;
@@ -19,9 +17,7 @@ struct Settings
 	uint32_t mTransformBindingPoint;
 	uint32_t mMaterialBindingPoint;
 
-#ifdef GF_PROFILING
 	ProfilerSettings mProfilerSettings;
-#endif
 
 	void Parse(rapidjson::Document& settingsFile);
 };

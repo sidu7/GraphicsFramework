@@ -3,6 +3,7 @@
 #include "Profiling/CPUProfiler.h"
 
 #include <algorithm>
+#include <iostream>
 #include <unordered_map>
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -14,7 +15,17 @@ void CPUProfiler::StartFrame()
     mRawSamples.clear();
     mScopes.clear();
     mSamples.clear();
-    mSnapshot = FrameSnapshot{};
+
+    // Keep frameTimeHistory across frames; only clear the per-frame fields.
+    mSnapshot.cpuSamples.clear();
+    mSnapshot.drawCalls.clear();
+    mSnapshot.frameTimeMs = 0.0;
+    mSnapshot.cpuTimeMs = 0.0;
+    mSnapshot.gpuTimeMs = 0.0;
+    mSnapshot.renderLoopTimeMs = 0.0;
+    mSnapshot.updateLoopTimeMs = 0.0;
+    mSnapshot.imguiTimeMs = 0.0;
+    mSnapshot.waitTimeMs = 0.0;
 }
 
 void CPUProfiler::EndFrame()
@@ -35,15 +46,29 @@ void CPUProfiler::EndFrame()
         mSnapshot.imguiTimeMs = std::chrono::duration<double, std::milli>(mImguiEnd - mImguiStart).count();
     }
 
+    // Group raw samples into named totals (must happen before cpuTimeMs uses mSamples)
+    GroupSamples();
+
     // CPU loading = time spent in the main loop (render + update + imgui + wait)
-    mSnapshot.cpuTimeMs = mSnapshot.renderLoopTimeMs + mSnapshot.updateLoopTimeMs
-                        + mSnapshot.imguiTimeMs + mSnapshot.waitTimeMs;
+    // Use max(explicit sum, largest sample) to avoid double-counting:
+    // GF_PROFILE_SCOPE samples include the explicit sections, so the larger value
+    // represents the true dominant CPU bottleneck without inflating the sum.
+    const double explicitSum = mSnapshot.renderLoopTimeMs + mSnapshot.updateLoopTimeMs
+                             + mSnapshot.imguiTimeMs + mSnapshot.waitTimeMs;
+
+    // Find the largest grouped sample total time
+    double largestSampleMs = 0.0;
+    for (const auto& s : mSamples)
+    {
+        if (s.totalTime > largestSampleMs)
+        {
+            largestSampleMs = s.totalTime;
+        }
+    }
+    mSnapshot.cpuTimeMs = (explicitSum > largestSampleMs) ? explicitSum : largestSampleMs;
 
     // NOTE: GPU data (gpuTimeMs, drawCalls) is NOT populated here.
     // It is filled in by Profiler::EndFrame() which consolidates both subsystems.
-
-    // Group raw samples
-    GroupSamples();
 
     // Update rolling history (CPU-side only; Profiler may replace frameTimeMs with consolidated value)
     mSnapshot.frameTimeHistory.push_back(frameTime);

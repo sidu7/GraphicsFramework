@@ -6,7 +6,8 @@
       "displayName": "Ninja Multi-Config",
       "description": "Multi-configuration Ninja build",
       "generator": "Ninja Multi-Config",
-      "binaryDir": "${sourceDir}/build/ninja-multi"
+      "binaryDir": "${sourceDir}/build/ninja-multi",
+      "cacheVariables": {}
     }
   ],
   "buildPresets": [

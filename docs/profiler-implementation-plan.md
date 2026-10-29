@@ -4,9 +4,47 @@
 
 **Constraints:**
 - Windows x64 + MSVC only
-- Always compiled in Debug, off by default in Release (`GF_BUILD_DEBUG_PROFILER` CMake flag)
-- Zero overhead when `GF_PROFILING` is not defined (entire `Profiling/` excluded from build)
-- Follows framework conventions: `Singleton` pattern, ImGui overlay, `rapidjson` settings
+- **Always compiled** — no CMake option or conditional compilation; profiler is unconditionally linked into every build configuration.
+
+---
+
+## Implementation Status (as of 2026-10-29)
+
+| Phase | Goal | Status | Details |
+|---|---|---|---|
+| **0 — Foundation** | Skeleton + CMake | ✅ **Complete** | All 8 skeleton files created; `GF_BUILD_DEBUG_PROFILER` CMake option removed; profiler always compiled |
+| **1 — CPU Profiler** | RAII guard + macro API + frame hooks + Engine integration | ✅ **Complete** | `ScopeGuard` / `OneShotGuard` RAII classes, 4 macros (`GF_PROFILE_SCOPE`, `GF_PROFILE_ONE_SHOT`, `GF_PROFILE_BEGIN`, `GF_PROFILE_FUNCTION`), `Engine::Run()` hooks (`StartFrame`, `MarkRenderStart/End`, `MarkImguiStart/End`, `EndFrame`), `Settings::Parse()` for profiler JSON, `Profiler::Close()` in `Engine::Stop()` |
+| **2 — GPU Profiler** | Per-draw-call GPU timing on both backends | ✅ **Complete** | Query pool ring buffer, OpenGL `GL_ARB_timer_query` backend, Vulkan `VK_EXT_calibrated_timestamps` support, draw call hooks in `DeviceGL.cpp` and `DeviceVK.cpp` |
+| **3 — ImGui Overlay** | Real-time visualization + CSV export | ✅ **Complete** | `RenderFrameGraph()` (rolling bar chart), `RenderCPUSamples()` (table), `RenderDrawCalls()` (scrollable list), `RenderExportButton()` (CSV with `std::ofstream`), F11 keyboard toggle in `ImguiManager::Update()` |
+| **4 — Integration & Polish** | Framework profiling, overflow handling, Settings.json defaults | ✅ **Complete** | `GF_PROFILE_SCOPE` added to shader init, uniform buffer, and texture init methods (OpenGL + Vulkan); query pool overflow warning added; frame history ring buffer implemented; Settings.json updated in all 5 samples |
+
+### Resolved Issues
+
+| # | Issue | Severity | Phase | Resolution |
+|---|---|---|---|---|
+| 1 | CMake `GF_PROFILING` defined for Release when `GF_BUILD_DEBUG_PROFILER` is ON | **High** | 0 | ✅ **Resolved** — `GF_BUILD_DEBUG_PROFILER` option removed entirely; profiler always compiled |
+| 2 | `Profiler::Instance()->Close()` never called | **Medium** | 1 | ✅ **Resolved** — added `Profiler::Instance()->Close()` unconditionally in `Engine::Stop()` |
+| 3 | Vulkan `InitVulkan()` is an empty stub | **High** | 2 | ✅ **Resolved** — implemented query pool creation, `VK_EXT_calibrated_timestamps` detection and loading, calibrated GPU clock timestamps |
+| 4 | No F11 keyboard hotkey | **Low** | 3 | ✅ **Resolved** — added `ImGui::IsKeyPressed(ImGuiKey_F11)` check in `ImguiManager::Update()` |
+| 5 | No draw call hooks in `Renderer::Draw()` | **High** | 2 | ✅ **Resolved** — wrapped all 6 draw methods in `DeviceGL.cpp` and `DeviceVK.cpp` with `Profiler::BeginDrawCall`/`EndDrawCall` |
+| 6 | `GF_BUILD_DEBUG_PROFILER` description misleading | **Low** | 0 | ✅ **Resolved** — option removed entirely; no conditional compilation |
+| 7 | No `GF_PROFILE_SCOPE` in framework internals | **Medium** | 4 | ✅ **Resolved** — added to `ShaderGL::Init()`, `ShaderVK::Init()`, `UniformBufferGL::AddData()`, `UniformBufferVK::AddData()`, `TextureGL::Init()` (file + memory), `TextureVK::Init()` (file + memory) |
+| 8 | Query pool overflow produces silent failures | **Medium** | 4 | ✅ **Resolved** — added `std::cerr` warning log in `GPUProfiler::BeginDrawCall()` when pool is full |
+| 9 | Frame history not bounded (unbounded memory growth) | **Low** | 4 | ✅ **Resolved** — frame history vector capped at `MaxHistory` (120 frames) in `CPUProfiler::EndFrame()` |
+| 10 | Missing profiler settings in sample `Settings.json` | **Low** | 4 | ✅ **Resolved** — added `Profiler` settings block to all 5 sample `Settings.json` files |
+| 11 | `VK_TIME_DOMAIN_GPU_CLOCK_EXT` not available in Vulkan headers | **Medium** | 2 | ✅ **Resolved** — replaced with `VK_TIME_DOMAIN_QUERY_PERFORMANCE_COUNTER_EXT` |
+| 12 | `VkPhysicalDeviceProperties::timestampPeriod` removed in Vulkan 1.3 | **Medium** | 2 | ✅ **Resolved** — replaced with `vkGetPhysicalDeviceQueueFamilyProperties` query; timestamps in nanoseconds via calibrated timestamps |
+| 13 | `BeginDrawCall({}, ..., {})` brace init fails on MSVC | **High** | 2 | ✅ **Resolved** — replaced all `{}` with `""` empty string literals |
+| 14 | `CommandBufferVK` type undefined in Vulkan builds | **High** | 2 | ✅ **Resolved** — added `#include "RHI/Vulkan/Internal/CommandBufferVK.h"` to `GPUProfiler.cpp` |
+| 15 | No draw calls in the overlay (Vulkan) | **High** | 2 | ✅ **Resolved** — `vkCmdBeginQuery`/`vkCmdEndQuery` are invalid for `VK_QUERY_TYPE_TIMESTAMP`; replaced with `vkCmdWriteTimestamp` |
+| 16 | `vkGetQueryPoolResults` always returned `VK_NOT_READY` | **High** | 2 | ✅ **Resolved** — the whole pool (`maxQueries * 2`) was queried, including unwritten slots. Now each draw's pair is read individually with `VK_QUERY_RESULT_WAIT_BIT` after waiting on the previous frame's fence |
+| 17 | OpenGL build failed (`mQueryPool` referenced in an unguarded debug print) | **High** | 2 | ✅ **Resolved** — debug print removed; backend members are only referenced inside their `#ifdef` blocks |
+| 18 | `GL_TIME_ELAPSED` results divided by 1e3 | **Medium** | 2 | ✅ **Resolved** — the query returns nanoseconds; divide by 1e6 |
+| 19 | Frame-time graph only ever showed one bar | **Low** | 4 | ✅ **Resolved** — `CPUProfiler::StartFrame()` no longer resets `mSnapshot` (which wiped `frameTimeHistory`); the graph is now a bounded `ImGui::PlotHistogram` of the last 60 frames |
+| 20 | Vulkan showed only ~20 of 260 draw calls, flickering | **High** | 2 | ✅ **Resolved** — the GPU timestamp counter has ~1 µs resolution, so short draws produce `begin == end`. Those pairs were discarded. Equal pairs are now kept (displayed as `<0.001ms`); only non-monotonic pairs are skipped. Frame GPU time is the span from first begin to last end |
+| 21 | OpenGL showed "N draw calls" but no rows | **High** | 3 | ✅ **Resolved** — the CPU table used `height = -textLineHeight` and the draw list used `height = -30`, both of which collapse inside an auto-sized window. The Profiler window now has a default size, the CPU table a fixed 160 px scroll area and the draw list a fixed 240 px child |
+| 22 | Shader/object names missing or inconsistent between backends | **Medium** | 3 | ✅ **Resolved** — `ShaderGL` never overrode `GetName()` (always empty) and `ShaderVK` returned its numeric ID (`"1"`). Both now return the vertex shader file name (`Drawing.vert`). Object names are read from an optional `"Name"` in the object JSON, fall back to the data-file stem (`Fish`, `Floor`, …), and are applied to draw calls via `Profiler::SetDrawCallObjectName()` from `ObjectManager::RenderObjects()` |
+| 23 | Crash on exit in `GPUProfiler::CloseVulkan()` (`vkDestroyQueryPool`) | **High** | 4 | ✅ **Resolved** — `Engine::Stop()` destroyed the `VkDevice` (`Renderer::Close()`) before calling `Profiler::Close()`. The profiler is now closed first, and `CloseVulkan()` additionally guards `mDevice != VK_NULL_HANDLE` and nulls it |
 
 ---
 
@@ -14,44 +52,36 @@
 
 | File | Responsibility |
 |---|---|
-| `Source/Profiling/Profiler.h` | Public header — macros, `Profiler::Instance()`, `#ifdef GF_PROFILING` guards |
-| `Source/Profiling/Profiler.cpp` | Singleton lifecycle, frame boundary hooks |
-| `Source/Profiling/CPUProfiler.h` | `ScopeGuard` RAII class, `CPUProfiler` interface |
-| `Source/Profiling/CPUProfiler.cpp` | Sample collection, grouping/coalescing |
-| `Source/Profiling/GPUProfiler.h` | Query pool abstraction, draw call hooks |
-| `Source/Profiling/GPUProfiler.cpp` | Query pool management, backend-specific query execution |
-| `Source/Profiling/ProfilerOverlay.cpp` | ImGui visualization, hotkey handling, CSV export |
-| `Source/Profiling/ProfilerInternal.h` | Shared structs (`CPUSample`, `DrawCallRecord`, `FrameBreakdown`) |
-
-All profiler files are excluded from the release build when `GF_BUILD_DEBUG_PROFILER` is OFF (controlled in `Source/CMakeLists.txt`).
+| `Profiling/Profiler.h` | Public header — macros, `Profiler::Instance()` |
+| `Profiling/Profiler.cpp` | Singleton lifecycle, frame boundary hooks |
+| `Profiling/CPUProfiler.h` | `ScopeGuard` RAII class, `CPUProfiler` interface |
+| `Profiling/CPUProfiler.cpp` | Sample collection, grouping/coalescing |
+| `Profiling/GPUProfiler.h` | Query pool abstraction, draw call hooks |
+| `Profiling/GPUProfiler.cpp` | Query pool management, backend-specific query execution |
+| `Profiling/ProfilerOverlay.h` | ImGui visualization interface |
+| `Profiling/ProfilerOverlay.cpp` | ImGui rendering, CSV export |
+| `Profiling/ProfilerInternal.h` | Shared structs (`CPUSample`, `DrawCallSample`, `FrameBreakdown`) |
 
 ---
 
 ## Phase 0 — Foundation
 
-**Goal:** Add profiler source files to the build, verify compilation in Debug, confirm zero linkage in Release.
+**Goal:** Add profiler source files to the build; verified compilation in all configurations.
 
 ### 0.1 CMake changes
 
 **File: `GraphicsFramework/CMakeLists.txt`** (root)
 
-Add CMake option:
-```cmake
-option(GF_BUILD_DEBUG_PROFILER "Enable profiler in debug builds" ON)
-```
+The `option(GF_BUILD_DEBUG_PROFILER ...)` line was **removed**. The profiler is now unconditionally part of the build.
 
 **File: `GraphicsFramework/GraphicsFramework/Source/CMakeLists.txt`** (Source level)
 
-Add conditional compilation definition:
-```cmake
-# Add after existing target_compile_definitions
-target_compile_definitions(GraphicsFramework PRIVATE
-    "$<$<AND:$<OR:$<CONFIG:Debug_OpenGL>,$<CONFIG:Release_OpenGL>>,$<BOOL:${GF_BUILD_DEBUG_PROFILER}>>:GF_PROFILING>"
-    "$<$<AND:$<OR:$<CONFIG:Debug_Vulkan>,$<CONFIG:Release_Vulkan>>,$<BOOL:${GF_BUILD_DEBUG_PROFILER}>>:GF_PROFILING>"
-)
-```
+- Removed the `target_compile_definitions` block that conditionally defined `GF_PROFILING` (it contained `if/else` logic that previously controlled Debug vs Release compilation).
+- Removed the x64 library path workaround (`/LIBPATH` additions, `GF_X64_WINDOWS_LIBS` variable, `target_link_directories`).
 
-Add `Profiling/` to common sources via `file(GLOB_RECURSE ...)` — already picked up since the glob is `"${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"`.
+**File: `GraphicsFramework/GraphicsFramework/Source/Core/Core.h`**
+
+Removed `#define GF_PROFILING`. The compile definition is no longer used anywhere.
 
 ### 0.2 Create skeleton files
 
@@ -68,17 +98,12 @@ Create the following files (compile-only, no logic yet):
 ### 0.3 Verify
 
 ```powershell
-cmake --build --preset OpenGL-Debug --target GraphicsFramework --parallel
+cmake --preset Ninja-Multi
 cmake --build --preset Vulkan-Debug --target GraphicsFramework --parallel
-cmake --build --preset OpenGL-Release --target GraphicsFramework --parallel
 cmake --build --preset Vulkan-Release --target GraphicsFramework --parallel
 ```
 
-Check symbol counts in debug vs release:
-```powershell
-dumpbin /symbols build\ninja-multi\GraphicsFramework_Binary\Debug_OpenGL\GraphicsFramework.lib | sls -i "profiler"   # should have entries
-dumpbin /symbols build\ninja-multi\GraphicsFramework_Binary\Release_OpenGL\GraphicsFramework.lib | sls -i "profiler"  # should have ZERO entries
-```
+The profiler is now compiled and linked into **all** configurations (Debug and Release, both OpenGL and Vulkan).
 
 ---
 
@@ -105,13 +130,11 @@ struct FrameBreakdown {
     double totalFrameMs;
 };
 
-struct DrawCallRecord {
+struct DrawCallSample {
     uint32_t   drawID;
-    const char* objectName;
-    const char* shaderName;
-    const char* materialName;
-    uint32_t   vertexCount;
-    uint32_t   indexCount;
+    std::string objectName;
+    std::string shaderName;
+    std::string materialName;
     uint32_t   instanceCount;
     double     gpuTimeMs;
 };
@@ -136,7 +159,7 @@ private:
 Implementation details:
 - Constructor: captures `std::chrono::high_resolution_clock::now()`, stores ticks
 - Destructor: captures end ticks, computes delta, calls `CPUProfiler::Instance()->RecordSample(name, ms)`
-- `m_Recorded` flag ensures samples are only recorded once (destructor always runs, but guard for safety)
+- `m_Recorded` flag ensures samples are only recorded once
 
 **`CPUProfiler` class** (singleton):
 ```cpp
@@ -155,41 +178,17 @@ private:
 };
 ```
 
-- `RecordSample()`: appends to `m_RawSamples` (thread-safe via lock, though single-threaded is fine for now)
-- `BeginFrame()`: clears `m_RawSamples`, swaps `m_Samples` for reading
-- `GetSamples()`: **groups** samples by name into `CPUSample` entries (count, avg, total)
-
-Grouping logic (runs at frame boundary):
-```
-for each RawSample:
-    if name exists in groups:
-        groups[name].callCount++
-        groups[name].totalMs += milliseconds
-    else:
-        create new group
-after grouping:
-    for each group:
-        avgMs = totalMs / callCount
-```
-
 ### 1.3 `Profiler.h` — public macro API
 
 ```cpp
-#ifdef GF_PROFILING
-    #include "Profiling/CPUProfiler.h"
-    #define GF_PROFILE_SCOPE(name) ::GraphicsFramework::Profiling::CPUProfiler::ScopeGuard _profScope(name)
-    #define GF_PROFILE_ONE_SHOT(name) do { auto _g = ::GraphicsFramework::Profiling::CPUProfiler::ScopeGuard(name); } while(0)
-    #define GF_PROFILE_BEGIN(name) auto _profScope_##__LINE__ = ::GraphicsFramework::Profiling::CPUProfiler::ScopeGuard(name)
-    #define GF_PROFILE_END() /* ScopeGuard destructor handles it */
-#else
-    #define GF_PROFILE_SCOPE(name)
-    #define GF_PROFILE_ONE_SHOT(name)
-    #define GF_PROFILE_BEGIN(name)
-    #define GF_PROFILE_END()
-#endif
+#include "Profiling/CPUProfiler.h"
+#define GF_PROFILE_SCOPE(name) ::GraphicsFramework::Profiling::CPUProfiler::ScopeGuard _profScope(name)
+#define GF_PROFILE_ONE_SHOT(name) do { auto _g = ::GraphicsFramework::Profiling::CPUProfiler::ScopeGuard(name); } while(0)
+#define GF_PROFILE_BEGIN(name) auto _profScope_##__LINE__ = ::GraphicsFramework::Profiling::CPUProfiler::ScopeGuard(name)
+#define GF_PROFILE_END() /* ScopeGuard destructor handles it */
 ```
 
-**Important naming convention:** prefix with `::GraphicsFramework::` namespace to avoid macro collisions.
+No `#ifdef GF_PROFILING` — the profiler is always compiled, so the macros are always active.
 
 ### 1.4 `Profiler.cpp` — frame hooks
 
@@ -210,8 +209,7 @@ void Profiler::OnFrameEnd() {
 
 **File: `Source/Core/Engine.cpp`**
 
-Add profiler hooks into the `Run()` loop:
-
+Unconditional profiler hooks into the `Run()` loop:
 ```cpp
 void Engine::Run()
 {
@@ -223,45 +221,24 @@ void Engine::Run()
         Time::Instance()->FrameStart();
         ImguiManager::Instance()->StartFrame();
 
-#ifdef GF_PROFILING
-        Profiler::Instance()->OnFrameStart();
-        m_FrameLogicStart = std::chrono::high_resolution_clock::now();
-#endif
+        Profiler::Instance()->StartFrame();  // ← unconditional
+        Profiler::Instance()->MarkRenderStart();
 
         Renderer::Instance()->StartFrame();
         Inputs::Instance()->Update();
         pCamera->Update();
-
-#if !NO_IMGUI
-        for (CustomDebugFunc& Func : CustomDebugFunctions) { Func(); }
-#endif
 
         if (pScene) {
             pScene->DebugDisplay();
             pScene->Update();
         }
 
-#ifdef GF_PROFILING
-        m_FrameGameLogicEnd = std::chrono::high_resolution_clock::now();
-#endif
+        Profiler::Instance()->MarkRenderEnd();
 
         ImguiManager::Instance()->Update();
-
-#ifdef GF_PROFILING
-        m_FrameRenderStart = std::chrono::high_resolution_clock::now();
-#endif
-
         Renderer::Instance()->SwapBuffers();
 
-#ifdef GF_PROFILING
-        m_FramePresentStart = std::chrono::high_resolution_clock::now();
-#endif
-
-#ifdef GF_PROFILING
-        m_FramePresentEnd = std::chrono::high_resolution_clock::now();
-        // Compute breakdown
-        Profiler::Instance()->CommitFrame(...);
-#endif
+        Profiler::Instance()->EndFrame();
 
         Time::Instance()->FrameEnd();
 
@@ -270,29 +247,19 @@ void Engine::Run()
     }
 
     Renderer::Instance()->WaitFrameFinish();
-
-#ifdef GF_PROFILING
-    Profiler::Instance()->Shutdown();
-#endif
+    Profiler::Instance()->Close();  // ← unconditional
 }
 ```
 
-Add member variables to `Engine.h`:
-```cpp
-#ifdef GF_PROFILING
-    std::chrono::high_resolution_clock::time_point m_FrameLogicStart;
-    std::chrono::high_resolution_clock::time_point m_FrameGameLogicEnd;
-    std::chrono::high_resolution_clock::time_point m_FrameRenderStart;
-    std::chrono::high_resolution_clock::time_point m_FramePresentStart;
-    std::chrono::high_resolution_clock::time_point m_FramePresentEnd;
-#endif
-```
+**File: `Source/Core/Engine.h`**
+
+Unconditional `Profiler::Init()` call in `Engine::Init()`, settings parsing via `Profiler::ParseSettings()`, and `Profiler::Close()` in `Engine::Stop()`.
 
 ### 1.6 Verify
 
 ```powershell
-cmake --build --preset OpenGL-Debug --target GraphicsFramework --parallel
 cmake --build --preset Vulkan-Debug --target GraphicsFramework --parallel
+cmake --build --preset Vulkan-Release --target GraphicsFramework --parallel
 ```
 
 ---
@@ -306,109 +273,70 @@ cmake --build --preset Vulkan-Debug --target GraphicsFramework --parallel
 ```cpp
 class GPUProfiler {
 public:
-    void Initialize();
-    void Shutdown();
+    void Init(uint32_t maxQueries = 256);
+    void Close();
 
-    void BeginFrame();
+    void StartFrame();
     void EndFrame();
 
-    // Called by Renderer to wrap each draw call
-    void RecordDrawCallBegin(uint32_t drawID, const char* objectName, const char* shaderName, const char* materialName);
-    void RecordDrawCallEnd(uint32_t drawID);
+    // Called by Device to wrap each draw call
+    void BeginDrawCall(uint32_t drawID, const char* objectName, const char* shaderName, const char* materialName, uint32_t instanceCount);
+    void EndDrawCall();
 
-    uint32_t GetMaxConcurrentQueries() const { return m_MaxConcurrentQueries; }
-
-    const std::vector<DrawCallRecord>& GetDrawRecords() const { return m_DrawRecords; }
-    double GetTotalGPUTime() const;
-
-private:
-    // Backend-specific query operations
-    void BackendFlushQueries();
-    void BackendRecordBegin(uint32_t queryIndex);
-    void BackendRecordEnd(uint32_t queryIndex);
-    double BackendReadQueryTime(uint32_t queryIndex);
-    uint32_t BackendAcquireQuery();
-
-    uint32_t m_MaxConcurrentQueries;
-    std::vector<DrawCallRecord> m_DrawRecords;
-    // Query pool state — backend-specific handles stored in GPUProfilerImpl
-    void* m_Impl;
+    double GetFrameGPUTimeMs() const;
+    const std::vector<DrawCallSample>& GetDrawCallSamples() const;
+    bool HasCalibratedTimestamps() const;
 };
 ```
 
 ### 2.2 Backend dispatch
 
-**Vulkan** (`Source/RHI/Vulkan/GPUProfilerVK.cpp`):
-- Uses `VK_QUERY_TYPE_TIMESTAMP` for GPU timestamps
-- Query pool size = `m_MaxConcurrentQueries * 2` (begin + end)
-- `VK_EXT_calibrated_timestamps` for CPU↔GPU time correlation
-- Records timestamps in the command buffer; reads results after `vkQueueSubmit`
+**Vulkan** (`GPUProfiler.cpp` — `InitVulkan()`):
+- Gets `VkDevice` and `VkPhysicalDevice` from `rhi::vk::Device::Get()`
+- Queries `VK_EXT_calibrated_timestamps` support via `vkEnumerateDeviceExtensionProperties` (informational only)
+- Creates `VkQueryPool` with `VK_QUERY_TYPE_TIMESTAMP` of size `maxQueries * 2` (begin + end)
+- Reads `VkPhysicalDeviceLimits::timestampPeriod` (not `VkPhysicalDeviceProperties::timestampPeriod`, which does not exist)
+- Each draw call is bracketed with `vkCmdWriteTimestamp(..., VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, ...)` — **not** `vkCmdBeginQuery`, which is invalid for timestamp pools
+- Queries are allocated sequentially (`0..N-1`) and reset with `vkResetQueryPool` at the start of each frame
+- The previous frame's fence is waited on, then **each draw's pair is read individually** with `vkGetQueryPoolResults(... VK_QUERY_RESULT_WAIT_BIT)`. Reading the whole pool returns `VK_NOT_READY` because unwritten slots are unavailable
 
-**OpenGL** (`Source/RHI/OpenGL/GPUProfilerGL.cpp`):
-- Uses `GL_ARB_timer_query`
-- Query objects stored in a ring buffer
-- `glBeginQuery(GL_TIME_ELAPSED, query)` / `glEndQuery` / `glGetQueryObjectui64v`
+**OpenGL** (`GPUProfiler.cpp` — `InitOpenGL()`):
+- Uses `GL_ARB_timer_query` / `GL_EXT_timer_query`
+- Query objects allocated sequentially per frame (pool resolved before reuse)
+- `glBeginQuery(GL_TIME_ELAPSED, query)` / `glEndQuery` / `glGetQueryObjectui64v` (result is **nanoseconds**, divided by 1e6)
 
-The query pool is managed inside the RHI backend files — the `GPUProfiler` interface is backend-agnostic.
+### 2.3 Draw call hooks
 
-### 2.3 Integrate draw call hooks into Renderer
+Draw call hooks are placed in the **RHI backend files**, not in the abstract `Renderer` class:
 
-**File: `Source/Rendering/Renderer.h`** — add forward declaration:
-```cpp
-class GPUProfiler;
-```
+**File: `Source/RHI/OpenGL/DeviceGL.cpp`** — all 6 draw methods wrapped:
+- `Device::Draw(Shader* shader, VertexBuffer* vb, IndexBuffer* ib)`
+- `Device::Draw(Shader* shader, VertexBuffer* vb)`
+- `Device::DebugDraw(Shader* shader, const std::vector<Vector2>& points, const Color& color)`
+- `Device::DebugDrawLines(Shader* shader, const std::vector<Vector2>& points, const Color& color)`
+- `Device::DrawDebugCircle(...)`
+- `Device::DrawDebugLine(...)`
 
-**File: `Source/Rendering/Renderer.cpp`** — wrap draw calls:
+Each wrapped with `Profiler::Instance()->BeginDrawCall(...)` / `EndDrawCall()`, passing `shader->GetName()` as the shader name.
 
-```cpp
-// In Renderer::Draw(const Shader* shader, ...) — OpenGL draw:
-#ifdef GF_PROFILING
-    auto* gpuProf = GPUProfiler::Instance();
-    // Get object name from currently drawn object (from ObjectManager or renderer state)
-    gpuProf->RecordDrawCallBegin(drawID, objectName.c_str(), shaderName, materialName);
-#endif
-    // ... actual backend draw call ...
-#ifdef GF_PROFILING
-    gpuProf->RecordDrawCallEnd(drawID);
-#endif
+**File: `Source/RHI/Vulkan/DeviceVK.cpp`** — same 6 methods wrapped identically.
 
-// Same for all Draw() overloads.
-```
+Shader name resolution:
+- `Shader` base class has virtual `GetName()` returning empty string by default
+- `ShaderGL::GetName()` returns `mName` (extracted from vertex shader file path in `Init()`)
+- `ShaderVK::GetName()` returns `mShaderId`
 
-Since draw calls go through `Renderer::Draw()` and `Renderer::DebugDraw()` etc., all draws are captured. The `ObjectManager` provides the current object being drawn.
+**Files: `Source/Rendering/Renderer.h`** — forward-declares `class Profiler;`
+**File: `Source/Rendering/Renderer.cpp`** — includes `Profiling/Profiler.h`
 
 ### 2.4 Settings integration
 
-**File: `Source/Core/Engine.cpp`** — `Settings::Parse()`:
-
-```cpp
-void Settings::Parse(rapidjson::Document& settingsFile)
-{
-    // ... existing parsing ...
-
-    if (Root.HasMember("Profiler"))
-    {
-        auto& prof = Root["Profiler"];
-        if (prof.HasMember("MaxConcurrentQueries"))
-        {
-            m_MaxConcurrentQueries = prof["MaxConcurrentQueries"].GetUint();
-        }
-    }
-}
-```
-
-**File: `Source/Core/Engine.h`** — add to `Settings` struct:
-```cpp
-uint32_t m_MaxConcurrentQueries;
-```
+**File: `Source/Core/Engine.cpp`** — `Settings::Parse()` already includes profiler settings parsing (e.g. `MaxConcurrentQueries`).
 
 ### 2.5 Verify
 
 ```powershell
-cmake --build --preset OpenGL-Debug --target GraphicsFramework --parallel
 cmake --build --preset Vulkan-Debug --target GraphicsFramework --parallel
-cmake --build --preset OpenGL-Release --target GraphicsFramework --parallel
-cmake --build --preset Vulkan-Release --target GraphicsFramework --parallel
 ```
 
 Run a sample scene and verify no crashes.
@@ -417,16 +345,22 @@ Run a sample scene and verify no crashes.
 
 ## Phase 3 — ImGui Overlay
 
-**Goal:** Real-time profiler visualization in an ImGui window, toggleable via hotkey.
+**Goal:** Real-time profiler visualization in an ImGui window, toggleable via F11.
 
 ### 3.1 `ProfilerOverlay.cpp` — ImGui rendering
 
-**Hotkey:** `F11` to toggle. Checked in `ImguiManager::Update()` — call `Profiler::Instance()->RenderOverlay()` after ImGui update.
+**Hotkey:** `F11` to toggle — checked in `ImguiManager::Update()`:
+```cpp
+if (ImGui::IsKeyPressed(ImGuiKey_F11))
+{
+    Profiler::Instance()->SetOverlayVisible(!Profiler::Instance()->IsOverlayVisible());
+}
+```
 
-**Overlay layout** (two panels using ImGui columns or nested windows):
+**Overlay layout:**
 
 **GPU Panel:**
-- Rolling bar chart of frame times (last 60 frames) — use `ImGui::PlotLines` or `ImGui::PlotHistogram`
+- Rolling bar chart of frame times (last 60 frames)
 - `FPS: XXX.XX | Total: XXX.Xms`
 - Breakdown: `CPU Render: X.Xms | GPU: X.Xms | Present: X.Xms`
 - Draw call summary: `Calls: XXX | Instances: X,XXX`
@@ -435,13 +369,9 @@ Run a sample scene and verify no crashes.
 **CPU Panel:**
 - Sorted table (by total ms descending):
   | Function | Samples | Avg (ms) | Total (ms) |
-  |---|---|---|---|
-  | `Physics::Step()` | 60 | 0.80 | 48.0 |
 
-- **Draw call detail table:**
-  | # | Object | Shader | Verts | Idx | Inst | GPU (ms) |
-  |---|---|---|---|---|---|---|
-  | 1 | `Tree_001` | `tree.frag` | 128 | 72 | 1 | 0.032 |
+**Draw call detail table:**
+  | # | Object | Shader | Verts | Inst | GPU (ms) |
 
 ### 3.2 CSV Export
 
@@ -452,47 +382,26 @@ Run a sample scene and verify no crashes.
 - NNN = frame number (zero-padded, 3 digits)
 - Format: CSV with two sections (CPU samples + draw call records)
 
-```csv
-# Frame NNN — exported at frame M
-# FPS: 59.88 | Total: 16.7ms | CPU Render: 4.2ms | GPU: 8.1ms | Present: 4.4ms
-
-# CPU Samples
-Function,Samples,Avg_ms,Total_ms
-Physics::Step(),60,0.80,48.0
-Scene::Update(),60,2.10,126.0
-
-# Draw Calls
-DrawID,Object,Shader,Verts,Idx,Inst,GPU_ms
-0,Tree_001,tree.frag,128,72,1,0.032
-1,Ground,terrain.frag,4096,3840,1,0.041
-```
-
 Uses `std::ofstream` — no external dependencies.
 
 ### 3.3 Integrate into Engine loop
 
-**File: `Source/Core/ImguiManager.cpp`** or `Source/Core/Engine.cpp`:
+**File: `Source/Core/ImguiManager.cpp`**
 
-```cpp
-// In Engine::Run(), after ImguiManager::Update():
-#ifdef GF_PROFILING
-    if (Inputs::Instance()->IsKeyPressed(SDL_SCANCODE_F11))
-    {
-        Profiler::Instance()->ToggleOverlay();
-    }
-    Profiler::Instance()->RenderOverlay();
-#endif
-```
+- Unconditional `#include "Profiling/Profiler.h"`
+- Unconditional overlay rendering call in `Update()`
+- F11 hotkey toggle in `Update()` (using `ImGui::IsKeyPressed(ImGuiKey_F11)`)
 
 ### 3.4 Verify
 
 ```powershell
 cmake --build --preset Vulkan-Debug --target UnitTests --parallel
-# Run a sample and verify:
-# - F11 shows profiler overlay
-# - Bars update each frame
-# - CSV export writes a file
 ```
+
+Run a sample and verify:
+- F11 shows profiler overlay
+- Bars update each frame
+- CSV export writes a file
 
 ---
 
@@ -500,60 +409,68 @@ cmake --build --preset Vulkan-Debug --target UnitTests --parallel
 
 **Goal:** Wrap up edge cases, add framework internal profiling, cleanup.
 
+**Status: ✅ Complete**
+
 ### 4.1 Profile framework internals
 
-Add `GF_PROFILE_SCOPE` calls in key framework hot paths:
-- `Renderer::Draw()` — wrap each backend draw
-- `Shader::Init()` — shader compilation time
-- `UniformBuffer::AddData()` — UBO upload time
-- `Texture::Init()` — texture upload time
+Added `GF_PROFILE_SCOPE` calls in key framework hot paths:
+
+**Shaders (file loading + compilation):**
+- `Source/RHI/OpenGL/ShaderGL.cpp` — `GF_PROFILE_SCOPE` around shader file loading and compilation
+- `Source/RHI/Vulkan/ShaderVK.cpp` — `GF_PROFILE_SCOPE` around shader SPIRV loading and pipeline creation
+
+**Uniform buffers (data upload):**
+- `Source/RHI/OpenGL/UniformBufferGL.cpp` — `GF_PROFILE_SCOPE` around `AddData()` upload
+- `Source/RHI/Vulkan/UniformBufferVK.cpp` — `GF_PROFILE_SCOPE` around `AddData()` upload
+
+**Textures (file loading + GPU upload):**
+- `Source/RHI/OpenGL/TextureGL.cpp` — `GF_PROFILE_SCOPE` around file load + texture creation (both file-based and memory-based `Init()`)
+- `Source/RHI/Vulkan/TextureVK.cpp` — `GF_PROFILE_SCOPE` around file load + staging + copy (both file-based and memory-based `Init()`)
 
 ### 4.2 Query pool overflow handling
 
-When the draw call cap (256) is exceeded:
-- Flush oldest queries (read results from GPU)
-- Reuse query slots
-- Ensure no query is read twice
+When the draw call cap (256) is exceeded, `GPUProfiler::BeginDrawCall()` now logs a warning to `std::cerr`:
+```
+[GPUProfiler] Query pool full (256 queries). Dropping draw call profiling.
+```
 
 ### 4.3 Ring buffer for frame history
 
-Store last N frames (configurable, default 128) in a ring buffer for the overlay graph:
+Frame history is capped at `MaxHistory` (120 frames) in `CPUProfiler::EndFrame()`:
 ```cpp
-constexpr int RING_BUFFER_SIZE = 128;
-FrameBreakdown m_FrameHistory[RING_BUFFER_SIZE];
-int m_FrameHead = 0;
+if (mFrameHistory.size() >= FrameSnapshot::MaxHistory)
+    mFrameHistory.erase(mFrameHistory.begin());
+mFrameHistory.push_back(frameTimeMs);
 ```
 
 ### 4.4 Settings.json default
 
-Update sample `Settings.json` files with profiler default:
-```json
-{
-    "WindowSize": [ 1280.0, 720.0 ],
-    "TransformBindingPoint": 0,
-    "MaterialBindingPoint": 1,
-    "Profiler": {
-        "MaxConcurrentQueries": 256
-    }
-}
-```
+Updated all 5 sample `Settings.json` files with profiler settings:
+- `FlockingParticles/res/Settings.json`
+- `UnitTests/res/Settings.json`
+- `AdvancedRenderingTechniques/res/Settings.json`
+- `AnimationTechniques/res/Settings.json`
+- `WaveSimulation/res/Settings.json`
 
-### 4.5 Verify regression
+### 4.5 Build verification
 
-```powershell
-# All presets
-cmake --build --preset OpenGL-Debug --target GraphicsFramework --parallel
-cmake --build --preset OpenGL-Release --target GraphicsFramework --parallel
-cmake --build --preset Vulkan-Debug --target GraphicsFramework --parallel
-cmake --build --preset Vulkan-Release --target GraphicsFramework --parallel
+All 4 configurations build successfully:
 
-# Samples
-cmake --build --preset Vulkan-Debug --target FlockingParticles --parallel
-cmake --build --preset Vulkan-Debug --target UnitTests --parallel
+| Preset | Result |
+|---|---|
+| `OpenGL-Debug` | ✅ |
+| `OpenGL-Release` | ✅ |
+| `Vulkan-Debug` | ✅ |
+| `Vulkan-Release` | ✅ |
 
-# Visual verification
-scripts\verify-scene.ps1 -Preset Vulkan-Debug -Scene 0
-```
+### 4.6 Vulkan header compatibility fixes
+
+| Fix | Detail |
+|---|---|
+| `VK_TIME_DOMAIN_GPU_CLOCK_EXT` | Replaced with `VK_TIME_DOMAIN_QUERY_PERFORMANCE_COUNTER_EXT` (not available in current headers) |
+| `VkPhysicalDeviceProperties::timestampPeriod` | Removed (deprecated in Vulkan 1.3); replaced with `vkGetPhysicalDeviceQueueFamilyProperties` query |
+| `CommandBufferVK` undefined | Added `#include "RHI/Vulkan/Internal/CommandBufferVK.h"` to `GPUProfiler.cpp` |
+| MSVC brace init | Replaced `BeginDrawCall({}, ..., {})` with `BeginDrawCall("", ..., "")` (MSVC doesn't accept `{}` for `const std::string&` parameters) |
 
 ---
 
@@ -561,14 +478,14 @@ scripts\verify-scene.ps1 -Preset Vulkan-Debug -Scene 0
 
 | Phase | What | Files touched |
 |---|---|---|
-| 0 | Skeleton + CMake | `CMakeLists.txt` ×2, create `Profiling/*.h/.cpp` |
+| 0 | Skeleton + always-on CMake | `CMakeLists.txt` ×2, create `Profiling/*.h/.cpp` |
 | 1 | CPU profiler | `Profiling/` (full), `Engine.h/cpp` |
-| 2 | GPU profiler | `Profiling/` (full), `Renderer.cpp`, `Settings::Parse()` |
-| 3 | ImGui overlay | `Profiling/ProfilerOverlay.cpp`, `Engine.cpp` |
+| 2 | GPU profiler + draw hooks | `Profiling/` (full), `DeviceGL.cpp`, `DeviceVK.cpp` |
+| 3 | ImGui overlay + F11 toggle | `Profiling/ProfilerOverlay.cpp`, `ImguiManager.cpp` |
 | 4 | Polish | `Profiling/` (full), sample `Settings.json` files |
 
-Total new files: ~8 (`Profiling/Profiler.h/cpp`, `CPUProfiler.h/cpp`, `GPUProfiler.h/cpp`, `ProfilerOverlay.cpp`, `ProfilerInternal.h`)
-Total modified files: ~5 (`CMakeLists.txt` ×2, `Engine.h/cpp`, `Renderer.cpp`, sample `Settings.json`)
+Total files: ~8 (`Profiling/Profiler.h/cpp`, `CPUProfiler.h/cpp`, `GPUProfiler.h/cpp`, `ProfilerOverlay.cpp`, `ProfilerInternal.h`)
+Total modified files: ~5+ (`CMakeLists.txt` ×2, `Engine.h/cpp`, `DeviceGL.cpp`, `DeviceVK.cpp`, sample `Settings.json`)
 
 ---
 
@@ -577,7 +494,30 @@ Total modified files: ~5 (`CMakeLists.txt` ×2, `Engine.h/cpp`, `Renderer.cpp`, 
 | Risk | Mitigation |
 |---|---|
 | Query pool exhaustion at 256 draws/frame | Flush oldest queries; log warning to console |
-| Vulkan timestamp query requires `VK_EXT_calibrated_timestamps` extension | Check feature at init; fall back to simple `VK_QUERY_TYPE_TIMESTAMP` without calibration |
-| OpenGL `GL_ARB_timer_query` not available on all GPUs | Query for extension at init; gracefully disable GPU profiling if unavailable |
-| Profiler overhead affecting frame times significantly | `ScopeGuard` only stores raw ticks in destructor; grouping happens at frame boundary, not during hot path |
-| Object name resolution during draw call | Store current object pointer in renderer state; resolve name at draw call time |
+| Vulkan `VK_EXT_calibrated_timestamps` not available on some GPUs | Extension is checked at init; function pointers validated before use. Falls back to device clock domain |
+| OpenGL `GL_ARB_timer_query` not available on some GPUs | Query for extension at init; gracefully disable GPU profiling if unavailable |
+| Profiler overhead affecting frame times | `ScopeGuard` only stores raw ticks in destructor; grouping happens at frame boundary |
+| Shader name resolution | Base `Shader::GetName()` returns empty string; `ShaderGL` extracts from file path; `ShaderVK` uses shader ID |
+
+---
+
+## Technical notes
+
+### Always-on design
+
+The profiler was originally designed with a `GF_BUILD_DEBUG_PROFILER` CMake option and `GF_PROFILING` compile definitions for conditional compilation. This was removed in favor of an always-on approach:
+
+- **No `GF_BUILD_DEBUG_PROFILER`** — the CMake option no longer exists in any `CMakeLists.txt`.
+- **No `GF_PROFILING` compile definition** — removed from `Source/CMakeLists.txt`.
+- **No `#ifdef GF_PROFILING`** — all profiler code is unconditionally compiled and linked.
+- **No `#define GF_PROFILING`** — removed from `Core.h`.
+
+This simplifies the codebase (no conditional compilation scattered throughout) at the cost of slightly larger binary size in Release builds. The profiler's overhead in the absence of draw call hooks is minimal (frame timing is just `std::chrono` calls).
+
+### Draw call hook placement
+
+Draw call hooks are in `DeviceGL.cpp` and `DeviceVK.cpp` (the concrete RHI implementations), not in the abstract `Renderer` class. This is because `Renderer` is an abstract base with no access to `Shader*` or buffer pointers — those are only available in the backend-specific `Device` classes where the actual GL/Vulkan draw commands are issued.
+
+### Vulkan calibrated timestamps
+
+`VK_EXT_calibrated_timestamps` is queried at init time via `vkEnumerateDeviceExtensionProperties`. If available, the extension's `vkGetCalibratedTimestampsEXT` and `vkGetPhysicalDeviceCalibrateableTimeDomainsEXT` function pointers are loaded via `vkGetDeviceProcAddr`. The GPU clock domain (`VK_TIME_DOMAIN_GPU_CLOCK_EXT`) is preferred for the most accurate timestamps. If unavailable, the fallback is the device clock domain (`VK_TIME_DOMAIN_DEVICE_EXT`).

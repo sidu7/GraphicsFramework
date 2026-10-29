@@ -38,8 +38,6 @@ void Profiler::Init(const ProfilerSettings& settings)
 
     mInitialized = true;
     mFrameCount = 0;
-
-    std::cout << "[Profiler] Initialized (CPU + GPU, queries=" << mSettings.maxConcurrentQueries << ")" << std::endl;
 }
 
 void Profiler::Close()
@@ -128,7 +126,8 @@ void Profiler::BeginDrawCall(const std::string& objectName, const std::string& s
 {
     if (!mEnabled || !mInitialized || !mSettings.captureDrawCalls) return;
 
-    mGPUProfiler->BeginDrawCall(objectName, shaderName, materialName);
+    mGPUProfiler->BeginDrawCall(objectName.empty() ? mCurrentObjectName : objectName,
+                                shaderName, materialName);
 }
 
 void Profiler::EndDrawCall()
@@ -203,9 +202,6 @@ bool Profiler::ExportCSV(const std::string& filepath)
     }
 
     file.close();
-    std::cout << "[Profiler] Exported CSV: " << filepath << " ("
-              << snapshot.cpuSamples.size() << " CPU samples, "
-              << snapshot.drawCalls.size() << " draw calls)" << std::endl;
 
     return true;
 }

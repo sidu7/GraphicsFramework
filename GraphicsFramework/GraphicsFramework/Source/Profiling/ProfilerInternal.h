@@ -78,7 +78,7 @@ struct FrameSnapshot
 // ─────────────────────────────────────────────────────────────────────────────
 struct ProfilerSettings
 {
-    uint32_t maxConcurrentQueries    = 256;  // Max GPU query pool size
+    uint32_t maxConcurrentQueries    = 1024;  // Max GPU query pool size
     bool     enabled                 = true;
     bool     captureDrawCalls        = true;
     double   maxCPUSampleDurationMs  = 0.0;  // 0 = capture all (filter threshold)

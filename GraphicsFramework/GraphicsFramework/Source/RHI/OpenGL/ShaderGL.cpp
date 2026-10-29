@@ -8,6 +8,7 @@ Author: Sidhant Tumma
 #include "ShaderGL.h"
 #include "RHI/OpenGL/DeviceGL.h"
 #include "Utils/FileHelper.h"
+#include "Profiling/Profiler.h"
 
 namespace rhi::gl
 {
@@ -19,9 +20,12 @@ ShaderGL::ShaderGL()
 
 void ShaderGL::Init(int32_t shaderId)
 {
+	GF_PROFILE_SCOPE("ShaderGL::Init");
 	const auto& vertPath = ShaderRegistry::Instance()->GetGLSLPath(shaderId, ShaderRegistry::ShaderStage::Vertex);
 	const auto& fragPath = ShaderRegistry::Instance()->GetGLSLPath(shaderId, ShaderRegistry::ShaderStage::Fragment);
 
+	// Derive shader name from the vertex file path (e.g. "BasicShader" from ".../BasicShader.glsl")
+	mName = vertPath.substr(vertPath.find_last_of("/\\") + 1);
 	auto vertSource = FileHelper::ReadFile(vertPath);
 	auto fragSource = FileHelper::ReadFile(fragPath);
 
@@ -68,6 +72,8 @@ void ShaderGL::Init(int32_t shaderId)
 
 void ShaderGL::Init(const std::string& vertexPath, const std::string& fragmentPath)
 {
+	// Derive shader name from the vertex file path
+	mName = vertexPath.substr(vertexPath.find_last_of("/\\") + 1);
 	auto vertSource = FileHelper::ReadFile(vertexPath);
 	auto fragSource = FileHelper::ReadFile(fragmentPath);
 

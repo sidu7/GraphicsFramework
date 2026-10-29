@@ -35,6 +35,10 @@ public:
     void BeginDrawCall(const std::string& objectName, const std::string& shaderName, const std::string& materialName);
     void EndDrawCall();
 
+    // Sets the object name used for draw calls that do not pass one explicitly.
+    // ObjectManager calls this around each object's RenderObject().
+    void SetDrawCallObjectName(const std::string& name) { mCurrentObjectName = name; }
+
     // Overlay rendering (called by ImguiManager)
     void RenderOverlay();
 
@@ -84,6 +88,9 @@ private:
 
     // ImGui overlay
     ProfilerOverlay  mOverlay;
+
+    // Object name applied to draw calls that pass an empty object name.
+    std::string      mCurrentObjectName;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

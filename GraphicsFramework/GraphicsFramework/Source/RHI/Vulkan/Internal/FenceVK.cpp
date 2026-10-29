@@ -22,7 +22,13 @@ FenceVK::~FenceVK()
 
 void FenceVK::Wait()
 {
-	VKCall(vkWaitForFences(Device::Get()->GetDevice(), 1, &mFence, VK_TRUE, UINT64_MAX), "Waiting for Fence Failed.");
+	if (mFence == VK_NULL_HANDLE)
+	{
+		std::cerr << "[FenceVK] Wait on null fence handle!" << std::endl;
+		return;
+	}
+	// Use 5s timeout instead of infinite wait to avoid permanent hangs
+	VKCall(vkWaitForFences(Device::Get()->GetDevice(), 1, &mFence, VK_TRUE, 5000000000ull), "Waiting for Fence Failed.");
 }
 
 void FenceVK::Reset()

@@ -24,6 +24,8 @@ public:
 	virtual void Init(int32_t shaderId) override;
 	virtual void Init(const std::string& vertexPath, const std::string& fragmentPath) override;
 
+	std::string GetName() const override { return mName; }
+
 	VkPipeline mPipeline;
 	// Second graphics pipeline for debug line primitives. Vulkan only allows a
 	// dynamic topology change within the same topology class, so line draws
@@ -41,5 +43,6 @@ protected:
 	std::vector<VkVertexInputAttributeDescription> VertexAttribDescs;
 	const FrameBufferVK* mBoundFramebuffer;
 	std::string mShaderId;
+	std::string mName;
 };
 }

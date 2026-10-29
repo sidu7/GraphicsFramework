@@ -7,10 +7,7 @@
 #include "Imgui/imgui.h"
 #include "Imgui/backends/imgui_impl_sdl2.h"
 #include "Rendering/Renderer.h"
-
-#ifdef GF_PROFILING
 #include "Profiling/Profiler.h"
-#endif
 
 void ImguiManager::Init()
 {
@@ -43,17 +40,19 @@ void ImguiManager::Update()
 	ImGui::Text("Camera Position: %.1f, %.1f, %.1f", Cam->mCameraPos.x, Cam->mCameraPos.y, Cam->mCameraPos.z);
 	ImGui::Text("Camera Pitch: %.1f Yaw %.1f", Cam->pitch, Cam->yaw);
 
-#ifdef GF_PROFILING
 	if (ImGui::Button("Toggle Profiler"))
 	{
 		Profiler::Instance()->SetOverlayVisible(!Profiler::Instance()->IsOverlayVisible());
 	}
-#endif
+
+	// F11 hotkey toggle for profiler overlay
+	if (ImGui::IsKeyPressed(ImGuiKey_F11))
+	{
+		Profiler::Instance()->SetOverlayVisible(!Profiler::Instance()->IsOverlayVisible());
+	}
 
 	ImGui::End();
-#ifdef GF_PROFILING
 	Profiler::Instance()->RenderOverlay();
-#endif
 	Render();
 #endif
 }

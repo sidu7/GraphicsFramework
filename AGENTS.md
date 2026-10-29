@@ -77,3 +77,4 @@ git submodule update --init --recursive
   `-AnalyzeOnly <png>` to analyse an existing screenshot.
 - Full procedure, baseline numbers, failure signatures and manual capture: skill
   `.opencode/skills/visual-verify/SKILL.md` (load with `@visual-verify`).
+- Use this skill only when explicitly requested by user

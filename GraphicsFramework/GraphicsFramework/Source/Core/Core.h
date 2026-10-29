@@ -39,7 +39,6 @@
 // Stbi
 #include <stb_image.h>
 
-#define GF_PROFILING
 // Graphics Framework
 #include "GlobalDefines.h"
 #include "Singleton.h"

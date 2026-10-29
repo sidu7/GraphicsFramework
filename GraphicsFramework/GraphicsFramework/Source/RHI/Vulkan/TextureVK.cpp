@@ -12,6 +12,7 @@ Author: Sidhant Tumma
 #include "RHI/Vulkan/Internal/HelperVK.h"
 #include "RHI/Vulkan/Internal/CommandBufferVK.h"
 #include "RHI/Vulkan/Internal/CommandQueueVK.h"
+#include "Profiling/Profiler.h"
 
 namespace rhi::vk
 {
@@ -59,6 +60,7 @@ TextureVK::TextureVK() :
 
 void TextureVK::Init(const std::string& FilePath) 
 {
+	GF_PROFILE_SCOPE("TextureVK::Init");
 	mFilePath = FilePath;
 
 	stbi_set_flip_vertically_on_load(1);
@@ -100,6 +102,7 @@ void TextureVK::Init(ImageFormat format, int width, int height)
 
 void TextureVK::Init(void* buffer, int size)
 {
+	GF_PROFILE_SCOPE("TextureVK::Init (memory)");
 	int NumChannels;
 	mLocalBuffer = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buffer), size, &mWidth, &mHeight, &NumChannels, 0);
 
