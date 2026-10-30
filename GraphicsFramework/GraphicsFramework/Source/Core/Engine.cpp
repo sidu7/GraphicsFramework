@@ -19,6 +19,8 @@
 #include "ObjectManager.h"
 #include "ComponentFactory.h"
 #include "Utils/JSONHelper.h"
+#include "Core/Profiling/ProfilerInternal.h"
+#include "Core/Profiling/Profiler.h"
 
 void Engine::Start(const std::string& settingsFilePath)
 {
@@ -37,13 +39,16 @@ void Engine::Start(const std::string& settingsFilePath)
 
 	appIsRunning = true;
 
-	//Init Managers
+	// Init managers
 	Inputs::Instance()->Init();
 	Renderer::Instance()->Init();
-	Time::Instance()->Init(60);
+	Time::Instance()->Init(120);
 	ShapeManager::Instance()->Init();
 	ImguiManager::Instance()->Init();
 	ComponentFactory::Instance()->Init();
+
+	// Initialize profiler with settings from Settings.json
+	Profiler::Instance()->Init(mSettings.mProfilerSettings);
 
 	pCamera = new Camera();
 	pCamera->Init(glm::radians(45.0f), 0.1f, 4000.0f);
@@ -55,42 +60,46 @@ void Engine::Run()
 {
 	while (appIsRunning)
 	{
-		for (const NextFrameFunc& Func : StartFrameFuncs)
+		// ── Profiler: start new frame ──
+		Profiler::Instance()->StartFrame();
 		{
-			Func();
+			GF_PROFILE_SCOPE("Engine::Run");
+			for (const NextFrameFunc& Func : StartFrameFuncs)
+			{
+				Func();
+			}
+			StartFrameFuncs.clear();
+
+			Time::Instance()->FrameStart();
+			ImguiManager::Instance()->StartFrame();
+
+			Renderer::Instance()->StartFrame();
+			Inputs::Instance()->Update();
+			pCamera->Update();
+			if (pScene)
+			{
+				pScene->DebugDisplay();
+				pScene->Update();
+			}
+
+			Profiler::Instance()->MarkRenderStart();
+			Profiler::Instance()->MarkImguiStart();
+			ImguiManager::Instance()->Update();
+			Profiler::Instance()->MarkImguiEnd();
+
+			Renderer::Instance()->SwapBuffers();
+			Time::Instance()->FrameEnd();
+			Profiler::Instance()->MarkRenderEnd();
+
+			for (const NextFrameFunc& Func : EndFrameFuncs)
+			{
+				Func();
+			}
+			EndFrameFuncs.clear();
 		}
-		StartFrameFuncs.clear();
 
-		Time::Instance()->FrameStart();	
-		ImguiManager::Instance()->StartFrame();
-
-		Renderer::Instance()->StartFrame();
-		Inputs::Instance()->Update();
-		pCamera->Update();
-
-#if !NO_IMGUI
-		// Call Custom debug functions
-		for (CustomDebugFunc& Func : CustomDebugFunctions)
-		{
-			Func();
-		}
-#endif
-
-		if (pScene)
-		{
-			pScene->DebugDisplay();
-			pScene->Update();
-		}
-	
-		ImguiManager::Instance()->Update();
-		Renderer::Instance()->SwapBuffers();
-		Time::Instance()->FrameEnd();
-
-		for (const NextFrameFunc& Func : EndFrameFuncs)
-		{
-			Func();
-		}
-		EndFrameFuncs.clear();
+		// ── Profiler: end frame ──
+		Profiler::Instance()->EndFrame();
 	}
 
 	Renderer::Instance()->WaitFrameFinish();
@@ -105,6 +114,11 @@ void Engine::Stop()
 	ObjectManager::Instance()->Close();
 	ShapeManager::Instance()->Close();
 	ImguiManager::Instance()->Close();
+
+	// The profiler owns Vulkan/OpenGL objects (query pools, GL query names), so
+	// it must be shut down before the renderer destroys the device/context.
+	Profiler::Instance()->Close();
+
 	Renderer::Instance()->Close();
 	std::cout << "Window closed" << std::endl;
 	Window::Instance()->Close();
@@ -157,5 +171,23 @@ void Settings::Parse(rapidjson::Document& settingsFile)
 	if (Root.HasMember("MaterialBindingPoint"))
 	{
 		mMaterialBindingPoint = Root["MaterialBindingPoint"].GetInt();
+	}
+
+	// Profiler settings (optional — uses defaults if absent)
+	if (Root.HasMember("Profiler"))
+	{
+		rapidjson::Value::Object Profiler = Root["Profiler"].GetObject();
+		if (Profiler.HasMember("MaxConcurrentQueries"))
+		{
+			mProfilerSettings.maxConcurrentQueries = static_cast<uint32_t>(Profiler["MaxConcurrentQueries"].GetUint());
+		}
+		if (Profiler.HasMember("Enabled"))
+		{
+			mProfilerSettings.enabled = Profiler["Enabled"].GetBool();
+		}
+		if (Profiler.HasMember("CaptureDrawCalls"))
+		{
+			mProfilerSettings.captureDrawCalls = Profiler["CaptureDrawCalls"].GetBool();
+		}
 	}
 }

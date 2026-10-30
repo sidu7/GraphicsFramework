@@ -1,6 +1,7 @@
 #include "UniformBufferGL.h"
 
 #include "RHI/OpenGL/DeviceGL.h"
+#include "Core/Profiling/Profiler.h"
 
 namespace rhi::gl
 {
@@ -27,6 +28,7 @@ void UniformBufferGL::Init(uint32_t size, uint32_t binding, const void* data)
 
 void UniformBufferGL::AddData(uint32_t size, const void* data, uint32_t offset) const
 {
+	GF_PROFILE_SCOPE("UniformBufferGL::AddData");
 	GLCall(glBindBuffer(GL_UNIFORM_BUFFER, m_RendererId));
 	GLCall(glBufferSubData(GL_UNIFORM_BUFFER, offset, size, data));
 	GLCall(glBindBuffer(GL_UNIFORM_BUFFER, 0));

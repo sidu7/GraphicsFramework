@@ -32,6 +32,12 @@ void Object::Update()
 
 void Object::Serialize(const rapidjson::Value::Object& data)
 {
+	// Optional display name, used by the profiler's draw call list.
+	if (data.HasMember("Name") && data["Name"].IsString())
+	{
+		mName = data["Name"].GetString();
+	}
+
 	rapidjson::Value::Array components = data["Components"].GetArray();
 	for (unsigned int i = 0; i < components.Size(); ++i)
 	{

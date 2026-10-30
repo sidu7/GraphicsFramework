@@ -6,6 +6,8 @@
 #include <vulkan/vk_enum_string_helper.h>
 #include <Imgui\backends\imgui_impl_vulkan.h>
 
+#include <cstring>
+
 #include "CommandBufferPoolVK.h"
 #include "CommandBufferVK.h"
 #include "CommandQueueVK.h"
@@ -718,6 +720,12 @@ void Helper::InitVulkan()
 
 				};
 
+				// The RHI toggles cull mode, front face, topology and depth-test enable
+				// through dynamic state commands, so the extended dynamic state feature
+				// (core in Vulkan 1.3, extension in earlier versions) has to be enabled.
+				VkPhysicalDeviceExtendedDynamicStateFeaturesEXT ExtendedDynamicStateFeatures = { VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT };
+				ExtendedDynamicStateFeatures.extendedDynamicState = VK_TRUE;
+
 				VkDeviceCreateInfo DeviceInfo = { VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO };
 				DeviceInfo.queueCreateInfoCount = QueueInfos.size();
 				DeviceInfo.pQueueCreateInfos = QueueInfos.data();
@@ -725,7 +733,25 @@ void Helper::InitVulkan()
 				DeviceInfo.ppEnabledExtensionNames = VkRenderer->DeviceExtensions.data();
 				DeviceInfo.enabledLayerCount = DeviceLayers.size();
 				DeviceInfo.ppEnabledLayerNames = DeviceLayers.data();
+				DeviceInfo.pNext = &ExtendedDynamicStateFeatures;
 				DeviceInfo.pEnabledFeatures = nullptr;
+
+				// Ensure the extension is requested
+				bool HasExtDynamicState = false;
+				for (const auto& ext : VkRenderer->DeviceExtensions)
+				{
+					if (strcmp(ext, VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME) == 0)
+					{
+						HasExtDynamicState = true;
+						break;
+					}
+				}
+				if (!HasExtDynamicState)
+				{
+					VkRenderer->DeviceExtensions.push_back(VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME);
+					DeviceInfo.enabledExtensionCount = static_cast<uint32_t>(VkRenderer->DeviceExtensions.size());
+					DeviceInfo.ppEnabledExtensionNames = VkRenderer->DeviceExtensions.data();
+				}
 
 				VKCall(vkCreateDevice(VkRenderer->PhysicalDevice, &DeviceInfo, nullptr, &VkRenderer->mDevice), "Vulkan Logical Device creation Failed.");
 			}

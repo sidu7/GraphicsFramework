@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include "Core/Profiling/ProfilerInternal.h"
 
 class Camera;
 class Scene;
@@ -15,6 +16,8 @@ struct Settings
 
 	uint32_t mTransformBindingPoint;
 	uint32_t mMaterialBindingPoint;
+
+	ProfilerSettings mProfilerSettings;
 
 	void Parse(rapidjson::Document& settingsFile);
 };

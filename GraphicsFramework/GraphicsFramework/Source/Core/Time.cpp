@@ -1,6 +1,9 @@
 #include "Time.h"
 #include "SDL/include/SDL.h"
 
+#include <thread>
+#include <chrono>
+
 void Time::Init(unsigned int requiredFrameRate)
 {
 	deltaTime = 0;
@@ -17,8 +20,9 @@ void Time::FrameStart()
 void Time::FrameEnd()
 {
 	endTime = SDL_GetTicks();
-	while (endTime - startTime < neededTime)
+	if (neededTime > 0 && endTime - startTime < neededTime)
 	{
+		std::this_thread::sleep_for(std::chrono::milliseconds(neededTime - static_cast<unsigned int>(endTime - startTime)));
 		endTime = SDL_GetTicks();
 	}
 	deltaTime = (endTime - startTime) / 1000.0f;

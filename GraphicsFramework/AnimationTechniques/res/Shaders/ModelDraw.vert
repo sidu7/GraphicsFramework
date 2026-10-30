@@ -1,43 +1,48 @@
-#version 330 core
+#version 450
 
+// Mesh::SetupMesh layout: Vec3 position, Vec3 normal, Vec2 uv, iVec4 boneIDs, Vec4 weights
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec2 aTexCoord;
 layout (location = 3) in ivec4 aBoneIDs;
 layout (location = 4) in vec4 aWeights;
 
-const int MAX_BONES = 100;
+layout (binding = 0) uniform ObjectMatrices
+{
+	mat4 normaltr;
+	mat4 model;
+	mat4 prevModel;
+} Object;
 
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 model;
-uniform mat4 normaltr;
-uniform mat4 inverseview;
-uniform mat4 boneMatrix[MAX_BONES];
-uniform mat4 pathTr;
+layout (binding = 2) uniform CameraMatrices
+{
+	mat4 projection;
+	mat4 view;
+	mat4 invView;
+} Camera;
 
-out vec3 normalVec;
-out vec3 worldPos;
-out vec3 eyePos;
-out vec2 TexCoord;
+layout (binding = 4) uniform BoneMatrices
+{
+	mat4 bones[128];
+} Skeleton;
+
+layout (location = 0) out vec3 normalVec;
+layout (location = 1) out vec3 worldPos;
+layout (location = 2) out vec2 texCoord;
 
 void main()
 {
+	mat4 skin =
+		Skeleton.bones[aBoneIDs.x] * aWeights.x +
+		Skeleton.bones[aBoneIDs.y] * aWeights.y +
+		Skeleton.bones[aBoneIDs.z] * aWeights.z +
+		Skeleton.bones[aBoneIDs.w] * aWeights.w;
 
-	mat4 BoneTransform = boneMatrix[aBoneIDs[0]] * aWeights[0];
-	BoneTransform += boneMatrix[aBoneIDs[1]] * aWeights[1];
-	BoneTransform += boneMatrix[aBoneIDs[2]] * aWeights[2];
-	BoneTransform += boneMatrix[aBoneIDs[3]] * aWeights[3];
+	vec4 skinnedPosition = skin * vec4(aPos, 1.0);
+	vec3 skinnedNormal = mat3(skin) * aNormal;
 
-	gl_Position = projection * view * pathTr * model * BoneTransform * vec4(aPos,1.0);
-
-	worldPos = (model * BoneTransform * vec4(aPos,1.0)).xyz;
-
-	vec4 normalL = BoneTransform * vec4(aNormal,0.0);
-
-	normalVec = (normalL * normaltr).xyz;
-
-	TexCoord = aTexCoord;
-
-	eyePos = (inverseview * vec4(0,0,0,1)).xyz;
+	worldPos = (Object.model * skinnedPosition).xyz;
+	gl_Position = Camera.projection * Camera.view * vec4(worldPos, 1.0);
+	normalVec = skinnedNormal * mat3(Object.normaltr);
+	texCoord = aTexCoord;
 }

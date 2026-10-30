@@ -48,14 +48,16 @@ void Mesh::Draw(Shader * shader)
 
 		//shader->SetUniform1i(name + number, i);
 
-		Renderer::Instance()->BindTexture(mTextures[i].texture, i);
+		// Samplers live above the uniform-block bindings (0-7) so a mesh texture can
+		// never collide with ObjectMatrices/MaterialData/Camera/Light on Vulkan.
+		Renderer::Instance()->BindTexture(mTextures[i].texture, 8 + i);
 	}
 
 	Renderer::Instance()->Draw(VBO, IBO, shader);
 
 	for (unsigned int i = 0; i < mTextures.size(); ++i)
 	{
-		Renderer::Instance()->UnbindTexture(mTextures[i].texture, i);
+		Renderer::Instance()->UnbindTexture(mTextures[i].texture, 8 + i);
 	}
 }
 

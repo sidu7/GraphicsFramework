@@ -21,7 +21,10 @@ public:
 	virtual void Init(int32_t shaderId) override;
 	virtual void Init(const std::string& vertexPath, const std::string& fragmentPath) override;
 
+	std::string GetName() const override { return mName; }
+
 	unsigned int m_RendererID;
+	std::string  mName;
 
 protected:
 	void SetUniform1i(const std::string& name, int i);

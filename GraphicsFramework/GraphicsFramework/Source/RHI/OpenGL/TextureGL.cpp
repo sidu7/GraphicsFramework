@@ -9,6 +9,7 @@ Author: Sidhant Tumma
 
 #include "Core/Core.h"
 #include "RHI/OpenGL/DeviceGL.h"
+#include "Core/Profiling/Profiler.h"
 
 namespace rhi::gl
 {
@@ -22,6 +23,7 @@ TextureGL::TextureGL() :
 
 void TextureGL::Init(const std::string& FilePath) 
 {
+	GF_PROFILE_SCOPE("TextureGL::Init");
 	mFilePath = FilePath;
 
 	stbi_set_flip_vertically_on_load(1);
@@ -90,6 +92,7 @@ void TextureGL::Init(ImageFormat format, int width, int height)
 
 void TextureGL::Init(void* buffer, int size)
 {
+	GF_PROFILE_SCOPE("TextureGL::Init (memory)");
 	int NumChannels;
 	mLocalBuffer = stbi_load_from_memory(reinterpret_cast<unsigned char*>(buffer), size, &mWidth, &mHeight, &NumChannels, 0);
 	

@@ -8,6 +8,7 @@ Author: Sidhant Tumma
 #include "ShaderVK.h"
 #include "Core/Core.h"
 #include "Utils/FileHelper.h"
+#include "Core/Profiling/Profiler.h"
 
 #include "RHI/Vulkan/VertexBufferVK.h"
 #include "RHI/Vulkan/FrameBufferVK.h"
@@ -47,7 +48,12 @@ ShaderVK::~ShaderVK()
 
 void ShaderVK::Init(int32_t shaderId)
 {
+	GF_PROFILE_SCOPE("ShaderVK::Init");
 	mShaderId = std::to_string(shaderId);
+
+	// Human-readable name for the profiler (e.g. "Drawing.vert").
+	const auto& glslVertPath = ShaderRegistry::Instance()->GetGLSLPath(shaderId, ShaderRegistry::ShaderStage::Vertex);
+	mName = glslVertPath.substr(glslVertPath.find_last_of("/\\") + 1);
 
 	const auto& vertPath = ShaderRegistry::Instance()->GetSPIRVPath(shaderId, ShaderRegistry::ShaderStage::Vertex);
 	const auto& fragPath = ShaderRegistry::Instance()->GetSPIRVPath(shaderId, ShaderRegistry::ShaderStage::Fragment);
@@ -260,6 +266,7 @@ void ShaderVK::Init(int32_t shaderId)
 void ShaderVK::Init(const std::string& vertexPath, const std::string& fragmentPath)
 {
 	mShaderId = vertexPath;
+	mName = vertexPath.substr(vertexPath.find_last_of("/\\") + 1);
 
 	auto vertSource = FileHelper::ReadBinaryFile(vertexPath + ".spv");
 	auto fragSource = FileHelper::ReadBinaryFile(fragmentPath + ".spv");

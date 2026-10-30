@@ -28,4 +28,8 @@ public:
 
 	// Initialize from raw file paths (legacy/direct path, for projects that bypass registry)
 	virtual void Init(const std::string& vertexPath, const std::string& fragmentPath) = 0;
+
+	// Return a human-readable name for this shader (used by the profiler for draw call metadata).
+	// Default returns empty string — override in subclasses to return a meaningful name.
+	virtual std::string GetName() const { return {}; }
 };

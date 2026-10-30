@@ -41,7 +41,9 @@ void Transform::Update()
 	}
 
 	SetModelTransformation();
-	UpdateUniformBuffer();
+	// NOTE: UBO upload is deferred to a separate call (e.g. from Flock::Update())
+	// so that components which modify the rotation matrix after this Update() can
+	// include the updated rotation in a single upload, avoiding the double upload.
 }
 
 void Transform::Serialize(rapidjson::Value::Object data)

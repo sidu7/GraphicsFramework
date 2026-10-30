@@ -7,6 +7,7 @@
 #include "Imgui/imgui.h"
 #include "Imgui/backends/imgui_impl_sdl2.h"
 #include "Rendering/Renderer.h"
+#include "Core/Profiling/Profiler.h"
 
 void ImguiManager::Init()
 {
@@ -38,7 +39,20 @@ void ImguiManager::Update()
 	ImGui::Text("FPS: %.2f FPS", ImGui::GetIO().Framerate);
 	ImGui::Text("Camera Position: %.1f, %.1f, %.1f", Cam->mCameraPos.x, Cam->mCameraPos.y, Cam->mCameraPos.z);
 	ImGui::Text("Camera Pitch: %.1f Yaw %.1f", Cam->pitch, Cam->yaw);
+
+	if (ImGui::Button("Toggle Profiler"))
+	{
+		Profiler::Instance()->SetOverlayVisible(!Profiler::Instance()->IsOverlayVisible());
+	}
+
+	// F11 hotkey toggle for profiler overlay
+	if (ImGui::IsKeyPressed(ImGuiKey_F11))
+	{
+		Profiler::Instance()->SetOverlayVisible(!Profiler::Instance()->IsOverlayVisible());
+	}
+
 	ImGui::End();
+	Profiler::Instance()->RenderOverlay();
 	Render();
 #endif
 }

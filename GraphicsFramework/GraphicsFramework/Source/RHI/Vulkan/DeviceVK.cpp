@@ -22,6 +22,8 @@ Author: Sidhant Tumma
 #include "Rendering/VertexBuffer.h"
 #include "Rendering/Shader.h"
 #include "Rendering/Texture.h"
+// Profiling
+#include "Core/Profiling/Profiler.h"
 // Rendering Vulkan
 #include "RHI/Vulkan/FrameBufferVK.h"
 #include "RHI/Vulkan/IndexBufferVK.h"
@@ -410,6 +412,22 @@ void Device::WaitFrameFinish() const
 	VKCall(vkDeviceWaitIdle(mDevice), "Wait for device Idle Failed.");
 }
 
+void Device::WaitForPreviousFrame()
+{
+	if (InFlightFences.size() > FrameIdx)
+	{
+		InFlightFences[FrameIdx]->Wait();
+	}
+}
+
+void Device::WaitForFenceAt(uint32_t frameIdx)
+{
+	if (frameIdx < InFlightFences.size())
+	{
+		InFlightFences[frameIdx]->Wait();
+	}
+}
+
 void Device::StartFrame()
 {
 	ExecuteTransientCommandBuffers();
@@ -636,6 +654,8 @@ void Device::UnbindTexture(const Texture* texture, unsigned int slot)
 
 void Device::Draw(const Shader* Shader, const VertexBuffer* vertexBuffer, int32_t VertexCount, int32_t VertexStart, int32_t InstanceCount, int32_t InstanceStart)
 {
+	Profiler::Instance()->BeginDrawCall("", Shader ? Shader->GetName() : "", "");
+
 	// The pass is opened in StartFrame and shared by every draw of the frame.
 	BeginScreenPass();
 
@@ -661,10 +681,14 @@ void Device::Draw(const Shader* Shader, const VertexBuffer* vertexBuffer, int32_
 	BindVertexBuffer(vertexBuffer);
 
 	vkCmdDraw(GetCommandBuffer()->mCommandBuffer, VertexCount, InstanceCount, VertexStart, InstanceStart);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::Draw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)
 {
+	Profiler::Instance()->BeginDrawCall("", shader ? shader->GetName() : "", "");
+
 	// The pass is opened in StartFrame and shared by every draw of the frame.
 	BeginScreenPass();
 
@@ -692,6 +716,8 @@ void Device::Draw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuff
 	BindIndexBuffer(indexBuffer);
 
 	vkCmdDrawIndexed(GetCommandBuffer()->mCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::BeginDebugDraw(const Shader* shader, VkPrimitiveTopology topology)
@@ -734,10 +760,14 @@ void Device::DebugDraw(const VertexBuffer* vertexBuffer, const IndexBuffer* inde
 		return;
 	}
 
+	Profiler::Instance()->BeginDrawCall("", shader->GetName(), "");
+
 	BeginDebugDraw(shader, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP);
 	BindVertexBuffer(vertexBuffer);
 	BindIndexBuffer(indexBuffer);
 	vkCmdDrawIndexed(GetCommandBuffer()->mCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::DebugDrawLines(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)
@@ -749,10 +779,14 @@ void Device::DebugDrawLines(const VertexBuffer* vertexBuffer, const IndexBuffer*
 
 	// The wire primitives store their indices in line-pair order, matching the
 	// GL_LINES draw the OpenGL backend records.
+	Profiler::Instance()->BeginDrawCall("", shader->GetName(), "");
+
 	BeginDebugDraw(shader, VK_PRIMITIVE_TOPOLOGY_LINE_LIST);
 	BindVertexBuffer(vertexBuffer);
 	BindIndexBuffer(indexBuffer);
 	vkCmdDrawIndexed(GetCommandBuffer()->mCommandBuffer, indexBuffer->GetCount(), 1, 0, 0, 0);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::DrawDebugCircle(const VertexBuffer* vertexBuffer, const Shader* shader)
@@ -762,9 +796,13 @@ void Device::DrawDebugCircle(const VertexBuffer* vertexBuffer, const Shader* sha
 		return;
 	}
 
+	Profiler::Instance()->BeginDrawCall("", shader->GetName(), "");
+
 	BeginDebugDraw(shader, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP);
 	BindVertexBuffer(vertexBuffer);
 	vkCmdDraw(GetCommandBuffer()->mCommandBuffer, 16, 1, 0, 0);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::DrawDebugLine(const VertexBuffer* vertexBuffer, const Shader* shader)
@@ -774,9 +812,13 @@ void Device::DrawDebugLine(const VertexBuffer* vertexBuffer, const Shader* shade
 		return;
 	}
 
+	Profiler::Instance()->BeginDrawCall("", shader->GetName(), "");
+
 	BeginDebugDraw(shader, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP);
 	BindVertexBuffer(vertexBuffer);
 	vkCmdDraw(GetCommandBuffer()->mCommandBuffer, 2, 1, 0, 0);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::SetDepthTest(bool bEnabled)

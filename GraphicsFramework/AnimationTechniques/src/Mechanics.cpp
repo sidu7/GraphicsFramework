@@ -3,49 +3,66 @@
 // Application-local shader IDs (shared across all scenes in this project)
 #include "ProjectShaderIDs.h"
 
-#include "core/Engine.h"
-#include "core/Camera.h"
-#include "core/Light.h"
-#include "core/Inputs.h"
-#include "core/Time.h"
-#include "core/ShapeManager.h"
+#include "Core/Engine.h"
+#include "Core/Camera.h"
+#include "Core/Light.h"
+#include "Core/Inputs.h"
+#include "Core/Time.h"
+#include "Core/ShapeManager.h"
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/ShaderRegistry.h"
+#include "Rendering/UniformBuffer.h"
 #include "Core/Components/Transform.h"
 #include "Core/Components/Material.h"
-#include "Core/Components/Shape.h"
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <Imgui/imgui.h>
+#include <glm/gtc/matrix_transform.hpp>
+
+namespace
+{
+	constexpr uint32_t ObjectBindingPoint = 0;
+	constexpr uint32_t MaterialBindingPoint = 1;
+	constexpr uint32_t CameraBindingPoint = 2;
+	constexpr uint32_t LightBindingPoint = 3;
+
+	struct CameraMatricesUBO
+	{
+		glm::mat4 mProjection;
+		glm::mat4 mView;
+		glm::mat4 mInverseView;
+	};
+
+	struct LightDataUBO
+	{
+		glm::vec4 mPosition;
+		glm::vec4 mColor;
+	};
+
+	struct MaterialUBO
+	{
+		glm::vec4 mDiffuse;
+		glm::vec4 mSpecular;
+		float mShininess;
+		int32_t mLighting;
+		int32_t mUseTexture;
+		int32_t mPad0;
+		int32_t mPad1;
+		int32_t mPad2;
+	};
+}
 
 Mechanics::~Mechanics()
 {
+	Close();
 }
 
 void Mechanics::Init()
 {
-	mLight = new Light(glm::vec3(10.0, 100.0, 40.0));
-
-	// Initialize shader registry
-	ShaderRegistry::Instance()->Init("res/Shaders/", [](ShaderRegistry* reg) {
-		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::MODEL_DRAW),
-							"ModelDraw.vert", "ModelDraw.frag",
-							"", "");
-		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::DRAWING),
-							"Drawing.vert", "Drawing.frag",
-							"", "");
-	});
-
-	Engine::Instance()->GetCamera()->mCameraPos = glm::vec3(20.0f, 23.0f, 60.0f);
-	Engine::Instance()->GetCamera()->pitch = -20.0f;
-	Engine::Instance()->GetCamera()->CalculateFront();
-
-	Drawing = Renderer::Instance()->CreateShader();
-	Drawing->Init(static_cast<int32_t>(AnimationShaderID::DRAWING));
-
-	NodeCount = 80;
+	mLight = new Light(glm::vec3(10.0f, 100.0f, 40.0f));
+	mPauseSimulation = false;
 	Time = 0.0f;
+	NodeCount = 80;
 	NodeMass = 0.05f;
 	mSpringLength = 0.5f;
 	mSpringConstant = 30.0f;
@@ -56,15 +73,56 @@ void Mechanics::Init()
 	mRopeConnectionPosition2 = glm::vec3(40.0f, 6.0f, 0.0f);
 	mRopeConnectionVelocity = 50.0f;
 
-	//mSpringFriction = NodeCount * NodeMass * -mGravitationalForce.y / (mSpringLength/10.0f);
+	Engine::Instance()->GetCamera()->mCameraPos = glm::vec3(20.0f, 23.0f, 60.0f);
+	Engine::Instance()->GetCamera()->pitch = -20.0f;
+	Engine::Instance()->GetCamera()->CalculateFront();
+
+	// Initialize shader registry
+	ShaderRegistry::Instance()->Init("res/Shaders/", [](ShaderRegistry* reg) {
+		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::MODEL_DRAW),
+							"ModelDraw.vert", "ModelDraw.frag",
+							"spirv/ModelDraw.vert.spv", "spirv/ModelDraw.frag.spv");
+		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::DRAWING),
+							"Drawing.vert", "Drawing.frag",
+							"spirv/Drawing.vert.spv", "spirv/Drawing.frag.spv");
+	});
+
+	Drawing = Renderer::Instance()->CreateShader();
+	Drawing->Init(static_cast<int32_t>(AnimationShaderID::DRAWING));
+
+	// Create shared UBOs
+	mCameraUBO = Renderer::Instance()->CreateUniformBuffer();
+	mCameraUBO->Init(sizeof(CameraMatricesUBO), CameraBindingPoint);
+
+	mLightUBO = Renderer::Instance()->CreateUniformBuffer();
+	mLightUBO->Init(sizeof(LightDataUBO), LightBindingPoint);
 
 	ResetNodesAndSprings();
+
+	Renderer::Instance()->SetClearColor(glm::vec3(0.2f, 0.2f, 0.2f));
+	Renderer::Instance()->SetDepthTest(true);
 }
 
 void Mechanics::Close()
 {
 	delete mLight;
+	mLight = nullptr;
+
 	delete Drawing;
+	Drawing = nullptr;
+
+	delete mCameraUBO;
+	mCameraUBO = nullptr;
+
+	delete mLightUBO;
+	mLightUBO = nullptr;
+
+	for (auto& entry : mNodeUBOs)
+	{
+		delete entry.mObjectUBO;
+		delete entry.mMaterialUBO;
+	}
+	mNodeUBOs.clear();
 
 	mSprings.clear();
 	mRopeNodes.clear();
@@ -81,7 +139,6 @@ void Mechanics::Update()
 	Time += deltaTime;
 
 	float maxDT = 0.016f;
-
 	int numIterations = (int)(deltaTime / maxDT) + 1;
 
 	if (numIterations != 0)
@@ -154,55 +211,69 @@ void Mechanics::Update()
 		}
 	}
 
+	// Update UBOs
+	Camera* camera = Engine::Instance()->GetCamera();
+	CameraMatricesUBO cameraData{ camera->mProjection, camera->mView, glm::inverse(camera->mView) };
+	mCameraUBO->AddData(sizeof(cameraData), &cameraData);
 
+	LightDataUBO lightData{ glm::vec4(mLight->position, 1.0f), glm::vec4(3.2f, 3.2f, 3.2f, 1.0f) };
+	mLightUBO->AddData(sizeof(lightData), &lightData);
 
-	Renderer::Instance()->BindShader(Drawing);
+	Renderer::Instance()->BindUniformBuffer(mCameraUBO, CameraBindingPoint);
+	Renderer::Instance()->BindUniformBuffer(mLightUBO, LightBindingPoint);
 
-	Drawing->SetUniform3f("lightPos", mLight->position.x, mLight->position.y, mLight->position.z);
-	Drawing->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
-	Drawing->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
-	Drawing->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
-	Drawing->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
-
-	Drawing->SetUniform1i("lighting", 1);
-	//Draw Rope
+	// Draw rope nodes (one UBO pair per node, reused from pool)
+	int nodeDrawIndex = 0;
 	for (int i = 0; i < mRopeNodes.size(); ++i)
 	{
 		RopeNode& node = mRopeNodes[i];
 		glm::mat4 matrix = glm::mat4(1.0f);
 		matrix = glm::translate(matrix, node.mPosition);
-		matrix = glm::rotate(matrix, glm::radians(node.mRotation.x), glm::vec3(1.0, 0.0, 0.0));
-		matrix = glm::rotate(matrix, glm::radians(node.mRotation.y), glm::vec3(0.0, 1.0, 0.0));
-		matrix = glm::rotate(matrix, glm::radians(node.mRotation.z), glm::vec3(0.0, 0.0, 1.0));
+		matrix = glm::rotate(matrix, glm::radians(node.mRotation.x), glm::vec3(1.0f, 0.0f, 0.0f));
+		matrix = glm::rotate(matrix, glm::radians(node.mRotation.y), glm::vec3(0.0f, 1.0f, 0.0f));
+		matrix = glm::rotate(matrix, glm::radians(node.mRotation.z), glm::vec3(0.0f, 0.0f, 1.0f));
 		matrix = glm::scale(matrix, node.mScale);
 		node.mModel = matrix;
-		Drawing->SetUniformMat4f("model", node.mModel);
-		Drawing->SetUniformMat4f("normaltr", glm::inverse(node.mModel));
-		Drawing->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
-		Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
-		Drawing->SetUniform1f("shininess", 1.0f);
-		Renderer::Instance()->Draw(node.mRenderData->mVAO, node.mRenderData->mIBO, Drawing);
-	}
 
-	//Floor
-	/*glm::mat4 matrix = glm::mat4(1.0f);
-	matrix = glm::translate(matrix, glm::vec3(0.0f, 0.0f, 0.0f));
-	matrix = glm::rotate(matrix, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
-	matrix = glm::scale(matrix, glm::vec3(500.0f));
-	Drawing->SetUniformMat4f("model", matrix);
-	Drawing->SetUniformMat4f("normaltr", glm::inverse(matrix));
-	Drawing->SetUniform3f("diffuse", 0.0f, 0.5f, 0.0f);
-	Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
-	Drawing->SetUniform1f("shininess", 1.0f);
-	ShapeData& shape = ShapeManager::Instance()->mShapes[Shapes::QUAD];
-	Renderer::Instance()->Draw(shape.mVAO, shape.mIBO, Drawing);*/
+		// Ensure we have enough UBO entries in the pool
+		while (mNodeUBOs.size() <= nodeDrawIndex)
+		{
+			NodeDrawUniforms entry;
+			entry.mObjectUBO = Renderer::Instance()->CreateUniformBuffer();
+			entry.mObjectUBO->Init(sizeof(ObjectMatricesUBO), ObjectBindingPoint);
+			entry.mMaterialUBO = Renderer::Instance()->CreateUniformBuffer();
+			entry.mMaterialUBO->Init(64, MaterialBindingPoint);
+			mNodeUBOs.push_back(entry);
+		}
+
+		ObjectMatricesUBO objectData{ glm::inverse(matrix), matrix, matrix };
+		mNodeUBOs[nodeDrawIndex].mObjectUBO->AddData(sizeof(objectData), &objectData);
+
+		MaterialUBO mat{};
+		mat.mDiffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		mat.mSpecular = glm::vec4(0.2f, 0.2f, 0.2f, 0.0f);
+		mat.mShininess = 1.0f;
+		mat.mLighting = 1;
+		mat.mUseTexture = 0;
+		mNodeUBOs[nodeDrawIndex].mMaterialUBO->AddData(sizeof(mat), &mat);
+
+		Renderer::Instance()->BindUniformBuffer(mNodeUBOs[nodeDrawIndex].mObjectUBO, ObjectBindingPoint);
+		Renderer::Instance()->BindUniformBuffer(mNodeUBOs[nodeDrawIndex].mMaterialUBO, MaterialBindingPoint);
+
+		const ShapeData& shape = *node.mRenderData;
+		if (shape.mVBO && shape.mIBO)
+		{
+			Renderer::Instance()->Draw(shape.mVBO, shape.mIBO, Drawing);
+		}
+		++nodeDrawIndex;
+	}
 }
 
 void Mechanics::DebugDisplay()
 {
 	ImGui::Begin("Mechanics");
 	ImGui::InputFloat("Rope Friction Constant", &mSpringFriction);
-	ImGui::InputFloat("Rope Connection Velocity", &mRopeConnectionVelocity, 0.5);
+	ImGui::InputFloat("Rope Connection Velocity", &mRopeConnectionVelocity, 0.5f);
 	ImGui::InputFloat("Air Friction", &mAirFriction);
 	if (ImGui::Button("Reset"))
 	{
@@ -211,7 +282,6 @@ void Mechanics::DebugDisplay()
 	ImGui::Checkbox("Pause", &mPauseSimulation);
 	ImGui::End();
 }
-
 
 void Mechanics::Simulate(float time)
 {
@@ -230,7 +300,6 @@ void Mechanics::Start()
 
 void Mechanics::Solve()
 {
-	//Apply Spring forces
 	for (int i = 0; i < mSprings.size(); ++i)
 	{
 		Spring& spring = mSprings[i];
@@ -239,7 +308,7 @@ void Mechanics::Solve()
 
 		glm::vec3 force(0.0f);
 
-		if (r != 0)
+		if (r != 0.0f)
 			force += -mSpringConstant * (springVec / r) * (r - mSpringLength);
 
 		force += -(spring.mMass1->mBody.mVelocity - spring.mMass2->mBody.mVelocity) * mSpringFriction;
@@ -248,7 +317,6 @@ void Mechanics::Solve()
 		spring.mMass2->mBody.mForce += -force;
 	}
 
-	//Apply Gravitational forces
 	for (int i = 1; i < mRopeNodes.size() - 1; ++i)
 	{
 		Mass& mass = mRopeNodes[i].mBody;
@@ -259,7 +327,6 @@ void Mechanics::Solve()
 
 void Mechanics::Apply(float time)
 {
-	//float deltaTime = Time::Instance()->deltaTime;
 	float deltaTime = time;
 
 	for (int i = 0; i < mRopeNodes.size(); ++i)
@@ -267,41 +334,20 @@ void Mechanics::Apply(float time)
 		RopeNode& node = mRopeNodes[i];
 		Mass& mass = node.mBody;
 
-		// Euler
-		/*mass.mVelocity += (mass.mForce/mass.mMass) * time;
-
-		node.mPosition += mass.mVelocity * time;*/
-
-		// RK4		
-		/*State state;
-		state.mPosition = node.mPosition;
-		state.mVelocity = mass.mVelocity;
-
 		glm::vec3 acceleration = mass.mForce / mass.mMass;
-		Derivative kv1 = Func(state, 0.0f,Derivative(),acceleration);
-		kv1.mDPosition /= 2.0f; kv1.mDVelocity /= 2.0f;
-		Derivative kv2 = Func(state, deltaTime / 2.0f, kv1 ,acceleration);
-		kv2.mDPosition /= 2.0f; kv2.mDVelocity /= 2.0f;
-		Derivative kv3 = Func(state, deltaTime / 2.0f, kv2 ,acceleration);
-		Derivative kv4 = Func(state, deltaTime, kv3,acceleration);
+		glm::vec3 kv1 = deltaTime * Func(acceleration, 0.0f, acceleration);
+		glm::vec3 kv2 = deltaTime * Func(acceleration, deltaTime / 2.0f, kv1 / 2.0f);
+		glm::vec3 kv3 = deltaTime * Func(acceleration, deltaTime / 2.0f, kv2 / 2.0f);
+		glm::vec3 kv4 = deltaTime * Func(acceleration, deltaTime, kv3);
 
-		mass.mVelocity += 1 / 6.0f * (kv1.mDVelocity + 2.0f * kv2.mDVelocity + 2.0f * kv3.mDVelocity + kv4.mDVelocity) * deltaTime;
-		node.mPosition += 1 / 6.0f * (kv1.mDPosition + 2.0f * kv2.mDPosition + 2.0f * kv3.mDPosition + kv4.mDPosition) * deltaTime;*/
-
-		glm::vec3 accleration = mass.mForce / mass.mMass;
-		glm::vec3 kv1 = deltaTime * Func(accleration, 0.0f, accleration);
-		glm::vec3 kv2 = deltaTime * Func(accleration, deltaTime / 2.0f, kv1 / 2.0f); // accl + accle/2
-		glm::vec3 kv3 = deltaTime * Func(accleration, deltaTime / 2.0f, kv2 / 2.0f);
-		glm::vec3 kv4 = deltaTime * Func(accleration, deltaTime, kv3);
-
-		mass.mVelocity += 1 / 6.0f * (kv1 + 2.0f * kv2 + 2.0f * kv3 + kv4);
+		mass.mVelocity += 1.0f / 6.0f * (kv1 + 2.0f * kv2 + 2.0f * kv3 + kv4);
 
 		glm::vec3 kp1 = deltaTime * Func(mass.mVelocity, 0.0f, mass.mVelocity);
 		glm::vec3 kp2 = deltaTime * Func(mass.mVelocity, deltaTime / 2.0f, kp1 / 2.0f);
 		glm::vec3 kp3 = deltaTime * Func(mass.mVelocity, deltaTime / 2.0f, kp2 / 2.0f);
 		glm::vec3 kp4 = deltaTime * Func(mass.mVelocity, deltaTime, kp3);
 
-		node.mPosition += 1 / 6.0f * (kp1 + 2.0f * kp2 + 2.0f * kp3 + kp4);
+		node.mPosition += 1.0f / 6.0f * (kp1 + 2.0f * kp2 + 2.0f * kp3 + kp4);
 	}
 
 	mRopeNodes[0].mPosition = mRopeConnectionPosition1;
@@ -334,8 +380,8 @@ void Mechanics::ResetNodesAndSprings()
 
 	RopeNode node;
 	node.mPosition = mRopeConnectionPosition1;
-	node.mRotation = glm::vec3(0.0);
-	node.mScale = glm::vec3(0.6, 0.6, 0.6);
+	node.mRotation = glm::vec3(0.0f);
+	node.mScale = glm::vec3(0.6f, 0.6f, 0.6f);
 	node.mModel = glm::mat4(1.0f);
 	node.mRenderData = &ShapeManager::Instance()->mShapes[Shapes::SPHERE];
 	mRopeNodes.emplace_back(node);
@@ -343,20 +389,20 @@ void Mechanics::ResetNodesAndSprings()
 	const float NodeDistance = 0.5f;
 	for (int i = 0; i < NodeCount; ++i)
 	{
-		Mass m{ NodeMass,glm::vec3(0.0f),glm::vec3(0.0f) };
-		RopeNode node;
-		node.mBody = m;
-		node.mPosition = glm::vec3(i * NodeDistance, 4.0f, 0.0);
-		node.mRotation = glm::vec3(0.0);
-		node.mScale = glm::vec3(0.3, 0.3, 0.3);
-		node.mModel = glm::mat4(1.0f);
-		node.mRenderData = &ShapeManager::Instance()->mShapes[Shapes::CUBE];
-		mRopeNodes.emplace_back(node);
+		Mass m{ NodeMass, glm::vec3(0.0f), glm::vec3(0.0f) };
+		RopeNode rn;
+		rn.mBody = m;
+		rn.mPosition = glm::vec3(i * NodeDistance, 4.0f, 0.0f);
+		rn.mRotation = glm::vec3(0.0f);
+		rn.mScale = glm::vec3(0.3f, 0.3f, 0.3f);
+		rn.mModel = glm::mat4(1.0f);
+		rn.mRenderData = &ShapeManager::Instance()->mShapes[Shapes::CUBE];
+		mRopeNodes.emplace_back(rn);
 	}
 
 	node.mPosition = mRopeConnectionPosition2;
-	node.mRotation = glm::vec3(0.0);
-	node.mScale = glm::vec3(0.6, 0.6, 0.6);
+	node.mRotation = glm::vec3(0.0f);
+	node.mScale = glm::vec3(0.6f, 0.6f, 0.6f);
 	node.mModel = glm::mat4(1.0f);
 	node.mRenderData = &ShapeManager::Instance()->mShapes[Shapes::SPHERE];
 	mRopeNodes.emplace_back(node);

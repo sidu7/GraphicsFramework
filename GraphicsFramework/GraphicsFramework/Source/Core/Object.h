@@ -1,5 +1,6 @@
 #pragma once
 #include <rapidjson/document.h>
+#include <string>
 #include <vector>
 #include <typeindex>
 #include <unordered_map>
@@ -20,12 +21,19 @@ public:
 
 	void AddComponent(Component* component);
 
+	// Name accessor (used by the profiler for draw call metadata)
+	std::string GetName() const { return mName; }
+	void SetName(const std::string& name) { mName = name; }
+
 	template<typename T>
 	T* GetComponent();
 	
 public:
 	std::unordered_map<std::type_index, Component*> mComponents;
 	std::vector<std::type_index> mIndices;
+
+private:
+	std::string mName;
 };
 
 template <typename T>

@@ -29,6 +29,7 @@ Author: Sidhant Tumma
 #include "RHI/OpenGL/ShaderGL.h"
 #include "RHI/OpenGL/ComputeShaderGL.h"
 #include "RHI/OpenGL/TextureGL.h"
+#include "Core/Profiling/Profiler.h"
 #include "Core/Window.h"
 #include "Imgui/backends/imgui_impl_sdl2.h"
 #include "Imgui/backends/imgui_impl_opengl3.h"
@@ -97,6 +98,10 @@ bool GLLogCall(const char* function, const char* file, int line)
 
 void Device::Init()
 {
+	//Enable experimental mode for core profile contexts (required for proper
+	//loading of extension function pointers such as glGenQueriesEXT).
+	glewExperimental = GL_TRUE;
+
 	//Initialize GLEW
 	if (glewInit() != GLEW_OK)
 	{
@@ -234,6 +239,8 @@ void Device::UnbindTexture(const Texture* texture, unsigned int slot)
 
 void Device::Draw(const Shader* Shader, const VertexBuffer* vertexBuffer, int32_t VertexCount, int32_t VertexStart, int32_t InstanceCount, int32_t InstanceStart)
 {
+	Profiler::Instance()->BeginDrawCall("", Shader ? Shader->GetName() : "", "");
+
 	BindShader(Shader);
 	VertexBuffer* Vb = vertexBuffer ? const_cast<VertexBuffer*>(vertexBuffer) : CreateVertexBuffer();
 	BindVertexBuffer(Vb);
@@ -244,62 +251,84 @@ void Device::Draw(const Shader* Shader, const VertexBuffer* vertexBuffer, int32_
 	{
 		delete Vb;
 	}
+
+	Profiler::Instance()->EndDrawCall();
 }
 void Device::Draw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)
 {
-	if (indexBuffer)
-	{
-		BindShader(shader);
-		BindVertexBuffer(vertexBuffer);
-		BindIndexBuffer(indexBuffer);
-		GLCall(glDrawElements(GL_TRIANGLES, indexBuffer->GetCount(), GL_UNSIGNED_SHORT, nullptr));
-		UnbindVertexBuffer(vertexBuffer);
-		UnbindIndexBuffer(indexBuffer);
-	}
+	if (!indexBuffer)
+		return;
+
+	Profiler::Instance()->BeginDrawCall("", shader ? shader->GetName() : "", "");
+
+	BindShader(shader);
+	BindVertexBuffer(vertexBuffer);
+	BindIndexBuffer(indexBuffer);
+	GLCall(glDrawElements(GL_TRIANGLES, indexBuffer->GetCount(), GL_UNSIGNED_SHORT, nullptr));
+	UnbindVertexBuffer(vertexBuffer);
+	UnbindIndexBuffer(indexBuffer);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::DebugDraw(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)
 {
-	if (indexBuffer)
-	{
-		BindShader(shader);
-		BindVertexBuffer(vertexBuffer);
-		BindIndexBuffer(indexBuffer);
-		GLCall(glDrawElements(GL_LINE_LOOP, indexBuffer->GetCount(), GL_UNSIGNED_SHORT, nullptr));
-		UnbindVertexBuffer(vertexBuffer);
-		UnbindIndexBuffer(indexBuffer);
-	}
+	if (!indexBuffer)
+		return;
+
+	Profiler::Instance()->BeginDrawCall("", shader ? shader->GetName() : "", "");
+
+	BindShader(shader);
+	BindVertexBuffer(vertexBuffer);
+	BindIndexBuffer(indexBuffer);
+	GLCall(glDrawElements(GL_LINE_LOOP, indexBuffer->GetCount(), GL_UNSIGNED_SHORT, nullptr));
+	UnbindVertexBuffer(vertexBuffer);
+	UnbindIndexBuffer(indexBuffer);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::DebugDrawLines(const VertexBuffer* vertexBuffer, const IndexBuffer* indexBuffer, const Shader* shader)
 {
-	if (indexBuffer)
-	{
-		GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
-		BindShader(shader);
-		BindVertexBuffer(vertexBuffer);
-		BindIndexBuffer(indexBuffer);
-		GLCall(glDrawElements(GL_LINES, indexBuffer->GetCount(), GL_UNSIGNED_SHORT, nullptr));
-		UnbindVertexBuffer(vertexBuffer);
-		UnbindIndexBuffer(indexBuffer);
-		GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
-	}
+	if (!indexBuffer)
+		return;
+
+	Profiler::Instance()->BeginDrawCall("", shader ? shader->GetName() : "", "");
+
+	GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
+	BindShader(shader);
+	BindVertexBuffer(vertexBuffer);
+	BindIndexBuffer(indexBuffer);
+	GLCall(glDrawElements(GL_LINES, indexBuffer->GetCount(), GL_UNSIGNED_SHORT, nullptr));
+	UnbindVertexBuffer(vertexBuffer);
+	UnbindIndexBuffer(indexBuffer);
+	GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_FILL));
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::DrawDebugCircle(const VertexBuffer* vertexBuffer, const Shader* shader)
 {
+	Profiler::Instance()->BeginDrawCall("", shader ? shader->GetName() : "", "");
+
 	BindShader(shader);
 	BindVertexBuffer(vertexBuffer);
 	GLCall(glDrawArrays(GL_LINE_LOOP, 0, 16));
 	UnbindVertexBuffer(vertexBuffer);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::DrawDebugLine(const VertexBuffer* vertexBuffer, const Shader* shader)
 {
+	Profiler::Instance()->BeginDrawCall("", shader ? shader->GetName() : "", "");
+
 	BindShader(shader);
 	BindVertexBuffer(vertexBuffer);
 	GLCall(glDrawArrays(GL_LINE_LOOP, 0, 2));
 	UnbindVertexBuffer(vertexBuffer);
+
+	Profiler::Instance()->EndDrawCall();
 }
 
 void Device::SetDepthTest(bool bEnabled)

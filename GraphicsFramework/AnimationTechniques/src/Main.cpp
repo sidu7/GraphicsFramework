@@ -1,57 +1,61 @@
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
-#include <core/Engine.h>
+#include <string>
+
+#include "Core/Engine.h"
 #include "AnimationScene.h"
 #include "Mechanics.h"
 
-int SelectedProject = 0;
-
-void ProjectSelector()
+namespace
 {
-	ImGui::Begin("Projects");
-
-	static const char* projectList[] = {
-		"None",
-		"Animation",
-		"Mechanics",
-	};
-
-	bool selected = true;
-	if (ImGui::BeginCombo("Select Project", projectList[SelectedProject]))
+	// -scene=1 -> AnimationScene (skinned archer)
+	// -scene=2 -> Mechanics    (rope of cubes)
+	// default  -> AnimationScene
+	//
+	// CommandLine::GetValue cannot be used: it returns true when the flag is
+	// absent (Core/CommandLine.cpp compares against CmdStr.size() instead of
+	// npos), and sample mains never call CommandLine::Init.
+	int ParseSceneArgument(int argc, char* args[])
 	{
-		for (int i = 0; i < ARRAY_SIZE(projectList); ++i)
+		const std::string Prefix = "-scene=";
+
+		for (int i = 1; i < argc; ++i)
 		{
-			if (ImGui::Selectable(projectList[i], selected))
+			const std::string Argument = args[i];
+			if (Argument.rfind(Prefix, 0) == 0)
 			{
-				if (SelectedProject != i)
+				const std::string Value = Argument.substr(Prefix.size());
+				if (!Value.empty())
 				{
-					SelectedProject = i;
-					switch (SelectedProject)
-					{
-						case 1:
-							Engine::Instance()->SetScene<AnimationScene>();
-							break;
-						case 2:
-							Engine::Instance()->SetScene<Mechanics>();
-							break;
-					}
+					return std::atoi(Value.c_str());
 				}
 			}
 		}
-		ImGui::EndCombo();
-	}
 
-	ImGui::End();
+		return 1;
+	}
 }
 
 int main(int argc, char* args[])
 {
-	std::cout << "Graphics Framework" << std::endl;
+	std::cout << "Animation Techniques" << std::endl;
 
-	Engine::Instance()->Start(1280,720);
-	Engine::Instance()->SetScene<AnimationScene>();
+	const int SceneIndex = ParseSceneArgument(argc, args);
+
+	Engine::Instance()->Start("res/Settings.json");
+
+	if (SceneIndex == 2)
+	{
+		Engine::Instance()->SetScene<Mechanics>();
+	}
+	else
+	{
+		Engine::Instance()->SetScene<AnimationScene>();
+	}
+
 	Engine::Instance()->Run();
 	Engine::Instance()->Stop();
 
-	//system("pause");
 	return 0;
 }

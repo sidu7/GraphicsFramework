@@ -102,8 +102,16 @@ public:
 	virtual void StartFrame() override;
 	virtual void SwapBuffers() override;
 
-	virtual void Clear() const override; 
+	virtual void Clear() const override;
 	virtual void WaitFrameFinish() const override;
+
+	// Wait for the GPU to finish the previous frame (used by GPU profiler to
+	// ensure query results are available before reading them).
+	void WaitForPreviousFrame();
+
+	// Wait for a specific frame's fence (by index) — used by GPU profiler to
+	// wait on the fence that was actually used for the previous frame.
+	void WaitForFenceAt(uint32_t frameIdx);
 
 	// Bind Functions
 	virtual void BindShader(const Shader* shader) override;
@@ -199,6 +207,9 @@ public:
 
 	// ImGui
 	inline const RenderPassVK* GetImGuiRenderPass() { return ImGuiRenderPass; }
+
+	// Frame index (used by GPU profiler to determine the previous frame's fence)
+	inline uint32_t GetCurrentFrameIndex() const { return FrameIdx; }
 protected:
 #if _DEBUG
 	// Debug Messenger Callback

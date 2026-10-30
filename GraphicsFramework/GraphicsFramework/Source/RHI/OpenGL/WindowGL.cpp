@@ -44,6 +44,7 @@ void WindowGL::Init(int width, int height)
 
 	glContext = nullptr;
 	glContext = SDL_GL_CreateContext(pWindow);
+	SDL_GL_SetSwapInterval(0);  // Disable VSync for unlimited FPS
 	if (glContext == NULL)
 	{
 		printf("OpenGL context could not be created. SDL Error: %s\n", SDL_GetError());

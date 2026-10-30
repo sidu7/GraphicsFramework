@@ -1,4 +1,3 @@
-#pragma once
 #include "AnimationScene.h"
 
 #include "Core/Engine.h"
@@ -11,16 +10,159 @@
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/ShaderRegistry.h"
+#include "Rendering/UniformBuffer.h"
+#include "Rendering/VertexBuffer.h"
+#include "Rendering/IndexBuffer.h"
 #include "Core/Components/Transform.h"
 #include "Core/Components/Shape.h"
 #include "Core/Components/Material.h"
 
+#include "Imgui/imgui.h"
+
+#include <glm/gtc/matrix_transform.hpp>
+
+#include <fstream>
+#include <sstream>
+
+namespace
+{
+	// Fixed binding points. 0 and 1 come from Settings.json, 2-4 are allocated by this scene.
+	constexpr uint32_t ObjectBindingPoint = 0;
+	constexpr uint32_t MaterialBindingPoint = 1;
+	constexpr uint32_t CameraBindingPoint = 2;
+	constexpr uint32_t LightBindingPoint = 3;
+	constexpr uint32_t BoneBindingPoint = 4;
+
+	// App-local material block. 64 bytes, 16-byte aligned. Must match res/Shaders/*.frag.
+	struct AppMaterialUBO
+	{
+		glm::vec4 mDiffuse;
+		glm::vec4 mSpecular;
+		float mShininess;
+		int32_t mLighting;
+		int32_t mUseTexture;
+		int32_t mPad0;
+		int32_t mPad1;
+		int32_t mPad2;
+	};
+
+	// Framework structs (reused from Core/Components/Transform.h and Material.h)
+	// but declared here so the C++ layout matches the GLSL std140 block.
+	struct CameraMatricesUBO
+	{
+		glm::mat4 mProjection;
+		glm::mat4 mView;
+		glm::mat4 mInverseView;
+	};
+
+	struct LightDataUBO
+	{
+		glm::vec4 mPosition;
+		glm::vec4 mColor;
+	};
+}
+
+// ------------------------------------------------------------------- helpers ----
 
 AnimationScene::~AnimationScene()
 {
-	delete demoModel;
-	delete mCurveVAO;
+	Close();
 }
+
+AnimationScene::DrawUniforms& AnimationScene::NextDrawUniforms()
+{
+	if (mDrawIndex >= mDrawUniforms.size())
+	{
+		DrawUniforms entry;
+		entry.mObjectUBO = Renderer::Instance()->CreateUniformBuffer();
+		entry.mObjectUBO->Init(sizeof(ObjectMatricesUBO), ObjectBindingPoint);
+
+		entry.mMaterialUBO = Renderer::Instance()->CreateUniformBuffer();
+		entry.mMaterialUBO->Init(sizeof(AnimationMaterialUBO), MaterialBindingPoint);
+
+		mDrawUniforms.push_back(entry);
+	}
+
+	return mDrawUniforms[mDrawIndex++];
+}
+
+void AnimationScene::UploadBones()
+{
+	const size_t boneCount = std::min(demoModel->mBones.size(), static_cast<size_t>(128));
+
+	for (size_t i = 0; i < boneCount; ++i)
+	{
+		Bone& bone = demoModel->mBones[i];
+		mBonesTransformation[i] = bone.mCurrentGlobalTransformation * bone.mOffset;
+	}
+
+	for (size_t i = boneCount; i < 128; ++i)
+	{
+		mBonesTransformation[i] = glm::mat4(1.0f);
+	}
+
+	mBoneUBO->AddData(sizeof(glm::mat4) * 128, mBonesTransformation.data());
+}
+
+void AnimationScene::BuildCurveBuffers()
+{
+	std::vector<glm::vec4> curvePoints;
+	for (unsigned int j = 0; j < controlPointsMatrices.size(); ++j)
+	{
+		for (float i = 0.0f; i <= 1.0f; i += 0.01f)
+		{
+			glm::vec4 pointOnCurve = GetPointOnCurve(i, controlPointsMatrices[j]);
+			curvePoints.emplace_back(pointOnCurve);
+			curvePoints.emplace_back(pointOnCurve);
+		}
+	}
+	mCurvePointsSize = static_cast<unsigned int>(curvePoints.size());
+
+	if (mCurveVBO == nullptr)
+	{
+		mCurveVBO = Renderer::Instance()->CreateVertexBuffer();
+		mCurveVBO->SetDataLayout({ VertexFormat::Vec3, VertexFormat::Vec3 });
+		mCurveIBO = Renderer::Instance()->CreateIndexBuffer();
+	}
+
+	// Interleaved vertex: position (vec3 with w = curve parameter) + dummy normal (vec3)
+	struct CurveVertex
+	{
+		glm::vec3 mPosition;
+		glm::vec3 mNormal;
+	};
+
+	std::vector<CurveVertex> vertices;
+	vertices.reserve(curvePoints.size());
+	for (const glm::vec4& cp : curvePoints)
+	{
+		vertices.push_back({ glm::vec3(cp.x, cp.y, cp.z), glm::vec3(0.0f, 0.0f, 1.0f) });
+	}
+
+	mCurveVBO->AddDynamicData(vertices.data(),
+		static_cast<unsigned int>(vertices.size() * sizeof(CurveVertex)));
+
+	// Build uint16 index pairs: each consecutive pair is a line segment
+	std::vector<uint16_t> indices;
+	indices.reserve(mCurvePointsSize);
+	for (unsigned int i = 0; i < mCurvePointsSize; ++i)
+	{
+		indices.push_back(i);
+		indices.push_back(i + 1);
+	}
+	// The last segment is drawn twice (loop back), skip the last index pair
+	indices.pop_back();
+	indices.pop_back();
+
+	mCurveIBO->AddData(indices.data(), static_cast<unsigned int>(indices.size()), IndexType::UInt16);
+}
+
+void AnimationScene::BuildBonesBuffers()
+{
+	// Called once in Init() to create the bone line VBO; contents updated in Update().
+}
+
+// ------------------------------------------------------------------- Init / Close ----
 
 void AnimationScene::Init()
 {
@@ -30,10 +172,10 @@ void AnimationScene::Init()
 	ShaderRegistry::Instance()->Init("res/Shaders/", [](ShaderRegistry* reg) {
 		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::MODEL_DRAW),
 							"ModelDraw.vert", "ModelDraw.frag",
-							"", "");
+							"spirv/ModelDraw.vert.spv", "spirv/ModelDraw.frag.spv");
 		reg->RegisterShader(static_cast<int32_t>(AnimationShaderID::DRAWING),
 							"Drawing.vert", "Drawing.frag",
-							"", "");
+							"spirv/Drawing.vert.spv", "spirv/Drawing.frag.spv");
 	});
 
 	demoModel = new Model();
@@ -48,26 +190,21 @@ void AnimationScene::Init()
 	 *RightForeArm
 	 *RightHand
 	 */
-	for (int i = demoModel->mBones.size() - 1; i >= 0; --i)
+	for (int i = static_cast<int>(demoModel->mBones.size()) - 1; i >= 0; --i)
 	{
 		if (demoModel->mBones[i].mName == "RightArm" ||
 			demoModel->mBones[i].mName == "RightForeArm" ||
 			demoModel->mBones[i].mName == "RightHand")
 		{
-			mIKBones.push_back(i);
+			mIKBones.push_back(static_cast<unsigned int>(i));
 		}
 		demoModel->mBones[i].mIKTransformation = glm::mat4(1.0f);
-		//std::cout << demoModel->mBones[i].mName << std::endl;
 	}
 	mEndEffector = glm::vec3(0.0f);
 	mDoOnce = true;
 	IKDuration = 1.0f;
 
 	animation = demoModel->mAnimations[0];
-	//demoModel->LoadModel("res/arissa.fbx");
-
-	drawModel = true;
-	drawBones = false;
 
 	Engine::Instance()->GetCamera()->pitch = -8.0f;
 	Engine::Instance()->GetCamera()->yaw = 4.8f;
@@ -76,13 +213,26 @@ void AnimationScene::Init()
 
 	mBonesTransformation.resize(demoModel->mBones.size());
 
-	light = new Light(glm::vec3(10.0, 100.0, 40.0));
+	light = new Light(glm::vec3(10.0f, 100.0f, 40.0f));
 
-	modelDraw = Renderer::Instance()->CreateShader();
-	modelDraw->Init(static_cast<int32_t>(AnimationShaderID::MODEL_DRAW));
-	Drawing = Renderer::Instance()->CreateShader(); 
-	Drawing->Init(static_cast<int32_t>(AnimationShaderID::DRAWING));
+	modelDrawShader = Renderer::Instance()->CreateShader();
+	modelDrawShader->Init(static_cast<int32_t>(AnimationShaderID::MODEL_DRAW));
+	drawingShader = Renderer::Instance()->CreateShader();
+	drawingShader->Init(static_cast<int32_t>(AnimationShaderID::DRAWING));
 
+	// --- uniform blocks -------------------------------------------------
+	mCameraUBO = Renderer::Instance()->CreateUniformBuffer();
+	mCameraUBO->Init(sizeof(CameraMatricesUBO), CameraBindingPoint);
+
+	mLightUBO = Renderer::Instance()->CreateUniformBuffer();
+	mLightUBO->Init(sizeof(LightDataUBO), LightBindingPoint);
+
+	mBoneUBO = Renderer::Instance()->CreateUniformBuffer();
+	mBoneUBO->Init(sizeof(glm::mat4) * 128, BoneBindingPoint);
+
+	mBonesTransformation.assign(128, glm::mat4(1.0f));
+
+	// --- curve ----------------------------------------------------------
 	std::ifstream file("res/JSON Data/ControlPoints.json");
 	std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 	file.close();
@@ -104,7 +254,6 @@ void AnimationScene::Init()
 	CurveMatrix[3] = glm::vec4(1.0f, 4.0f, 1.0f, 0.0f);
 
 	CurveMatrix /= 6.0f;
-
 	CurveMatrix = glm::transpose(CurveMatrix);
 
 	RecalculateMatrices();
@@ -112,113 +261,90 @@ void AnimationScene::Init()
 	mSpeed = 18.0f;
 	mTolerance = 0.0001f;
 	CreateAxisLengthTable();
-
-	CreateControlPointsVAO();
+	BuildCurveBuffers();
 
 	mPathMatrix = glm::mat4(1.0f);
-
 	showControlWindow = false;
 	mGoalPosition = glm::vec3(-5.0f, 14.0f, 10.0f);
 	maxIterations = 10;
 	sqrDistanceError = 0.02f;
+
+	// --- state ----------------------------------------------------------
+	Renderer::Instance()->SetClearColor(glm::vec3(0.2f, 0.2f, 0.2f));
+	Renderer::Instance()->SetDepthTest(true);
+	Renderer::Instance()->SetCullingFace(CullFace::Front);
 }
 
 void AnimationScene::Close()
 {
 	delete demoModel;
-
-	mBonesTransformation.clear();
+	demoModel = nullptr;
 
 	delete light;
+	light = nullptr;
 
-	delete modelDraw;
-	delete Drawing;
+	delete modelDrawShader;
+	modelDrawShader = nullptr;
 
-	controlPoints.clear();		
+	delete drawingShader;
+	drawingShader = nullptr;
+
+	delete mCurveVBO;
+	mCurveVBO = nullptr;
+	delete mCurveIBO;
+	mCurveIBO = nullptr;
+
+	delete mCameraUBO;
+	mCameraUBO = nullptr;
+
+	delete mLightUBO;
+	mLightUBO = nullptr;
+
+	delete mBoneUBO;
+	mBoneUBO = nullptr;
+
+	for (DrawUniforms& du : mDrawUniforms)
+	{
+		delete du.mObjectUBO;
+		delete du.mMaterialUBO;
+	}
+	mDrawUniforms.clear();
+
+	controlPoints.clear();
 	controlPointsMatrices.clear();
 	mArcLengthTable.clear();
-	delete mCurveVAO;
 }
+
+// ------------------------------------------------------------------- RenderObject ----
 
 void AnimationScene::RenderObject(Object* object, Shader* shader)
 {
-	Transform* transform = object->GetComponent<Transform>();
-	if (transform)
-	{
-		Renderer::Instance()->BindUniformBuffer(transform->mMatricesUBO, 1);
-	}
-
-	Material* material = object->GetComponent<Material>();
-	if (material)
-	{
-		if (material->pTexture)
-		{
-			Renderer::Instance()->BindTexture(material->pTexture, 8);
-		}
-		Renderer::Instance()->BindUniformBuffer(material->mMaterialUBO, 3);
-	}
-
-	Shape* shape = object->GetComponent<Shape>();
-	if (shape)
-	{
-		if (shape && Renderer::Instance()->GetCullingFace() != CullFace::None)
-		{
-			if (shape->mShape == Shapes::QUAD)
-			{
-				Renderer::Instance()->SetCullingFace(CullFace::Back);
-			}
-			else
-			{
-				Renderer::Instance()->SetCullingFace(CullFace::Front);
-			}
-		}
-
-		if (shape->mMesh)
-		{
-			Renderer::Instance()->Draw(shape->mShapeData->mVAO, shape->mShapeData->mIBO, shader);
-		}
-		if (shape->mWireMesh)
-		{
-			Renderer::Instance()->DebugDrawLines(shape->mShapeData->mVAO, shape->mShapeData->mIBO, shader);
-		}
-		if (shape->mDebugMesh)
-		{
-			Renderer::Instance()->DebugDraw(shape->mShapeData->mVAO, shape->mShapeData->mIBO, shader);
-		}
-	}
-
-	if (transform)
-	{
-		Renderer::Instance()->UnbindUniformBuffer(transform->mMatricesUBO);
-	}
-
-	if (material)
-	{
-		if (material->pTexture)
-		{
-			Renderer::Instance()->UnbindTexture(material->pTexture, 8);
-		}
-		Renderer::Instance()->UnbindUniformBuffer(material->mMaterialUBO);
-	}
+	// This scene draws directly; ObjectManager objects are not used.
 }
+
+// ------------------------------------------------------------------- Update ----
 
 void AnimationScene::Update()
 {
-	Renderer::Instance()->BindShader(modelDraw);
-
 	if (!isPaused)
 	{
 		PathRunTime += Time::Instance()->deltaTime;
 	}
 
-	glEnable(GL_DEPTH_TEST);
+	// Camera + light UBOs
+	Camera* camera = Engine::Instance()->GetCamera();
+	CameraMatricesUBO cameraData{ camera->mProjection, camera->mView, glm::inverse(camera->mView) };
+	mCameraUBO->AddData(sizeof(cameraData), &cameraData);
 
-	modelDraw->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
-	modelDraw->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
-	modelDraw->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
-	modelDraw->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
-	modelDraw->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
+	LightDataUBO lightData{ glm::vec4(light->position, 1.0f), glm::vec4(3.2f, 3.2f, 3.2f, 1.0f) };
+	mLightUBO->AddData(sizeof(lightData), &lightData);
 
+	// Shared UBO bindings (same for all draws)
+	Renderer::Instance()->BindUniformBuffer(mCameraUBO, CameraBindingPoint);
+	Renderer::Instance()->BindUniformBuffer(mLightUBO, LightBindingPoint);
+	Renderer::Instance()->BindUniformBuffer(mBoneUBO, BoneBindingPoint);
+
+	// Animation time update
 	float speed = mSpeed;
 	if (mPathWalk)
 	{
@@ -228,15 +354,16 @@ void AnimationScene::Update()
 			speed = mSpeed * PathRunTime / t1;
 			distance = 0.5f * mSpeed / t1 * PathRunTime * PathRunTime;
 		}
-		else if (PathRunTime > t1&& PathRunTime <= t2)
+		else if (PathRunTime > t1 && PathRunTime <= t2)
 		{
 			speed = mSpeed;
 			distance = mSpeed * t1 * 0.5f + mSpeed * (PathRunTime - t1);
 		}
-		else if (PathRunTime > t2&& PathRunTime <= totalRunTime)
+		else if (PathRunTime > t2 && PathRunTime <= totalRunTime)
 		{
 			speed = mSpeed * (totalRunTime - PathRunTime) / (totalRunTime - t2);
-			distance = mSpeed * t1 * 0.5f + mSpeed * (t2 - t1) + (mSpeed - (mSpeed * (PathRunTime - t2) / (totalRunTime - t2)) * 0.5f) *
+			distance = mSpeed * t1 * 0.5f + mSpeed * (t2 - t1) +
+				(mSpeed - (mSpeed * (PathRunTime - t2) / (totalRunTime - t2)) * 0.5f) *
 				(PathRunTime - t2);
 		}
 		else
@@ -246,7 +373,6 @@ void AnimationScene::Update()
 			speed = 0.0f;
 		}
 
-		//float distance = mSpeed * PathRunTime;
 		std::pair<float, int> searchedValue = SearchInTable(distance);
 		glm::vec3 position = GetPointOnCurve(searchedValue.first, controlPointsMatrices[searchedValue.second]);
 		mPathMatrix = glm::translate(glm::mat4(1.0f), position);
@@ -296,97 +422,230 @@ void AnimationScene::Update()
 		}
 	}
 
+	// Upload bone matrices
 	for (unsigned int i = 0; i < demoModel->mBones.size(); ++i)
 	{
-		modelDraw->SetUniformMat4f("boneMatrix[" + std::to_string(i) + "]", demoModel->mBones[i].mCurrentGlobalTransformation * demoModel->mBones[i].mOffset);
+		Bone& bone = demoModel->mBones[i];
+		mBonesTransformation[i] = bone.mCurrentGlobalTransformation * bone.mOffset;
 	}
+	// Pad remaining bones with identity
+	for (size_t i = demoModel->mBones.size(); i < 128; ++i)
+	{
+		mBonesTransformation[i] = glm::mat4(1.0f);
+	}
+	mBoneUBO->AddData(sizeof(glm::mat4) * 128, mBonesTransformation.data());
 
+	mDrawIndex = 0;
+
+	// --- skinned model --------------------------------------------------
 	if (drawModel)
 	{
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
-		modelDraw->SetUniformMat4f("pathTr", mPathMatrix);
-		modelDraw->SetUniformMat4f("model", matrix);
-		modelDraw->SetUniformMat4f("normaltr", glm::inverse(mPathMatrix * matrix));
-		modelDraw->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
-		modelDraw->SetUniform3f("specular", 1.0f, 1.0f, 1.0f);
-		modelDraw->SetUniform1f("shininess", 1.0f);
+		DrawUniforms& uniforms = NextDrawUniforms();
 
-		demoModel->Draw(modelDraw);
-		glDisable(GL_CULL_FACE);
+		const glm::mat4 model = matrix;
+		ObjectMatricesUBO objectData{ glm::inverse(mPathMatrix * model), mPathMatrix * model, mPathMatrix * model };
+		uniforms.mObjectUBO->AddData(sizeof(objectData), &objectData);
+
+		AnimationMaterialUBO material{};
+		material.mDiffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+		material.mSpecular = glm::vec4(1.0f, 1.0f, 1.0f, 0.0f);
+		material.mShininess = 1.0f;
+		material.mLighting = 1;
+		material.mUseTexture = 0;
+		uniforms.mMaterialUBO->AddData(sizeof(material), &material);
+
+		Renderer::Instance()->BindUniformBuffer(uniforms.mObjectUBO, ObjectBindingPoint);
+		Renderer::Instance()->BindUniformBuffer(uniforms.mMaterialUBO, MaterialBindingPoint);
+
+		demoModel->Draw(modelDrawShader);
 	}
 
-
-	Renderer::Instance()->BindShader(Drawing);
-	Drawing->SetUniform3f("lightPos", light->position.x, light->position.y, light->position.z);
-	Drawing->SetUniform3f("light", 3.2f, 3.2f, 3.2f);
-	Drawing->SetUniformMat4f("inverseview", glm::inverse(Engine::Instance()->GetCamera()->mView));
-	Drawing->SetUniformMat4f("projection", Engine::Instance()->GetCamera()->mProjection);
-	Drawing->SetUniformMat4f("view", Engine::Instance()->GetCamera()->mView);
-
+	// --- bones debug ----------------------------------------------------
 	if (drawBones)
 	{
 		if (drawModel)
 		{
-			glDisable(GL_DEPTH_TEST);
+			Renderer::Instance()->SetDepthTest(false);
 		}
-		Drawing->SetUniform1i("lighting", 0);
+
+		// Draw bone cubes
+		DrawUniforms& cubeUniforms = NextDrawUniforms();
 		for (unsigned int i = 0; i < demoModel->mBones.size(); ++i)
 		{
-			Drawing->SetUniformMat4f("model", mPathMatrix * matrix * demoModel->mBones[i].mCurrentGlobalTransformation);
-			Drawing->SetUniform3f("diffuse", 1.0f, 0.0f, 0.0f);
+			cubeUniforms.mObjectUBO->AddData(sizeof(ObjectMatricesUBO),
+				&ObjectMatricesUBO{ glm::inverse(demoModel->mBones[i].mCurrentGlobalTransformation),
+					demoModel->mBones[i].mCurrentGlobalTransformation,
+					demoModel->mBones[i].mCurrentGlobalTransformation });
+
+			AppMaterialUBO mat{};
+			mat.mDiffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+			mat.mLighting = 0;
+			mat.mUseTexture = 0;
+			cubeUniforms.mMaterialUBO->AddData(sizeof(mat), &mat);
+
+			Renderer::Instance()->BindUniformBuffer(cubeUniforms.mObjectUBO, ObjectBindingPoint);
+			Renderer::Instance()->BindUniformBuffer(cubeUniforms.mMaterialUBO, MaterialBindingPoint);
+
 			const ShapeData& shape = ShapeManager::Instance()->mShapes[Shapes::CUBE];
-			Renderer::Instance()->Draw(shape.mVAO, shape.mIBO, Drawing);
+			if (shape.mVBO && shape.mIBO)
+			{
+				Renderer::Instance()->Draw(shape.mVBO, shape.mIBO, drawingShader);
+			}
 		}
-		DrawBones();
-		Drawing->SetUniform1i("lighting", 1);
+
+		// Draw bone lines
+		{
+			DrawUniforms& lineUniforms = NextDrawUniforms();
+
+			lineUniforms.mObjectUBO->AddData(sizeof(ObjectMatricesUBO),
+				&ObjectMatricesUBO{ glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) });
+
+			AppMaterialUBO mat{};
+			mat.mDiffuse = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
+			mat.mLighting = 0;
+			mat.mUseTexture = 0;
+			lineUniforms.mMaterialUBO->AddData(sizeof(mat), &mat);
+
+			Renderer::Instance()->BindUniformBuffer(lineUniforms.mObjectUBO, ObjectBindingPoint);
+			Renderer::Instance()->BindUniformBuffer(lineUniforms.mMaterialUBO, MaterialBindingPoint);
+
+			// Build bone lines
+			struct BoneVertex
+			{
+				glm::vec3 mPosition;
+				glm::vec3 mNormal;
+			};
+
+			std::vector<BoneVertex> vertices;
+			for (unsigned int i = 1; i < demoModel->mBones.size(); ++i)
+			{
+				glm::mat4 trans = demoModel->mBones[i].mCurrentGlobalTransformation;
+				vertices.push_back({ (glm::vec3)trans[3], glm::vec3(0.0f, 0.0f, 1.0f) });
+
+				glm::mat4 parentTrans = demoModel->mBones[demoModel->mBones[i].mParentIndex].mCurrentGlobalTransformation;
+				vertices.push_back({ (glm::vec3)parentTrans[3], glm::vec3(0.0f, 0.0f, 1.0f) });
+			}
+
+			VertexBuffer* bonesVBO = Renderer::Instance()->CreateVertexBuffer();
+			bonesVBO->SetDataLayout({ VertexFormat::Vec3, VertexFormat::Vec3 });
+			bonesVBO->AddData(vertices.data(), static_cast<unsigned int>(vertices.size() * sizeof(BoneVertex)));
+
+			Renderer::Instance()->DebugDrawLines(bonesVBO, nullptr, drawingShader);
+			delete bonesVBO;
+		}
+
+		Renderer::Instance()->SetDepthTest(true);
 	}
 
-	Renderer::Instance()->SetDepthTest(true);
-
+	// --- control points -------------------------------------------------
+	DrawUniforms& cpUniforms = NextDrawUniforms();
 	for (unsigned int i = 0; i < controlPoints.size(); ++i)
 	{
-		Renderer::Instance()->BindShader(Drawing);
 		glm::mat4 controlModel = glm::translate(glm::mat4(1.0f), glm::vec3(controlPoints[i]));
 		controlModel = glm::translate(controlModel, glm::vec3(0.0f, 0.125f, 0.0f));
 		controlModel = glm::scale(controlModel, glm::vec3(0.25f));
-		Drawing->SetUniformMat4f("model", controlModel);
-		Drawing->SetUniform3f("diffuse", 0.0f, 0.0f, 1.0f);
+
+		ObjectMatricesUBO objectData{ glm::inverse(controlModel), controlModel, controlModel };
+		cpUniforms.mObjectUBO->AddData(sizeof(objectData), &objectData);
+
+		AppMaterialUBO mat{};
+		mat.mDiffuse = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+		mat.mLighting = 1;
+		mat.mUseTexture = 0;
+		cpUniforms.mMaterialUBO->AddData(sizeof(mat), &mat);
+
+		Renderer::Instance()->BindUniformBuffer(cpUniforms.mObjectUBO, ObjectBindingPoint);
+		Renderer::Instance()->BindUniformBuffer(cpUniforms.mMaterialUBO, MaterialBindingPoint);
+
 		const ShapeData& shape = ShapeManager::Instance()->mShapes[Shapes::CUBE];
-		Renderer::Instance()->Draw(shape.mVAO, shape.mIBO, Drawing);
+		if (shape.mVBO && shape.mIBO)
+		{
+			Renderer::Instance()->Draw(shape.mVBO, shape.mIBO, drawingShader);
+		}
 	}
 
-	Renderer::Instance()->BindShader(Drawing);
-	Drawing->SetUniformMat4f("model", glm::mat4(1.0f));
+	// --- curve polyline -----------------------------------------------
+	{
+		DrawUniforms& curveUniforms = NextDrawUniforms();
 
-	Renderer::Instance()->BindVertexArray(mCurveVAO);
-	//glLineWidth(2.0f);
-	glDrawArrays(GL_LINES, 1, mCurvePointsSize - 1);
-	Renderer::Instance()->UnbindVertexArray(mCurveVAO);
+		const glm::mat4 model(1.0f);
+		ObjectMatricesUBO objectData{ model, model, model };
+		curveUniforms.mObjectUBO->AddData(sizeof(objectData), &objectData);
 
-	matrix = glm::mat4(1.0f);
-	matrix = glm::translate(matrix, glm::vec3(0.0f, 0.0f, 0.0f));
-	matrix = glm::rotate(matrix, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
-	matrix = glm::scale(matrix, glm::vec3(500.0f));
-	Drawing->SetUniformMat4f("model", matrix);
-	Drawing->SetUniformMat4f("normaltr", glm::inverse(matrix));
-	Drawing->SetUniform3f("diffuse", 0.0f, 0.5f, 0.0f);
-	Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
-	Drawing->SetUniform1f("shininess", 1.0f);
-	const ShapeData& shapeQuad = ShapeManager::Instance()->mShapes[Shapes::QUAD];
-	Renderer::Instance()->Draw(shapeQuad.mVAO, shapeQuad.mIBO, Drawing);
+		AppMaterialUBO mat{};
+		mat.mDiffuse = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+		mat.mLighting = 0;
+		mat.mUseTexture = 0;
+		curveUniforms.mMaterialUBO->AddData(sizeof(mat), &mat);
 
-	matrix = glm::mat4(1.0f);
-	matrix = glm::translate(matrix, mGoalPosition);
-	matrix = glm::scale(matrix, glm::vec3(1.0f));
-	Drawing->SetUniformMat4f("model", matrix);
-	Drawing->SetUniformMat4f("normaltr", glm::inverse(matrix));
-	Drawing->SetUniform3f("diffuse", 0.5f, 0.0f, 0.0f);
-	Drawing->SetUniform3f("specular", 0.2f, 0.2f, 0.2f);
-	Drawing->SetUniform1f("shininess", 1.0f);
-	const ShapeData& shapeSphere = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
-	Renderer::Instance()->Draw(shapeSphere.mVAO, shapeSphere.mIBO, Drawing);
+		Renderer::Instance()->BindUniformBuffer(curveUniforms.mObjectUBO, ObjectBindingPoint);
+		Renderer::Instance()->BindUniformBuffer(curveUniforms.mMaterialUBO, MaterialBindingPoint);
+
+		if (mCurveVBO && mCurveIBO)
+		{
+			Renderer::Instance()->DebugDrawLines(mCurveVBO, mCurveIBO, drawingShader);
+		}
+	}
+
+	// --- floor ----------------------------------------------------------
+	{
+		DrawUniforms& floorUniforms = NextDrawUniforms();
+
+		glm::mat4 floorModel = glm::mat4(1.0f);
+		floorModel = glm::rotate(floorModel, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+		floorModel = glm::scale(floorModel, glm::vec3(500.0f));
+
+		ObjectMatricesUBO objectData{ glm::inverse(floorModel), floorModel, floorModel };
+		floorUniforms.mObjectUBO->AddData(sizeof(objectData), &objectData);
+
+		AppMaterialUBO mat{};
+		mat.mDiffuse = glm::vec4(0.0f, 0.5f, 0.0f, 1.0f);
+		mat.mSpecular = glm::vec4(0.2f, 0.2f, 0.2f, 0.0f);
+		mat.mShininess = 1.0f;
+		mat.mLighting = 1;
+		mat.mUseTexture = 0;
+		floorUniforms.mMaterialUBO->AddData(sizeof(mat), &mat);
+
+		Renderer::Instance()->BindUniformBuffer(floorUniforms.mObjectUBO, ObjectBindingPoint);
+		Renderer::Instance()->BindUniformBuffer(floorUniforms.mMaterialUBO, MaterialBindingPoint);
+
+		const ShapeData& shapeQuad = ShapeManager::Instance()->mShapes[Shapes::QUAD];
+		if (shapeQuad.mVBO && shapeQuad.mIBO)
+		{
+			Renderer::Instance()->Draw(shapeQuad.mVBO, shapeQuad.mIBO, drawingShader);
+		}
+	}
+
+	// --- goal sphere ----------------------------------------------------
+	{
+		DrawUniforms& goalUniforms = NextDrawUniforms();
+
+		glm::mat4 goalModel = glm::translate(glm::mat4(1.0f), mGoalPosition);
+		goalModel = glm::scale(goalModel, glm::vec3(1.0f));
+
+		ObjectMatricesUBO objectData{ glm::inverse(goalModel), goalModel, goalModel };
+		goalUniforms.mObjectUBO->AddData(sizeof(objectData), &objectData);
+
+		AppMaterialUBO mat{};
+		mat.mDiffuse = glm::vec4(0.5f, 0.0f, 0.0f, 1.0f);
+		mat.mSpecular = glm::vec4(0.2f, 0.2f, 0.2f, 0.0f);
+		mat.mShininess = 1.0f;
+		mat.mLighting = 1;
+		mat.mUseTexture = 0;
+		goalUniforms.mMaterialUBO->AddData(sizeof(mat), &mat);
+
+		Renderer::Instance()->BindUniformBuffer(goalUniforms.mObjectUBO, ObjectBindingPoint);
+		Renderer::Instance()->BindUniformBuffer(goalUniforms.mMaterialUBO, MaterialBindingPoint);
+
+		const ShapeData& shapeSphere = ShapeManager::Instance()->mShapes[Shapes::SPHERE];
+		if (shapeSphere.mVBO && shapeSphere.mIBO)
+		{
+			Renderer::Instance()->Draw(shapeSphere.mVBO, shapeSphere.mIBO, drawingShader);
+		}
+	}
 }
+
+// ------------------------------------------------------------------- DebugDisplay ----
 
 void AnimationScene::DebugDisplay()
 {
@@ -472,7 +731,7 @@ void AnimationScene::DebugDisplay()
 	{
 		showControlWindow = !showControlWindow;
 	}
-	if (ImGui::InputFloat("ArcTable Tolerance", &mTolerance, 0.0005f, 0.005f, 4))
+	if (ImGui::InputFloat("ArcTable Tolerance", &mTolerance, 0.0005f, 0.005f, "%.4f"))
 	{
 		mTolerance = mTolerance < 0.0f ? 0.0001f : mTolerance;
 		CreateAxisLengthTable();
@@ -495,7 +754,7 @@ void AnimationScene::DebugDisplay()
 			controlPoints.emplace_back(controlPoints[controlPoints.size() - 1]);
 			RecalculateMatrices();
 			CreateAxisLengthTable();
-			CreateControlPointsVAO();
+			BuildCurveBuffers();
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Save Control Points"))
@@ -509,13 +768,15 @@ void AnimationScene::DebugDisplay()
 				controlPoints[i].y = 0.0f;
 				RecalculateMatrices();
 				CreateAxisLengthTable();
-				CreateControlPointsVAO();
+				BuildCurveBuffers();
 			}
 		}
 		ImGui::End();
 	}
 	ImGui::End();
 }
+
+// ------------------------------------------------------------------- animation math (unchanged) ----
 
 void AnimationScene::AnimatorUpdate(std::string animName)
 {
@@ -599,42 +860,6 @@ void AnimationScene::AnimatorUpdate(std::string animName)
 	}
 }
 
-void AnimationScene::DrawBones()
-{
-	VertexArray* va = Renderer::Instance()->CreateVertexArray();
-	VertexBuffer* vb = Renderer::Instance()->CreateVertexBuffer();
-
-	std::vector<glm::vec3> vertices;
-
-	for (unsigned int i = 1; i < demoModel->mBones.size(); ++i)
-	{
-		glm::mat4 trans = demoModel->mBones[i].mCurrentGlobalTransformation;
-		vertices.push_back((glm::vec3)trans[3]);
-		if (demoModel->mBones[i].mParentIndex != 0)
-		{
-			glm::mat4 parentTrans = demoModel->mBones[demoModel->mBones[i].mParentIndex].mCurrentGlobalTransformation;
-			vertices.push_back((glm::vec3)parentTrans[3]);
-		}
-		else
-		{
-			vertices.push_back((glm::vec3)trans[3]);
-		}
-	}
-	va->AddBuffer(vb);
-	vb->AddData(&vertices[0], vertices.size() * sizeof(glm::vec3));
-	  
-	va->Push(3, GL_FLOAT, sizeof(float));
-	va->SetDataLayout();
-
-	//glLineWidth(1.0f);
-	glDrawArrays(GL_LINES, 0, demoModel->mBones.size() * 2 - 2);
-	Renderer::Instance()->UnbindVertexArray(va);
-	Renderer::Instance()->UnbindVertexBuffer(vb);
-
-	delete va;
-	delete vb;
-}
-
 glm::vec4 AnimationScene::GetPointOnCurve(float t, glm::mat4& controlPointMatrix)
 {
 	return glm::vec4(t * t * t, t * t, t, 1.0f) * CurveMatrix * controlPointMatrix;
@@ -667,35 +892,6 @@ void AnimationScene::Deserialize()
 	std::cout << "Successfully written to File" << std::endl;
 }
 
-void AnimationScene::CreateControlPointsVAO()
-{
-	std::vector<glm::vec4> curvePoints;
-	for (unsigned int j = 0; j < controlPointsMatrices.size(); ++j)
-	{
-		for (float i = 0.0f; i <= 1.0f; i += 0.01f)
-		{
-			glm::vec4 pointOnCurve = GetPointOnCurve(i, controlPointsMatrices[j]);
-			curvePoints.emplace_back(pointOnCurve);
-			curvePoints.emplace_back(pointOnCurve);
-		}
-	}
-	mCurvePointsSize = curvePoints.size();
-	delete mCurveVAO;
-
-	mCurveVAO = Renderer::Instance()->CreateVertexArray();
-	VertexBuffer* vb = Renderer::Instance()->CreateVertexBuffer();
-
-	mCurveVAO->AddBuffer(vb);
-	vb->AddData(&curvePoints[0], curvePoints.size() * sizeof(glm::vec4));
-
-	mCurveVAO->Push(4, GL_FLOAT, sizeof(float));
-	mCurveVAO->SetDataLayout();
-
-	Renderer::Instance()->UnbindVertexBuffer(vb);
-	Renderer::Instance()->UnbindVertexArray(mCurveVAO);
-	delete vb;
-}
-
 void AnimationScene::IKUpdate(glm::mat4 model, float time)
 {
 	glm::vec3 Goal = glm::inverse(model) * glm::vec4(mGoalPosition, 1.0);
@@ -706,61 +902,57 @@ void AnimationScene::IKUpdate(glm::mat4 model, float time)
 	float sqrDistance = glm::length(currentEndEffector - mGoalPosition);
 
 	int iterationCount = 0;
-	while (sqrDistance > sqrDistanceError&& iterationCount <= maxIterations)
+	while (sqrDistance > sqrDistanceError && iterationCount <= maxIterations)
 	{
-		//for (int i = 0; i < mIKBones.size() - 2; ++i)
+		for (int j = 1; j < static_cast<int>(mIKBones.size()); ++j)
 		{
-			//for (int j = 1; j < i + 3 && j < mIKBones.size(); ++j)
-			for (int j = 1; j < mIKBones.size(); ++j)
+			glm::vec3 originOfRotation = demoModel->mBones[mIKBones[j]].mCurrentGlobalTransformation[3];
+			currentEndEffector = demoModel->mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
+			glm::vec3 B = glm::normalize(currentEndEffector - originOfRotation);
+			glm::vec3 C = glm::normalize(Gprime - originOfRotation);
+			float dot = glm::dot(B, C);
+			if (dot >= 0.9999f)
 			{
-				glm::vec3 originOfRotation = demoModel->mBones[mIKBones[j]].mCurrentGlobalTransformation[3];
-				currentEndEffector = demoModel->mBones[mIKBones[0]].mCurrentGlobalTransformation[3];
-				glm::vec3 B = glm::normalize(currentEndEffector - originOfRotation);
-				glm::vec3 C = glm::normalize(Gprime - originOfRotation);
-				float dot = glm::dot(B, C);
-				if (dot >= 0.9999f)
+				continue;
+			}
+			float alpha = glm::acos(dot);
+			if (j == 1)
+			{
+				glm::vec3 shoulder = demoModel->mBones[mIKBones[j + 1]].mCurrentGlobalTransformation[3];
+				glm::vec3 biceps = glm::normalize(shoulder - originOfRotation);
+				float dot1 = glm::dot(biceps, C);
+				if (dot1 >= 0.9999f)
 				{
 					continue;
 				}
-				float alpha = glm::acos(dot);
-				if (j == 1)
+				float alpha1 = glm::acos(dot1);
+				if (alpha1 >= 2.8)
 				{
-					glm::vec3 shoulder = demoModel->mBones[mIKBones[j + 1]].mCurrentGlobalTransformation[3];
-					glm::vec3 biceps = glm::normalize(shoulder - originOfRotation);
-					float dot1 = glm::dot(biceps, C);
-					if (dot1 >= 0.9999f)
-					{
-						continue;
-					}
-					float alpha1 = glm::acos(dot1);
-					if (alpha1 >= 2.8)
-					{
-						continue;
-					}
+					continue;
 				}
-				glm::vec3 axis = glm::cross(B, C);
-				axis = glm::inverse(demoModel->mBones[mIKBones[j]].mCurrentGlobalTransformation) * glm::vec4(axis, 0.0f);
-				float alen = glm::length(axis);
-				glm::quat q = glm::quat(cos(alpha / 2.0f), sin(alpha / 2.0f) * axis.x / alen,
-					sin(alpha / 2.0f) * axis.y / alen, sin(alpha / 2.0f) * axis.z / alen);
-				glm::normalize(q);
-				demoModel->mBones[mIKBones[j]].mIKTransformation *= glm::toMat4(q);
+			}
+			glm::vec3 axis = glm::cross(B, C);
+			axis = glm::inverse(demoModel->mBones[mIKBones[j]].mCurrentGlobalTransformation) * glm::vec4(axis, 0.0f);
+			float alen = glm::length(axis);
+			glm::quat q = glm::quat(cos(alpha / 2.0f), sin(alpha / 2.0f) * axis.x / alen,
+				sin(alpha / 2.0f) * axis.y / alen, sin(alpha / 2.0f) * axis.z / alen);
+			glm::normalize(q);
+			demoModel->mBones[mIKBones[j]].mIKTransformation *= glm::toMat4(q);
 
-				for (int k = j; k >= 0; --k)
-				{
-					Bone& bone = demoModel->mBones[mIKBones[k]];
-					bone.mCurrentGlobalTransformation = demoModel->mBones[bone.mParentIndex].mCurrentGlobalTransformation *
-						bone.mCurrentLocalTransformation * bone.mIKTransformation;
-				}
+			for (int k = j; k >= 0; --k)
+			{
+				Bone& bone = demoModel->mBones[mIKBones[k]];
+				bone.mCurrentGlobalTransformation = demoModel->mBones[bone.mParentIndex].mCurrentGlobalTransformation *
+					bone.mCurrentLocalTransformation * bone.mIKTransformation;
+			}
 
-				currentEndEffector = (model * demoModel->mBones[mIKBones[0]].mCurrentGlobalTransformation)[3];
+			currentEndEffector = (model * demoModel->mBones[mIKBones[0]].mCurrentGlobalTransformation)[3];
 
-				sqrDistance = glm::length(currentEndEffector - mGoalPosition);
+			sqrDistance = glm::length(currentEndEffector - mGoalPosition);
 
-				if (sqrDistance <= sqrDistanceError)
-				{
-					goto Update_children;
-				}
+			if (sqrDistance <= sqrDistanceError)
+			{
+				goto Update_children;
 			}
 		}
 
@@ -790,7 +982,7 @@ void AnimationScene::RecalculateMatrices()
 {
 	controlPointsMatrices.clear();
 
-	for (unsigned int i = 0; i <= controlPoints.size() - 4; ++i)
+	for (unsigned int i = 0; i + 3 < controlPoints.size(); ++i)
 	{
 		glm::mat4 matrix;
 		matrix[0] = controlPoints[i];
@@ -882,7 +1074,7 @@ inline glm::mat4 AnimationScene::RotationFromDirection(const glm::vec3& directio
 {
 	float angle = std::atan2(direction.y, direction.x);
 	glm::mat4 glmrotXY = glm::rotate(angle, glm::vec3(0.0f, 0.0f, 1.0f));
-	// Find the angle with the xy with plane (0, 0, 1); the - there is because we want to 
+	// Find the angle with the xy with plane (0, 0, 1); the - there is because we want to
 	// 'compensate' for that angle (a 'counter-angle')
 	float angleZ = -std::asin(direction.z);
 	// Make the matrix for that, assuming that Y is your 'side' vector; makes the model 'pitch'
