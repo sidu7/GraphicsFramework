@@ -4,7 +4,7 @@
 
 #include "Rendering/IndexBuffer.h"
 #include "Rendering/VertexBuffer.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 
 Renderer* Renderer::Instance()
 {

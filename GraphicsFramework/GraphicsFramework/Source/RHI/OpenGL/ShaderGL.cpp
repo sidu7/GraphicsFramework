@@ -8,7 +8,7 @@ Author: Sidhant Tumma
 #include "ShaderGL.h"
 #include "RHI/OpenGL/DeviceGL.h"
 #include "Utils/FileHelper.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 
 namespace rhi::gl
 {

@@ -7,7 +7,7 @@
 #include "Imgui/imgui.h"
 #include "Imgui/backends/imgui_impl_sdl2.h"
 #include "Rendering/Renderer.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 
 void ImguiManager::Init()
 {

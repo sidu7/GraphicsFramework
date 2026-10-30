@@ -1,7 +1,7 @@
 #include "UniformBufferVK.h"
 
 #include "Internal\DescriptorPoolVK.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 
 namespace rhi::vk
 {

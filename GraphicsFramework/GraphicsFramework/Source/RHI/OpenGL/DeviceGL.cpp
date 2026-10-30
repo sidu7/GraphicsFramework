@@ -29,7 +29,7 @@ Author: Sidhant Tumma
 #include "RHI/OpenGL/ShaderGL.h"
 #include "RHI/OpenGL/ComputeShaderGL.h"
 #include "RHI/OpenGL/TextureGL.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 #include "Core/Window.h"
 #include "Imgui/backends/imgui_impl_sdl2.h"
 #include "Imgui/backends/imgui_impl_opengl3.h"

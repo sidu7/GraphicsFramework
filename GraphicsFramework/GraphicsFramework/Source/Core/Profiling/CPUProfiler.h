@@ -2,7 +2,7 @@
 
 // CPUProfiler.h — RAII-based CPU profiling with scope guards and sample grouping.
 
-#include "Profiling/ProfilerInternal.h"
+#include "Core/Profiling/ProfilerInternal.h"
 #include "Core/Singleton.h"
 #include <string>
 #include <vector>
@@ -83,7 +83,7 @@ private:
 // ─────────────────────────────────────────────────────────────────────────────
 // ScopeGuard / OneShotGuard — RAII classes for CPU profiling.
 // Public macros (GF_PROFILE_SCOPE, etc.) live in Profiler.h so applications
-// only need to #include <Profiling/Profiler.h>.
+// only need to #include <Core/Profiling/Profiler.h>.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class ScopeGuard

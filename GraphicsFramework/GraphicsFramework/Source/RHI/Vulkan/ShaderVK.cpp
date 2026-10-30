@@ -8,7 +8,7 @@ Author: Sidhant Tumma
 #include "ShaderVK.h"
 #include "Core/Core.h"
 #include "Utils/FileHelper.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 
 #include "RHI/Vulkan/VertexBufferVK.h"
 #include "RHI/Vulkan/FrameBufferVK.h"

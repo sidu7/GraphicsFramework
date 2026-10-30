@@ -62,4 +62,8 @@ private:
 
 	bool mStart;
 	int mFPS;
+
+	// Pre-allocated neighbor buffer to avoid per-frame heap allocations
+	// in the parallel update loop (see Flocking.cpp FindNeighbours).
+	std::vector<Object*> mNeighbourBuffer;
 };

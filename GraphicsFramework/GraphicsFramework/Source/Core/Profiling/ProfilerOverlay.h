@@ -2,7 +2,7 @@
 
 // ProfilerOverlay.h — ImGui overlay for profiler data visualization.
 
-#include "Profiling/ProfilerInternal.h"
+#include "Core/Profiling/ProfilerInternal.h"
 
 class Profiler;  // Forward declaration; full include in .cpp
 
@@ -21,6 +21,9 @@ private:
     // Sub-panels
     void RenderFrameGraph(const FrameSnapshot& snapshot);
     void RenderCPUSamples(const std::vector<CPUSample>& samples);
+
+    // Tree helpers
+    void RenderTreeRecursive(const std::vector<CPUSample>& samples, int parentIndex, int depth);
     void RenderDrawCalls(const std::vector<DrawCallSample>& drawCalls);
     void RenderExportButton(Profiler& profiler);
 

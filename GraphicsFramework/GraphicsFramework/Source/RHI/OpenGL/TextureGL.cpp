@@ -9,7 +9,7 @@ Author: Sidhant Tumma
 
 #include "Core/Core.h"
 #include "RHI/OpenGL/DeviceGL.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 
 namespace rhi::gl
 {

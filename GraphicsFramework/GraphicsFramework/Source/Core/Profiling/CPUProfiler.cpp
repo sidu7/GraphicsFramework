@@ -1,6 +1,6 @@
 // CPUProfiler.cpp — RAII CPU profiler with sample grouping and frame tracking.
 
-#include "Profiling/CPUProfiler.h"
+#include "Core/Profiling/CPUProfiler.h"
 
 #include <algorithm>
 #include <iostream>
@@ -107,9 +107,22 @@ void CPUProfiler::PopScope()
         return;
     }
 
+    // Build full scope path from parent scopes (below current on stack).
+    std::string fullPath;
+    for (size_t i = 0; i < mScopes.size() - 1; ++i)
+    {
+        if (i > 0) fullPath += " > ";
+        fullPath += mScopes[i].name;
+    }
+
+    // Append the current scope (being recorded) to form the complete path.
+    if (!fullPath.empty()) fullPath += " > ";
+    fullPath += scope.name;
+
     // Store raw sample
     CPUSample sample;
     sample.name = scope.name;
+    sample.path  = std::move(fullPath);
     sample.count = 1;
     sample.totalTime = elapsed;
     sample.avgTime = elapsed;
@@ -135,41 +148,64 @@ void CPUProfiler::RecordOneShot(const std::string& name, double elapsedMs)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Group samples by name
+// Group samples by path and build parent-child hierarchy
 // ─────────────────────────────────────────────────────────────────────────────
 void CPUProfiler::GroupSamples()
 {
-    // Use unordered_map for grouping
+    // 1. Group by full path (same as name when no nested scopes).
     std::unordered_map<std::string, CPUSample> groupMap;
-
     for (const auto& raw : mRawSamples)
     {
-        auto it = groupMap.find(raw.name);
+        auto it = groupMap.find(raw.path);
         if (it != groupMap.end())
         {
-            it->second.count += raw.count;
-            it->second.totalTime += raw.totalTime;
+            it->second.count       += raw.count;
+            it->second.totalTime   += raw.totalTime;
         }
         else
         {
-            groupMap[raw.name] = raw;
+            groupMap[raw.path] = raw;
         }
     }
 
-    // Calculate averages and build final vector
+    // 2. Build indexed vector so we can reference samples by index.
     mSamples.clear();
     mSamples.reserve(groupMap.size());
     for (auto& pair : groupMap)
     {
         auto& sample = pair.second;
-        sample.avgTime = (sample.count > 0) ? (sample.totalTime / sample.count) : 0.0;
+        sample.avgTime  = (sample.count > 0) ? (sample.totalTime / sample.count) : 0.0;
+        sample.parentIndex = -1;  // default: root-level
         mSamples.push_back(sample);
     }
 
-    // Sort by total time (descending) — most expensive first
+    // 3. Sort by total time (descending) — most expensive first.
+    //    Must happen BEFORE building parent indices so the index map stays valid.
     std::sort(mSamples.begin(), mSamples.end(),
         [](const CPUSample& a, const CPUSample& b)
         {
             return a.totalTime > b.totalTime;
         });
+
+    // 4. For each sample, find its parent by stripping the last path component.
+    //    Example: "Engine::Update > RenderLoop" -> parent path = "Engine::Update"
+    std::unordered_map<std::string, int> pathToIndex;
+    for (int i = 0; i < static_cast<int>(mSamples.size()); ++i)
+    {
+        pathToIndex[mSamples[i].path] = i;
+    }
+
+    for (auto& sample : mSamples)
+    {
+        auto sepPos = sample.path.rfind(" > ");
+        if (sepPos != std::string::npos)
+        {
+            std::string parentPath = sample.path.substr(0, sepPos);
+            auto it = pathToIndex.find(parentPath);
+            if (it != pathToIndex.end())
+            {
+                sample.parentIndex = it->second;
+            }
+        }
+    }
 }

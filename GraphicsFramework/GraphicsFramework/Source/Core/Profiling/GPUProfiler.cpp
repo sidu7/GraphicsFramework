@@ -7,7 +7,7 @@
 // them. Queries are allocated sequentially (0..N-1) so the results of a frame
 // are always a contiguous range.
 
-#include "Profiling/GPUProfiler.h"
+#include "Core/Profiling/GPUProfiler.h"
 
 #include <algorithm>
 #include <cstring>

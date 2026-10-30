@@ -2,7 +2,7 @@
 // Orchestrates CPUProfiler and GPUProfiler subsystems, consolidating their
 // data into a unified FrameSnapshot at EndFrame() for consumers.
 
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 
 #include <fstream>
 #include <sstream>

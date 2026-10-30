@@ -12,7 +12,7 @@ Author: Sidhant Tumma
 #include "RHI/Vulkan/Internal/HelperVK.h"
 #include "RHI/Vulkan/Internal/CommandBufferVK.h"
 #include "RHI/Vulkan/Internal/CommandQueueVK.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 
 namespace rhi::vk
 {

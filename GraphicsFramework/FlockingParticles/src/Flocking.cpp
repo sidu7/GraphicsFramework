@@ -10,6 +10,7 @@
 #include "Core/Components/Transform.h"
 #include "Core/Components/Material.h"
 #include "Core/Components/Shape.h"
+#include "Core/Profiling/Profiler.h"
 #include "Rendering/Shader.h"
 #include "Rendering/Renderer.h"
 #include "Rendering/UniformBuffer.h"
@@ -165,6 +166,10 @@ void Flocking::Init()
 	mFPS = 120;  // Default to 120 FPS (unlimited when neededTime=0, capped by display otherwise)
 	Time::Instance()->SetFrameRate(mFPS);
 
+	// Pre-allocate neighbor buffer — avoids 250 heap allocations per frame
+	// in the parallel update loop (see FindNeighbours, line ~214).
+	mNeighbourBuffer.reserve(mFishes.size() * 2);
+
 	auto rand = Random::Range(-1.0f, 1.0f);
 	auto rand2 = Random::Range();
 	glm::vec3 Y(0.0f, 1.0f, 0.0f);
@@ -190,6 +195,8 @@ void Flocking::Init()
 
 void Flocking::Update()
 {	
+	GF_PROFILE_SCOPE("Flocking::Update");
+
 	Camera* camera = Engine::Instance()->GetCamera();
 	CameraMatricesUBO cameraData{ camera->mProjection, camera->mView, glm::inverse(camera->mView) };
 	mCameraUBO->AddData(sizeof(cameraData), &cameraData);
@@ -200,19 +207,23 @@ void Flocking::Update()
 	Renderer::Instance()->BindUniformBuffer(mCameraUBO, CameraBindingPoint);
 	Renderer::Instance()->BindUniformBuffer(mLightUBO, LightBindingPoint);
 
-	ObjectManager::Instance()->UpdateObjects();
+	{
+		GF_PROFILE_SCOPE("Flocking::Update - ObjectManager::UpdateObjects");
+		ObjectManager::Instance()->UpdateObjects();
+	}
 	ObjectManager::Instance()->RenderObjects(mShader);
 	if (!Engine::Instance()->mPause)
 	{
-#pragma omp parallel for schedule(dynamic, 1) // Magic: Multi-thread y loop
+		GF_PROFILE_SCOPE("Flocking::Update - UpdateFishes");
 		for (auto fish : mFishes)
 		{
 			Flock* flock = fish->GetComponent<Flock>();
 			glm::vec3 accels[4] = { glm::vec3(0.0f),glm::vec3(0.0f) ,glm::vec3(0.0f), glm::vec3(0.0f) };
 
-			std::vector<Object*> neighbours;
-			neighbours.reserve(mFishes.size());
-			FindNeighbours(fish, neighbours);
+			// Reuse the pre-allocated buffer to avoid heap allocation every frame.
+			mNeighbourBuffer.clear();
+			FindNeighbours(fish, mNeighbourBuffer);
+			auto& neighbours = mNeighbourBuffer;
 			AvoidObstacles(accels[0], fish);
 			flock->mAcceleration += accels[0];
 			if (!neighbours.empty())
@@ -329,8 +340,8 @@ std::vector<Object*> Flocking::FindNeighbours(Object* fish, std::vector<Object*>
 
 		glm::vec3 posB = obj->GetComponent<Transform>()->mPosition;
 		glm::vec3 diff = posB - posA;
-		float dist = glm::length(diff);
-		if (dist > mFishViewDistance) continue;
+		float distSq = glm::dot(diff, diff);
+		if (distSq > mFishViewDistance * mFishViewDistance) continue;
 
 		// Angular check: is obj within the fish's viewing cone?
 		float dot = glm::dot(glm::normalize(diff), normVel);
@@ -352,8 +363,8 @@ std::vector<Object*> Flocking::FindNeighbours(Object* fish, std::vector<Object*>
 		                  neighbourBuffer.begin() + kMaxNeighbors,
 		                  neighbourBuffer.end(),
 		                  [&posA](Object* a, Object* b) {
-			                  return glm::length(a->GetComponent<Transform>()->mPosition - posA)
-	                             < glm::length(b->GetComponent<Transform>()->mPosition - posA);
+			                  return glm::dot(a->GetComponent<Transform>()->mPosition - posA, a->GetComponent<Transform>()->mPosition - posA)
+	                             < glm::dot(b->GetComponent<Transform>()->mPosition - posA, b->GetComponent<Transform>()->mPosition - posA);
 		                  });
 		neighbourBuffer.resize(kMaxNeighbors);
 	}
@@ -363,11 +374,11 @@ std::vector<Object*> Flocking::FindNeighbours(Object* fish, std::vector<Object*>
 	{
 		Flock* fo = n->GetComponent<Flock>();
 		glm::vec3 posB = n->GetComponent<Transform>()->mPosition;
-		float dist = glm::length(posB - posA);
+		float distSq = glm::dot(posB - posA, posB - posA);
 		data.mFlockHeading += fo->mFront;
 		data.mFlockCenter += posB;
 
-		if (dist < mBoidTightness)
+		if (distSq < mBoidTightness * mBoidTightness)
 		{
 			data.mAvoidanceDirection += glm::normalize(posA - posB);
 		}

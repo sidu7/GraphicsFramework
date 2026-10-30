@@ -97,9 +97,9 @@ void Flock::Update()
 	trans->mRotationMatrix = toMat4(orientation);
 	trans->SetModelTransformation();
 
-	// Transform::Update() already uploaded this frame's matrices before this
-	// component ran, so the new rotation has to be pushed to the UBO as well.
-	trans->UpdateUniformBuffer();
+	// No UpdateUniformBuffer() call here — ObjectManager::UpdateObjects() uploads
+	// all transform UBOs after every component has updated, so the final rotation
+	// computed by this method is included in a single upload.
 }
 
 void Flock::Serialize(rapidjson::Value::Object data)

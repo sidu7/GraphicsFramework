@@ -7,7 +7,8 @@
 #include "Rendering/Renderer.h"
 #include "Rendering/Shader.h"
 #include "Utils/JSONHelper.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
+#include "Core/Components/Transform.h"
 
 #include <filesystem>
 
@@ -49,6 +50,18 @@ void ObjectManager::UpdateObjects()
 	for (Object* object : mObjects)
 	{
 		object->Update();
+	}
+
+	// Upload all transform UBOs after every component has updated.
+	// This ensures a single upload per object with the final matrices
+	// (e.g. after Flock::Update() modifies the rotation matrix), avoiding
+	// the double-upload that would happen if Transform::Update() uploaded
+	// its matrices before downstream components finish modifying them.
+	for (Object* object : mObjects)
+	{
+		Transform* transform = object->GetComponent<Transform>();
+		if (transform)
+			transform->UploadMatrices();
 	}
 }
 

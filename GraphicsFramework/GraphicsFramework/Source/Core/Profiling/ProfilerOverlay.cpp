@@ -2,8 +2,8 @@
 // Reads from the unified FrameSnapshot provided by Profiler, not from
 // individual subsystem profilers directly.
 
-#include "Profiling/ProfilerOverlay.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/ProfilerOverlay.h"
+#include "Core/Profiling/Profiler.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <Imgui/imgui.h>
@@ -35,7 +35,7 @@ void ProfilerOverlay::Render(const Profiler& profiler)
     // Frame time graph (CPU-side history)
     RenderFrameGraph(snapshot);
 
-    ImGui::SeparatorText("CPU Samples (grouped)");
+    ImGui::SeparatorText("CPU Samples");
     RenderCPUSamples(snapshot.cpuSamples);
 
     ImGui::SeparatorText("Draw Calls");
@@ -85,7 +85,7 @@ void ProfilerOverlay::RenderFrameGraph(const FrameSnapshot& snapshot)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CPU samples table
+// CPU samples — hierarchical tree view (parent scopes expand to show children)
 // ─────────────────────────────────────────────────────────────────────────────
 void ProfilerOverlay::RenderCPUSamples(const std::vector<CPUSample>& samples)
 {
@@ -95,48 +95,145 @@ void ProfilerOverlay::RenderCPUSamples(const std::vector<CPUSample>& samples)
         return;
     }
 
-    // Show top 50 samples
-    size_t displayCount = std::min(samples.size(), static_cast<size_t>(50));
-
-    if (ImGui::BeginTable("CPUSamples", 4,
-            ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerV,
-            ImVec2(0, 160.0f)))
+    // Helper: does this sample have any children?
+    auto hasChildren = [&](int index)
     {
-        ImGui::TableSetupColumn("Function", ImGuiTableColumnFlags_WidthStretch, 0.0f, 0);
-        ImGui::TableSetupColumn("Count", ImGuiTableColumnFlags_WidthFixed, 60.0f, 1);
-        ImGui::TableSetupColumn("Total (ms)", ImGuiTableColumnFlags_WidthFixed, 80.0f, 2);
-        ImGui::TableSetupColumn("Avg (ms)", ImGuiTableColumnFlags_WidthFixed, 70.0f, 3);
-        ImGui::TableHeadersRow();
+        for (const auto& s : samples)
+            if (s.parentIndex == index) return true;
+        return false;
+    };
 
-        for (size_t i = 0; i < displayCount; ++i)
+    // Collect root-level samples (parentIndex == -1).
+    std::vector<const CPUSample*> roots;
+    roots.reserve(samples.size());
+    for (const auto& s : samples)
+    {
+        if (s.parentIndex == -1)
+            roots.push_back(&s);
+    }
+
+    if (!roots.empty())
+    {
+        // Render each root as a top-level tree node, then recurse into children.
+        for (const auto* root : roots)
         {
-            const auto& sample = samples[i];
+            int rootIdx = static_cast<int>(
+                std::distance(samples.begin(),
+                    std::find_if(samples.begin(), samples.end(),
+                        [root](const CPUSample& s) { return &s == root; }))
+            );
 
-            // Truncate long names
-            std::string displayName = sample.name;
-            if (displayName.size() > 60)
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(3) << root->totalTime
+                << " ms  (" << root->count << "x)";
+            std::string label = root->name + "  " + oss.str();
+
+            if (hasChildren(rootIdx))
             {
-                displayName = displayName.substr(0, 57) + "...";
+                std::string idText = "###cpu_root_" + std::to_string(rootIdx);
+                bool opened = ImGui::TreeNodeEx(idText.c_str(),
+                    ImGuiTreeNodeFlags_None, "%s", label.c_str());
+                if (opened)
+                {
+                    RenderTreeRecursive(samples, rootIdx, 1);
+                    ImGui::TreePop();
+                }
             }
-
-            ImGui::TableNextRow();
-            ImGui::TableSetColumnIndex(0);
-            ImGui::TextUnformatted(displayName.c_str());
-            ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%u", sample.count);
-            ImGui::TableSetColumnIndex(2);
-            ImGui::Text("%.3f", sample.totalTime);
-            ImGui::TableSetColumnIndex(3);
-            ImGui::Text("%.3f", sample.avgTime);
+            else
+            {
+                ImGui::Bullet();
+                ImGui::TextUnformatted(label.c_str());
+            }
         }
-
-        if (samples.size() > 50)
+    }
+    else
+    {
+        // Fallback: no root-level samples, render all as a flat list.
+        for (const auto& sample : samples)
         {
-            ImGui::TextColored(ImVec4(0.8f, 0.8f, 0.3f, 1.0f),
-                "... and %zu more samples (showing top 50)", samples.size() - 50);
-        }
+            int idx = static_cast<int>(
+                std::distance(samples.begin(),
+                    std::find_if(samples.begin(), samples.end(),
+                        [&sample](const CPUSample& s) { return &s == &sample; }))
+            );
 
-        ImGui::EndTable();
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(3) << sample.totalTime
+                << " ms  (" << sample.count << "x)";
+            std::string label = sample.name + "  " + oss.str();
+
+            if (hasChildren(idx))
+            {
+                std::string idText = "###cpu_flat_" + std::to_string(idx);
+                bool opened = ImGui::TreeNodeEx(idText.c_str(), 0, "%s", label.c_str());
+                if (opened)
+                {
+                    RenderTreeRecursive(samples, idx, 1);
+                    ImGui::TreePop();
+                }
+            }
+            else
+            {
+                ImGui::Bullet();
+                ImGui::TextUnformatted(label.c_str());
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recursive tree rendering for child scopes
+// ─────────────────────────────────────────────────────────────────────────────
+void ProfilerOverlay::RenderTreeRecursive(
+    const std::vector<CPUSample>& samples, int parentIndex, int depth)
+{
+    auto hasChildren = [&](int index)
+    {
+        for (const auto& s : samples)
+            if (s.parentIndex == index) return true;
+        return false;
+    };
+
+    for (const auto& sample : samples)
+    {
+        if (sample.parentIndex == parentIndex)
+        {
+            int idx = static_cast<int>(
+                std::distance(samples.begin(),
+                    std::find_if(samples.begin(), samples.end(),
+                        [&sample](const CPUSample& s) { return &s == &sample; }))
+            );
+
+            std::ostringstream oss;
+            oss << std::fixed << std::setprecision(3) << sample.totalTime
+                << " ms  (" << sample.count << "x)";
+            std::string label = sample.name + "  " + oss.str();
+
+            if (hasChildren(idx))
+            {
+                ImGui::Indent(depth * 4.0f);
+                ImGui::PushID(idx);
+
+                std::string idText = "###cpu_child_" + std::to_string(idx);
+                bool opened = ImGui::TreeNodeEx(idText.c_str(), 0, "%s", label.c_str());
+
+                if (opened)
+                {
+                    RenderTreeRecursive(samples, idx, depth + 1);
+                    ImGui::TreePop();
+                }
+
+                ImGui::PopID();
+                ImGui::Unindent(depth * 4.0f);
+            }
+            else
+            {
+                ImGui::Indent(depth * 4.0f);
+                ImGui::Bullet();
+                ImGui::TextUnformatted(label.c_str());
+                ImGui::Unindent(depth * 4.0f);
+            }
+        }
     }
 }
 

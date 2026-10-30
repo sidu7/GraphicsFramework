@@ -3,7 +3,7 @@
 // GPUProfiler.h — GPU timing via query pools (Vulkan timestamps / OpenGL timer queries).
 // Backend is selected at compile time via RENDERER_OPENGL or RENDERER_VULKAN.
 
-#include "Profiling/ProfilerInternal.h"
+#include "Core/Profiling/ProfilerInternal.h"
 #include "Core/Singleton.h"
 #include <vector>
 #include <string>

@@ -6,10 +6,10 @@
 // consolidating their data into a unified FrameSnapshot for consumers
 // (overlay, CSV export, etc.).
 
-#include "Profiling/ProfilerInternal.h"
-#include "Profiling/CPUProfiler.h"
-#include "Profiling/GPUProfiler.h"
-#include "Profiling/ProfilerOverlay.h"
+#include "Core/Profiling/ProfilerInternal.h"
+#include "Core/Profiling/CPUProfiler.h"
+#include "Core/Profiling/GPUProfiler.h"
+#include "Core/Profiling/ProfilerOverlay.h"
 
 class Profiler
 {

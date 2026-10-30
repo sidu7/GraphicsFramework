@@ -19,8 +19,8 @@
 #include "ObjectManager.h"
 #include "ComponentFactory.h"
 #include "Utils/JSONHelper.h"
-#include "Profiling/ProfilerInternal.h"
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/ProfilerInternal.h"
+#include "Core/Profiling/Profiler.h"
 
 void Engine::Start(const std::string& settingsFilePath)
 {

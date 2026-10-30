@@ -20,6 +20,12 @@ struct CPUSample
     uint32_t     count;       // How many times this scope was entered
     double       totalTime;   // Cumulative time across all invocations (ms)
     double       avgTime;     // totalTime / count (ms)
+
+    // Hierarchy — set during GroupSamples().
+    // parentIndex is the index into mSamples vector, or -1 if root-level.
+    int          parentIndex = -1;
+    // Full scope path captured during sampling (used to build hierarchy).
+    std::string  path;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

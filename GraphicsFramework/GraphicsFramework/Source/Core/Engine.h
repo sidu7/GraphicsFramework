@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core/Core.h"
-#include "Profiling/ProfilerInternal.h"
+#include "Core/Profiling/ProfilerInternal.h"
 
 class Camera;
 class Scene;

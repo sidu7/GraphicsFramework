@@ -23,7 +23,7 @@ Author: Sidhant Tumma
 #include "Rendering/Shader.h"
 #include "Rendering/Texture.h"
 // Profiling
-#include "Profiling/Profiler.h"
+#include "Core/Profiling/Profiler.h"
 // Rendering Vulkan
 #include "RHI/Vulkan/FrameBufferVK.h"
 #include "RHI/Vulkan/IndexBufferVK.h"
