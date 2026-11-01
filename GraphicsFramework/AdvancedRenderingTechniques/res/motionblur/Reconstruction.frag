@@ -1,16 +1,20 @@
-#version 330 core
+#version 450
 
 layout(location = 0) out vec4 FragColor;
 
 const float SOFT_Z_EXTENT = 1.0f;
 
-in vec2 TexCoord;
+layout(location = 0) in vec2 TexCoord;
 
-uniform sampler2D VelocityDepth;
-uniform sampler2D NeighbourMax;
-uniform sampler2D Color;
-uniform int k;
-uniform int S; // 15
+layout(binding = 1) uniform sampler2D VelocityDepth;
+layout(binding = 2) uniform sampler2D NeighbourMax;
+layout(binding = 3) uniform sampler2D Color;
+
+layout(binding = 4) uniform ReconstructionParams
+{
+    int k;
+    int S;
+} reconUbo;
 
 highp float rand(vec2 co)
 {
@@ -44,7 +48,7 @@ void main()
 	ivec2 NSize = textureSize(NeighbourMax,0);
 	ivec2 SSize = textureSize(VelocityDepth,0);
 
-	vec2 vn = texture(NeighbourMax,floor(X/k/NSize)).xy;
+	vec2 vn = texture(NeighbourMax,floor(X/reconUbo.k/NSize)).xy;
 
 	vec3 Cx = texture(Color,TexCoord).xyz;
 	if(length(vn) <= 0.01f + 0.5f)
@@ -63,14 +67,14 @@ void main()
 
 		// Take S - 1 additional neighbour samples
 		float j = rand(TexCoord) - 0.5f;
-		for(int i = 0; i < S; ++i)
+		for(int i = 0; i < reconUbo.S; ++i)
 		{
-			if(i == (S-1)/2)
+			if(i == (reconUbo.S-1)/2)
 			{
 				continue;
 			}
 
-			float t = mix(-1.0f,1.0f,(i+j+1.0f)/(S+1.0f));
+			float t = mix(-1.0f,1.0f,(i+j+1.0f)/(reconUbo.S+1.0f));
 			vec2 Y = floor(X + vn*t + 0.5f);
 
 			vec2 Vy = texture(VelocityDepth,Y/SSize).xy;

@@ -1,29 +1,33 @@
-#version 330 core
+#version 450
 
 layout(location = 0) out vec4 FragColor;
 
-in vec2 TexCoord;
+layout(location = 0) in vec2 TexCoord;
 
-uniform sampler2D velocityTex;
-uniform vec2 TileMaxSize;
-uniform int k;
+layout(binding = 1) uniform sampler2D velocityTex;
+
+layout(binding = 2) uniform TileMaxParams
+{
+    vec2 TileMaxSize;
+    int k;
+} tileMaxUbo;
 
 void main()
 {
-	float max = 0.0f;
+	float maxVal = 0.0f;
 	vec2 maxval = vec2(0.0f);
-	vec2 xy = vec2(TileMaxSize.x-1,TileMaxSize.y-1);
-	for(int u = 0; u < k; ++u)
+	vec2 xy = vec2(tileMaxUbo.TileMaxSize.x-1,tileMaxUbo.TileMaxSize.y-1);
+	for(int u = 0; u < tileMaxUbo.k; ++u)
 	{
-		for(int v = 0; v < k; ++v)
+		for(int v = 0; v < tileMaxUbo.k; ++v)
 		{
-			vec2 index = vec2(k*TexCoord.x*xy.x + u,k*TexCoord.y*xy.y + v);
+			vec2 index = vec2(tileMaxUbo.k*TexCoord.x*xy.x + u,tileMaxUbo.k*TexCoord.y*xy.y + v);
 			vec2 uv = index / vec2(1280,720);
 			vec2 val = texture(velocityTex,uv).xy;
 			float len = length(val);
-			if(len >= max)
+			if(len >= maxVal)
 			{
-				max = len;
+				maxVal = len;
 				maxval = val;
 			}
 		}

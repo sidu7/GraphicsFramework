@@ -1,8 +1,8 @@
-#version 430 core
+#version 450
 layout (location = 0) in vec3 aPos;
 layout (location = 2) in vec2 aTexCoords;
 
-out vec2 TexCoord;
+layout (location = 0) out vec2 TexCoord;
 
 layout (binding = 2) uniform Matrices
 {

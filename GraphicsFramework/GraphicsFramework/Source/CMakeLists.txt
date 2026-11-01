@@ -166,6 +166,17 @@ target_link_libraries(GraphicsFramework PUBLIC
     # which shadow the loader imports (causing a crash on the first vk call).
     "$<$<OR:$<CONFIG:Debug_Vulkan>,$<CONFIG:Release_Vulkan>>:${Vulkan_LIBRARY}>"
     "$<$<OR:$<CONFIG:Debug_OpenGL>,$<CONFIG:Release_OpenGL>>:opengl32>"
+    # SDL2 static library requires these Windows system libraries
+    user32
+    kernel32
+    gdi32
+    ole32
+    oleaut32
+    shell32
+    winmm
+    version
+    wsock32
+    setupapi
 )
 
 # The backend sources are already part of the archive through target_sources

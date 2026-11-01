@@ -1,31 +1,34 @@
-#version 330 core
+#version 450
 
 layout(location = 0) out vec4 FragColor;
 
-in vec2 TexCoord;
+layout(location = 0) in vec2 TexCoord;
 
-const float pi = 22.0f/7.0f;
+const float pi = 3.14159265f;
 
-uniform sampler2D normaltex;
-uniform sampler2D worldpostex;
-uniform sampler2D diffusetex;
-uniform sampler2D specularalpha;
-uniform sampler2D shadowmap;
+layout(binding = 1) uniform sampler2D normaltex;
+layout(binding = 2) uniform sampler2D worldpostex;
+layout(binding = 3) uniform sampler2D diffusetex;
+layout(binding = 4) uniform sampler2D specularalpha;
+layout(binding = 5) uniform sampler2D shadowmap;
 
-uniform vec3 lightPos;
-uniform vec3 Light;
-uniform int GBufferShow;
-uniform mat4 inverseview;
-uniform mat4 shadowmat;
-uniform float biasAlpha;
-uniform float exposure;
-uniform float contrast;
+layout(binding = 6) uniform LightingParams
+{
+    vec3 lightPos;
+    vec3 Light;
+    int GBufferShow;
+    mat4 inverseview;
+    mat4 shadowmat;
+    float biasAlpha;
+    float exposure;
+    float contrast;
+} lightingUbo;
 
 void main()
 {	
 	vec3 worldPos = texture(worldpostex,TexCoord).rgb;
-	vec3 lightVec = lightPos - worldPos;
-	vec3 eyePos = (inverseview * vec4(0,0,0,1)).xyz;
+	vec3 lightVec = lightingUbo.lightPos - worldPos;
+	vec3 eyePos = (lightingUbo.inverseview * vec4(0,0,0,1)).xyz;
 	vec3 eyeVec = eyePos - worldPos;
 
 	vec3 N = normalize(texture(normaltex,TexCoord).rgb);
@@ -42,7 +45,7 @@ void main()
 	vec3 Ks = value.rgb;
 	
 	float alp = value.w;
-	vec3 Ii = Light;
+	vec3 Ii = lightingUbo.Light;
 
 	vec3 F = Ks + (vec3(1,1,1)-Ks)*pow((1-LH),5);
 	float D = (alp+2) * pow(NH,alp) / (2*pi);

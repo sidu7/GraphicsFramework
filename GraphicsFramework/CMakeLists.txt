@@ -157,7 +157,7 @@ function(add_framework_app target_name source_dir)
         message(FATAL_ERROR "No C++ sources found for ${target_name} in ${source_dir}")
     endif()
 
-    add_executable(${target_name} EXCLUDE_FROM_ALL ${app_sources})
+    add_executable(${target_name} ${app_sources})
     target_link_libraries(${target_name} PRIVATE GraphicsFramework SDL2::SDL2main)
     
     # Copy the res folder to output directory (UnitTests has res/ alongside sources, others have res/ alongside src/)

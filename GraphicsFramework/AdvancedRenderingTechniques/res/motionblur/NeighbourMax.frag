@@ -1,16 +1,20 @@
-#version 330 core
+#version 450
 
 layout(location = 0) out vec4 FragColor;
 
-in vec2 TexCoord;
+layout(location = 0) in vec2 TexCoord;
 
-uniform sampler2D TileMax;
-uniform vec2 NMaxSize;
-uniform int k;
+layout(binding = 1) uniform sampler2D TileMax;
+
+layout(binding = 2) uniform NeighbourMaxParams
+{
+    vec2 NMaxSize;
+    int k;
+} neighbourMaxUbo;
 
 void main()
 {
-	float max = 0.0f;
+	float maxVal = 0.0f;
 	vec2 maxval = vec2(0.0f);
 
 	for(int u = -1; u < 2; ++u)
@@ -22,9 +26,9 @@ void main()
 			{
 				vec2 val = texture(TileMax,uv).xy;
 				float len = length(val);
-				if(len >= max)
+				if(len >= maxVal)
 				{
-					max = len;
+					maxVal = len;
 					maxval = val;
 				}
 			}

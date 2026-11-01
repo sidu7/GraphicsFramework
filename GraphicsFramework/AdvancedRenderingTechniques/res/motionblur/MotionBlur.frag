@@ -1,12 +1,16 @@
-#version 330
+#version 450
 
 const int MAX_SAMPLES = 50;
 
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
 
-uniform sampler2D Color;
-uniform sampler2D Velocity;
-uniform int S;
+layout(binding = 1) uniform sampler2D Color;
+layout(binding = 2) uniform sampler2D Velocity;
+
+layout(binding = 3) uniform MotionBlurParams
+{
+    int S;
+} motionBlurUbo;
 
 void main()
 {
@@ -16,7 +20,7 @@ void main()
 	vec2 velocity = texture(Velocity,screenTexCoords).rg;
 
 	float speed = length(velocity/texelSize);
-	int nSamples = clamp(int(speed),1,S);
+	int nSamples = clamp(int(speed),1,motionBlurUbo.S);
 
 	vec3 result = texture(Color,screenTexCoords).xyz;
 	for(int i = 1; i < nSamples; ++i)

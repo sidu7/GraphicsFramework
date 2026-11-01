@@ -3,10 +3,10 @@ layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormals;
 layout (location = 2) in vec2 aTexCoords;
 
-out vec2 TexCoords;
-out vec3 normalVec;
-out vec3 worldPos;
-out vec4 worldDepth;
+layout (location = 0) out vec2 TexCoords;
+layout (location = 1) out vec3 normalVec;
+layout (location = 2) out vec3 worldPos;
+layout (location = 3) out vec4 worldDepth;
 
 layout (binding = 2) uniform Matrices
 {

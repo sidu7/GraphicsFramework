@@ -1,13 +1,17 @@
-#version 330 core
+#version 450
 
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
 
-in vec2 TexCoord;
+layout(location = 0) in vec2 TexCoord;
 
-uniform vec3 Ambient;
-uniform sampler2D diffusetex;
+layout(binding = 0) uniform AmbientUBO
+{
+    vec3 Ambient;
+} ambientUbo;
+
+layout(binding = 1) uniform sampler2D diffusetex;
 
 void main()
 {
-	FragColor = vec4(Ambient * texture(diffusetex,TexCoord).xyz,1.0);
+    FragColor = vec4(ambientUbo.Ambient * texture(diffusetex,TexCoord).xyz,1.0);
 }

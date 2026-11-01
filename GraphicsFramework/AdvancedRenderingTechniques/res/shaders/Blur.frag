@@ -4,28 +4,26 @@
 //written consent of DigiPen Institute of Technology is prohibited.
 //Author: Sidhant Tumma
 //- End Header --------------------------------------------------------
-#version 330 core
+#version 450
 
 //Credits: LearnOpenGL Guassian blur
 
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
 
-uniform blurKernel{ float weight[101]; };
+layout (binding = 0) uniform blurKernel{ float weight[101]; };
 
-in vec2 TexCoords;
+layout(location = 0) in vec2 TexCoords;
 
-uniform sampler2D scene;
-uniform int blurSize;
-
-uniform bool horizontal;
+layout (binding = 1) uniform sampler2D scene;
+layout (binding = 2) uniform BlurParams { int blurSize; bool horizontal; } blurParams;
 
 void main()
 {   
      vec2 tex_offset = 1.0 / textureSize(scene, 0); // gets size of single texel
-     vec4 result = texture(scene, TexCoords);// * weight[blurSize];
-     if(horizontal)
+     vec4 result = texture(scene, TexCoords);// * weight[blurParams.blurSize];
+     if(blurParams.horizontal)
      {
-         for(int i = blurSize - 1; i >= 0; --i)
+         for(int i = blurParams.blurSize - 1; i >= 0; --i)
          {
             //result += texture(scene, TexCoords + vec2(tex_offset.x * i, 0.0)) * weight[i];
            //result += texture(scene, TexCoords - vec2(tex_offset.x * i, 0.0)) * weight[i];
@@ -33,7 +31,7 @@ void main()
      }
      else
      {
-         for(int i = blurSize - 1; i >= 0; --i)
+         for(int i = blurParams.blurSize - 1; i >= 0; --i)
          {
              //result += texture(scene, TexCoords + vec2(0.0, tex_offset.y * i)) * weight[i];
              //result += texture(scene, TexCoords - vec2(0.0, tex_offset.y * i)) * weight[i];
